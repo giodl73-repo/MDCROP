@@ -30,9 +30,10 @@ provenance paths; exclude stale duplicates and noisy periphery.
 ## Waves
 
 1. **Local graph fixture**: Rust workspace, BISECT shared-kernel dependencies,
-   fixture evidence graph, crop scoring, JSON output.
+   fixture evidence graph, crop scoring, JSON output. **Done.**
 2. **Repo and Markdown ingest**: walk local repos/vaults, chunk text, attach
-   provenance, build dependency/reference edges.
+   provenance, build dependency/reference edges. **First slice done via
+   `crop pack`.**
 3. **Crop engine**: task seed expansion, boundary scoring, bridge selection,
    dedupe, token-budget packing.
 4. **Agent harness**: CLI commands that emit model-ready context packs and a

@@ -6,6 +6,10 @@ use ropt_core::{exact_budgeted_selection, BudgetItem, RoptError, SeedPart};
 use rstat_core::scoring::{weighted_component_score, ScoringError};
 use rstat_core::summary::{summary_stats, SummaryError};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
+use std::collections::{BTreeMap, BTreeSet};
+use std::fs;
+use std::path::{Path, PathBuf};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -31,6 +35,24 @@ pub enum CropError {
     NonFiniteRelevance { unit: usize, score: f64 },
     #[error("[INPUT] budget must be positive")]
     NonPositiveBudget,
+    #[error("[INPUT] root path does not exist: {path}")]
+    RootDoesNotExist { path: String },
+    #[error("[INPUT] root path has no supported evidence files: {path}")]
+    NoSupportedFiles { path: String },
+    #[error("[INPUT] failed to read evidence file {path}: {source}")]
+    ReadFile {
+        path: String,
+        #[source]
+        source: std::io::Error,
+    },
+    #[error("[INPUT] evidence file is not valid UTF-8: {path}")]
+    NonUtf8File { path: String },
+    #[error("[INPUT] failed to inspect path {path}: {source}")]
+    InspectPath {
+        path: String,
+        #[source]
+        source: std::io::Error,
+    },
     #[error("[KERNEL] edge-cut failed: {0}")]
     EdgeCut(String),
     #[error("[KERNEL] summary failed: {0}")]
@@ -47,6 +69,8 @@ pub enum CropError {
 pub struct EvidenceUnit {
     pub id: String,
     pub source_id: String,
+    pub content_hash: String,
+    pub text: String,
     pub relevance: f64,
     pub token_estimate: usize,
 }
@@ -67,9 +91,25 @@ pub struct CropOptions {
 pub struct CropUnit {
     pub id: String,
     pub source_id: String,
+    pub content_hash: String,
+    pub text: String,
     pub relevance: f64,
     pub token_estimate: usize,
     pub reason: CropReason,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct IngestReport {
+    pub root: String,
+    pub source_count: usize,
+    pub unit_count: usize,
+    pub edge_count: usize,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct IngestedEvidence {
+    pub graph: EvidenceGraph,
+    pub report: IngestReport,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -93,6 +133,140 @@ pub struct CropPack {
 
 pub fn shared_kernel_probe(seed: usize) -> (&'static str, SeedPart) {
     (RCTX_VERSION, SeedPart::Usize(seed))
+}
+
+pub fn fixture_graph() -> EvidenceGraph {
+    EvidenceGraph {
+        units: vec![
+            unit_with_source(
+                "task-seed",
+                "fixture:task",
+                "Explain the target note.",
+                1.0,
+                80,
+            ),
+            unit_with_source(
+                "bridge-note",
+                "fixture:note",
+                "Bridge note connecting the task to the target evidence.",
+                0.2,
+                40,
+            ),
+            unit_with_source(
+                "target-note",
+                "fixture:target",
+                "Target note with the answer evidence.",
+                0.95,
+                40,
+            ),
+            unit_with_source(
+                "stale-noise",
+                "fixture:old",
+                "Old noisy note that should stay outside the crop.",
+                0.9,
+                40,
+            ),
+        ],
+        adjacency: vec![vec![1, 3], vec![0, 2], vec![1], vec![0]],
+    }
+}
+
+pub fn ingest_path(root: impl AsRef<Path>) -> Result<IngestedEvidence, CropError> {
+    let root = root.as_ref();
+    if !root.exists() {
+        return Err(CropError::RootDoesNotExist {
+            path: root.display().to_string(),
+        });
+    }
+
+    let files = supported_files(root)?;
+    if files.is_empty() {
+        return Err(CropError::NoSupportedFiles {
+            path: root.display().to_string(),
+        });
+    }
+
+    let mut units = Vec::new();
+    let mut source_first_unit = BTreeMap::new();
+    let mut source_unit_indices = BTreeMap::<String, Vec<usize>>::new();
+    let mut source_links = BTreeMap::<String, Vec<String>>::new();
+
+    for file in &files {
+        let bytes = fs::read(file).map_err(|source| CropError::ReadFile {
+            path: file.display().to_string(),
+            source,
+        })?;
+        let text = String::from_utf8(bytes).map_err(|_| CropError::NonUtf8File {
+            path: file.display().to_string(),
+        })?;
+        let source_id = source_id(root, file);
+        let source_hash = sha256_hex(text.as_bytes());
+        let chunks = text_chunks(&text);
+        source_links.insert(source_id.clone(), markdown_links(root, file, &text));
+
+        for (chunk_index, chunk) in chunks.into_iter().enumerate() {
+            let unit_index = units.len();
+            source_first_unit
+                .entry(source_id.clone())
+                .or_insert(unit_index);
+            source_unit_indices
+                .entry(source_id.clone())
+                .or_default()
+                .push(unit_index);
+            units.push(EvidenceUnit {
+                id: format!("{source_id}#{chunk_index:03}"),
+                source_id: source_id.clone(),
+                content_hash: source_hash.clone(),
+                text: chunk.to_string(),
+                relevance: 0.0,
+                token_estimate: estimate_tokens(chunk),
+            });
+        }
+    }
+
+    let mut edge_sets = vec![BTreeSet::new(); units.len()];
+    for indices in source_unit_indices.values() {
+        for pair in indices.windows(2) {
+            add_undirected_edge(&mut edge_sets, pair[0], pair[1]);
+        }
+    }
+    for (source_id, links) in source_links {
+        let Some(from_indices) = source_unit_indices.get(&source_id) else {
+            continue;
+        };
+        for target_source in links {
+            if let Some(&target_index) = source_first_unit.get(&target_source) {
+                for &from_index in from_indices {
+                    add_undirected_edge(&mut edge_sets, from_index, target_index);
+                }
+            }
+        }
+    }
+
+    let adjacency = edge_sets
+        .into_iter()
+        .map(|neighbors| neighbors.into_iter().collect::<Vec<_>>())
+        .collect::<Vec<_>>();
+    let edge_count = adjacency.iter().map(Vec::len).sum::<usize>() / 2;
+    let source_count = source_unit_indices.len();
+    let unit_count = units.len();
+
+    Ok(IngestedEvidence {
+        graph: EvidenceGraph { units, adjacency },
+        report: IngestReport {
+            root: root.display().to_string(),
+            source_count,
+            unit_count,
+            edge_count,
+        },
+    })
+}
+
+pub fn score_graph_for_task(graph: &mut EvidenceGraph, task: &str) {
+    let terms = task_terms(task);
+    for unit in &mut graph.units {
+        unit.relevance = relevance_score(unit, &terms);
+    }
 }
 
 pub fn crop_context(graph: &EvidenceGraph, options: CropOptions) -> Result<CropPack, CropError> {
@@ -178,6 +352,8 @@ pub fn crop_context(graph: &EvidenceGraph, options: CropOptions) -> Result<CropP
             units.push(CropUnit {
                 id: unit.id.clone(),
                 source_id: unit.source_id.clone(),
+                content_hash: unit.content_hash.clone(),
+                text: unit.text.clone(),
                 relevance: unit.relevance,
                 token_estimate: unit.token_estimate,
                 reason: reasons[index].expect("selected crop unit has reason"),
@@ -211,6 +387,180 @@ pub fn crop_context(graph: &EvidenceGraph, options: CropOptions) -> Result<CropP
         relevance_mean,
         quality_score,
     })
+}
+
+fn supported_files(root: &Path) -> Result<Vec<PathBuf>, CropError> {
+    let mut files = Vec::new();
+    collect_supported_files(root, &mut files)?;
+    files.sort();
+    Ok(files)
+}
+
+fn collect_supported_files(path: &Path, files: &mut Vec<PathBuf>) -> Result<(), CropError> {
+    let metadata = fs::metadata(path).map_err(|source| CropError::InspectPath {
+        path: path.display().to_string(),
+        source,
+    })?;
+    if metadata.is_file() {
+        if is_supported_file(path) {
+            files.push(path.to_path_buf());
+        }
+        return Ok(());
+    }
+    if metadata.is_dir() {
+        if is_ignored_dir(path) {
+            return Ok(());
+        }
+        let mut children = fs::read_dir(path)
+            .map_err(|source| CropError::InspectPath {
+                path: path.display().to_string(),
+                source,
+            })?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|source| CropError::InspectPath {
+                path: path.display().to_string(),
+                source,
+            })?;
+        children.sort_by_key(|entry| entry.path());
+        for child in children {
+            collect_supported_files(&child.path(), files)?;
+        }
+    }
+    Ok(())
+}
+
+fn is_ignored_dir(path: &Path) -> bool {
+    matches!(
+        path.file_name().and_then(|name| name.to_str()),
+        Some(".git" | "target")
+    )
+}
+
+fn is_supported_file(path: &Path) -> bool {
+    matches!(
+        path.extension()
+            .and_then(|extension| extension.to_str())
+            .map(str::to_ascii_lowercase)
+            .as_deref(),
+        Some("md" | "markdown" | "txt" | "json" | "toml" | "yaml" | "yml" | "rs")
+    )
+}
+
+fn source_id(root: &Path, file: &Path) -> String {
+    if root.is_file() {
+        return file
+            .file_name()
+            .map(|name| name.to_string_lossy().to_string())
+            .unwrap_or_else(|| file.display().to_string());
+    }
+    let relative = file.strip_prefix(root).unwrap_or(file);
+    relative
+        .components()
+        .map(|component| component.as_os_str().to_string_lossy())
+        .collect::<Vec<_>>()
+        .join("/")
+}
+
+fn text_chunks(text: &str) -> Vec<&str> {
+    let mut starts = Vec::new();
+    let mut cursor = 0;
+    let mut chunk_start = None;
+    for line in text.split_inclusive('\n') {
+        if line.trim().is_empty() {
+            if let Some(start) = chunk_start.take() {
+                starts.push((start, cursor));
+            }
+        } else if chunk_start.is_none() {
+            chunk_start = Some(cursor);
+        }
+        cursor += line.len();
+    }
+    if let Some(start) = chunk_start {
+        starts.push((start, text.len()));
+    }
+
+    let chunks = starts
+        .into_iter()
+        .map(|(start, end)| text[start..end].trim())
+        .map(str::trim)
+        .filter(|chunk| !chunk.is_empty())
+        .collect::<Vec<_>>();
+    if chunks.is_empty() {
+        vec![text.trim()]
+    } else {
+        chunks
+    }
+}
+
+fn markdown_links(root: &Path, file: &Path, text: &str) -> Vec<String> {
+    if !matches!(
+        file.extension()
+            .and_then(|extension| extension.to_str())
+            .map(str::to_ascii_lowercase)
+            .as_deref(),
+        Some("md" | "markdown")
+    ) {
+        return Vec::new();
+    }
+
+    let mut links = BTreeSet::new();
+    for segment in text.split("](").skip(1) {
+        let Some((target, _)) = segment.split_once(')') else {
+            continue;
+        };
+        if target.starts_with("http://")
+            || target.starts_with("https://")
+            || target.starts_with('#')
+            || target.is_empty()
+        {
+            continue;
+        }
+        let target = target.split('#').next().unwrap_or(target);
+        let Some(parent) = file.parent() else {
+            continue;
+        };
+        let candidate = parent.join(target);
+        if candidate.exists() && is_supported_file(&candidate) {
+            links.insert(source_id(root, &candidate));
+        }
+    }
+    links.into_iter().collect()
+}
+
+fn add_undirected_edge(edge_sets: &mut [BTreeSet<usize>], left: usize, right: usize) {
+    if left == right {
+        return;
+    }
+    edge_sets[left].insert(right);
+    edge_sets[right].insert(left);
+}
+
+fn sha256_hex(bytes: &[u8]) -> String {
+    let digest = Sha256::digest(bytes);
+    format!("sha256:{digest:x}")
+}
+
+fn estimate_tokens(text: &str) -> usize {
+    text.split_whitespace().count().max(1)
+}
+
+fn task_terms(task: &str) -> BTreeSet<String> {
+    task.split(|character: char| !character.is_ascii_alphanumeric())
+        .map(str::to_ascii_lowercase)
+        .filter(|term| term.len() >= 3)
+        .collect()
+}
+
+fn relevance_score(unit: &EvidenceUnit, terms: &BTreeSet<String>) -> f64 {
+    if terms.is_empty() {
+        return 0.5;
+    }
+    let haystack = format!("{} {}", unit.id, unit.text).to_ascii_lowercase();
+    let matches = terms
+        .iter()
+        .filter(|term| haystack.contains(term.as_str()))
+        .count();
+    (matches as f64 / terms.len() as f64).clamp(0.0, 1.0)
 }
 
 fn validate_graph(graph: &EvidenceGraph) -> Result<(), CropError> {
@@ -331,12 +681,108 @@ mod tests {
         assert_eq!(shared_kernel_probe(7), ("0.1", SeedPart::Usize(7)));
     }
 
+    #[test]
+    fn ingests_markdown_links_and_scores_task_terms() {
+        let root = unique_temp_dir("crop-ingest");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(
+            root.join("docs").join("index.md"),
+            "Task overview links to [target](target.md).\n\nBridge context.",
+        )
+        .unwrap();
+        fs::write(
+            root.join("docs").join("target.md"),
+            "Target evidence explains provenance replay.",
+        )
+        .unwrap();
+
+        let mut ingested = ingest_path(&root).unwrap();
+        score_graph_for_task(&mut ingested.graph, "provenance replay");
+
+        assert_eq!(ingested.report.source_count, 2);
+        assert_eq!(ingested.report.unit_count, 3);
+        assert!(ingested.report.edge_count >= 2);
+        assert!(ingested
+            .graph
+            .units
+            .iter()
+            .any(|unit| unit.content_hash.starts_with("sha256:")));
+        assert!(ingested.graph.units.iter().any(|unit| unit.relevance > 0.0));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn ingest_skips_git_and_target_directories() {
+        let root = unique_temp_dir("crop-ignore");
+        fs::create_dir_all(root.join(".git")).unwrap();
+        fs::create_dir_all(root.join("target")).unwrap();
+        fs::write(root.join("README.md"), "Visible context.").unwrap();
+        fs::write(root.join(".git").join("config.toml"), "hidden = true").unwrap();
+        fs::write(
+            root.join("target").join("generated.rs"),
+            "fn generated() {}",
+        )
+        .unwrap();
+
+        let ingested = ingest_path(&root).unwrap();
+
+        assert_eq!(ingested.report.source_count, 1);
+        assert_eq!(ingested.graph.units[0].source_id, "README.md");
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn ingest_rejects_missing_or_unsupported_root() {
+        let root = unique_temp_dir("crop-empty");
+        assert!(matches!(
+            ingest_path(root.join("missing")),
+            Err(CropError::RootDoesNotExist { .. })
+        ));
+
+        fs::create_dir_all(&root).unwrap();
+        fs::write(root.join("image.bin"), [0, 159, 146, 150]).unwrap();
+        assert!(matches!(
+            ingest_path(&root),
+            Err(CropError::NoSupportedFiles { .. })
+        ));
+        fs::remove_dir_all(root).unwrap();
+    }
+
     fn unit(id: &str, relevance: f64, token_estimate: usize) -> EvidenceUnit {
-        EvidenceUnit {
-            id: id.to_string(),
-            source_id: format!("source:{id}"),
+        unit_with_source(
+            id,
+            &format!("source:{id}"),
+            &format!("fixture text for {id}"),
             relevance,
             token_estimate,
-        }
+        )
+    }
+
+    fn unique_temp_dir(prefix: &str) -> PathBuf {
+        std::env::temp_dir().join(format!(
+            "{prefix}-{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ))
+    }
+}
+
+fn unit_with_source(
+    id: &str,
+    source_id: &str,
+    text: &str,
+    relevance: f64,
+    token_estimate: usize,
+) -> EvidenceUnit {
+    EvidenceUnit {
+        id: id.to_string(),
+        source_id: source_id.to_string(),
+        content_hash: sha256_hex(text.as_bytes()),
+        text: text.to_string(),
+        relevance,
+        token_estimate,
     }
 }

@@ -17,12 +17,31 @@ CROP draws the boundary around the right context before an agent answers.
 - **Rust local engine**: fast ingest, graph construction, scoring, and packing
   before slower LLM calls begin.
 
-## Current status
+## Commands
 
-This repository is scaffolded for implementation waves. The first product wave
-builds a minimal local engine that ingests Markdown and repository text,
-constructs an evidence graph, computes a task-specific crop, and emits a JSON
-context pack.
+Emit the deterministic bridge/noise fixture:
+
+```powershell
+cargo run -p crop-cli -- fixture --budget 170
+```
+
+Pack a local file or directory into a task-focused JSON context crop:
+
+```powershell
+cargo run -p crop-cli -- pack --root C:\src\CROP --task "explain graph context boundary" --budget 12000
+```
+
+Add `--output context.crop.json` to write the pack to disk instead of stdout.
+
+## Rust API
+
+`crop-core` exposes the first local engine surface:
+
+- `fixture_graph()` returns the deterministic bridge/noise fixture.
+- `ingest_path(root)` walks Markdown, text, JSON, TOML, YAML, and Rust files,
+  chunks text, hashes sources, and builds same-file plus Markdown-link edges.
+- `score_graph_for_task(graph, task)` assigns deterministic lexical relevance.
+- `crop_context(graph, CropOptions)` emits a provenance-aware `CropPack`.
 
 ## Development
 

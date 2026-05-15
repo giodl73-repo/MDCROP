@@ -1,6 +1,8 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use crop_core::{crop_context, CropOptions, EvidenceGraph, EvidenceUnit};
+use crop_core::{crop_context, fixture_graph, ingest_path, score_graph_for_task, CropOptions};
+use std::fs;
+use std::path::PathBuf;
 
 #[derive(Debug, Parser)]
 #[command(name = "crop")]
@@ -18,6 +20,24 @@ enum Commands {
         #[arg(long, default_value_t = 160)]
         budget: usize,
     },
+    /// Pack a local repo or document tree into a task-focused context crop.
+    Pack {
+        /// Root directory or file to ingest.
+        #[arg(long)]
+        root: PathBuf,
+        /// Task prompt used to score evidence units.
+        #[arg(long)]
+        task: String,
+        /// Token budget for the context crop.
+        #[arg(long, default_value_t = 12000)]
+        budget: usize,
+        /// Seed unit index for crop expansion.
+        #[arg(long, default_value_t = 0)]
+        seed: usize,
+        /// Optional output JSON path. Defaults to stdout.
+        #[arg(long)]
+        output: Option<PathBuf>,
+    },
 }
 
 fn main() -> Result<()> {
@@ -33,38 +53,29 @@ fn main() -> Result<()> {
             )?;
             println!("{}", serde_json::to_string_pretty(&pack)?);
         }
+        Commands::Pack {
+            root,
+            task,
+            budget,
+            seed,
+            output,
+        } => {
+            let mut ingested = ingest_path(root)?;
+            score_graph_for_task(&mut ingested.graph, &task);
+            let pack = crop_context(
+                &ingested.graph,
+                CropOptions {
+                    seed,
+                    token_budget: budget,
+                },
+            )?;
+            let json = serde_json::to_string_pretty(&pack)?;
+            if let Some(output) = output {
+                fs::write(output, json)?;
+            } else {
+                println!("{json}");
+            }
+        }
     }
     Ok(())
-}
-
-fn fixture_graph() -> EvidenceGraph {
-    EvidenceGraph {
-        units: vec![
-            EvidenceUnit {
-                id: "task-seed".to_string(),
-                source_id: "fixture:task".to_string(),
-                relevance: 1.0,
-                token_estimate: 80,
-            },
-            EvidenceUnit {
-                id: "bridge-note".to_string(),
-                source_id: "fixture:note".to_string(),
-                relevance: 0.2,
-                token_estimate: 40,
-            },
-            EvidenceUnit {
-                id: "target-note".to_string(),
-                source_id: "fixture:target".to_string(),
-                relevance: 0.95,
-                token_estimate: 40,
-            },
-            EvidenceUnit {
-                id: "stale-noise".to_string(),
-                source_id: "fixture:old".to_string(),
-                relevance: 0.9,
-                token_estimate: 40,
-            },
-        ],
-        adjacency: vec![vec![1, 3], vec![0, 2], vec![1], vec![0]],
-    }
 }

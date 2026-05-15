@@ -147,6 +147,7 @@ dependencies = [
  "ropt-core",
  "rstat-core",
  "serde",
+ "sha2",
  "thiserror",
 ]
 
