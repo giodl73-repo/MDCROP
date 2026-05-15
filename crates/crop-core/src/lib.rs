@@ -207,6 +207,25 @@ pub struct EvalReport {
     pub quality_score: f64,
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct EvalAggregate {
+    pub method: EvalMethod,
+    pub case_count: usize,
+    pub mean_gold_recall: f64,
+    pub mean_bridge_recall: f64,
+    pub mean_noise_rate: f64,
+    pub mean_quality_score: f64,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct EvalSuiteReport {
+    pub token_budget: usize,
+    pub cases: Vec<EvalCase>,
+    pub methods: Vec<EvalMethod>,
+    pub rows: Vec<EvalReport>,
+    pub aggregates: Vec<EvalAggregate>,
+}
+
 pub fn shared_kernel_probe(seed: usize) -> (&'static str, SeedPart) {
     (RCTX_VERSION, SeedPart::Usize(seed))
 }
@@ -256,6 +275,50 @@ pub fn eval_fixture(
         return Err(CropError::NonPositiveBudget);
     }
     eval_case(fixture_for_case(case), method, token_budget)
+}
+
+pub fn eval_suite(token_budget: usize) -> Result<EvalSuiteReport, CropError> {
+    if token_budget == 0 {
+        return Err(CropError::NonPositiveBudget);
+    }
+    let cases = all_eval_cases();
+    let methods = all_eval_methods();
+    let mut rows = Vec::new();
+    for case in &cases {
+        for method in &methods {
+            rows.push(eval_fixture(*case, *method, token_budget)?);
+        }
+    }
+    let aggregates = methods
+        .iter()
+        .map(|&method| aggregate_method(method, &rows))
+        .collect::<Vec<_>>();
+    Ok(EvalSuiteReport {
+        token_budget,
+        cases,
+        methods,
+        rows,
+        aggregates,
+    })
+}
+
+pub fn all_eval_cases() -> Vec<EvalCase> {
+    vec![
+        EvalCase::MissingBridge,
+        EvalCase::NoisyPeriphery,
+        EvalCase::StaleDuplicate,
+        EvalCase::BudgetPacking,
+        EvalCase::CrossLinkChain,
+    ]
+}
+
+pub fn all_eval_methods() -> Vec<EvalMethod> {
+    vec![
+        EvalMethod::Crop,
+        EvalMethod::ScoreTopK,
+        EvalMethod::LexicalTopK,
+        EvalMethod::HybridTopK,
+    ]
 }
 
 pub fn prefix_cached_pack(
@@ -535,6 +598,32 @@ fn prefix_profile_name(profile: PrefixCacheProfile) -> &'static str {
     match profile {
         PrefixCacheProfile::Generic => "generic",
     }
+}
+
+fn aggregate_method(method: EvalMethod, rows: &[EvalReport]) -> EvalAggregate {
+    let matching = rows
+        .iter()
+        .filter(|row| row.method == method)
+        .collect::<Vec<_>>();
+    let case_count = matching.len();
+    EvalAggregate {
+        method,
+        case_count,
+        mean_gold_recall: mean_by(&matching, |row| row.gold_recall),
+        mean_bridge_recall: mean_by(&matching, |row| row.bridge_recall),
+        mean_noise_rate: mean_by(&matching, |row| row.noise_rate),
+        mean_quality_score: mean_by(&matching, |row| row.quality_score),
+    }
+}
+
+fn mean_by<F>(rows: &[&EvalReport], value: F) -> f64
+where
+    F: Fn(&EvalReport) -> f64,
+{
+    if rows.is_empty() {
+        return 0.0;
+    }
+    rows.iter().map(|row| value(row)).sum::<f64>() / rows.len() as f64
 }
 
 struct EvalFixture {
@@ -1164,6 +1253,23 @@ mod tests {
                 .unwrap()
                 .selected_unit_ids
         );
+    }
+
+    #[test]
+    fn eval_suite_has_stable_case_and_method_ordering() {
+        let suite = eval_suite(160).unwrap();
+
+        assert_eq!(suite.cases, all_eval_cases());
+        assert_eq!(suite.methods, all_eval_methods());
+        assert_eq!(suite.rows.len(), suite.cases.len() * suite.methods.len());
+        assert_eq!(suite.aggregates.len(), suite.methods.len());
+        assert_eq!(suite.rows[0].case, EvalCase::MissingBridge);
+        assert_eq!(suite.rows[0].method, EvalMethod::Crop);
+        assert_eq!(suite.rows[1].method, EvalMethod::ScoreTopK);
+        assert_eq!(suite.aggregates[0].method, EvalMethod::Crop);
+        assert_eq!(suite.aggregates[0].case_count, suite.cases.len());
+        assert!(suite.aggregates[0].mean_gold_recall > suite.aggregates[1].mean_gold_recall);
+        assert!(suite.aggregates[0].mean_noise_rate < suite.aggregates[1].mean_noise_rate);
     }
 
     #[test]

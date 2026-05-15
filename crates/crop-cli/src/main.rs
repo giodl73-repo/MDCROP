@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand, ValueEnum};
 use crop_core::{
-    crop_context, eval_fixture, fixture_graph, ingest_path, prefix_cached_pack,
+    crop_context, eval_fixture, eval_suite, fixture_graph, ingest_path, prefix_cached_pack,
     score_graph_for_task, CropOptions, EvalCase, EvalMethod, PrefixCacheProfile,
 };
 use std::fs;
@@ -46,6 +46,9 @@ enum Commands {
     },
     /// Run deterministic apple-to-apple retrieval evaluations.
     Eval {
+        /// Run every fixture case against every local method.
+        #[arg(long)]
+        all: bool,
         /// Fixture case to evaluate.
         #[arg(long, value_enum, default_value_t = EvalCaseArg::MissingBridge)]
         case: EvalCaseArg,
@@ -126,12 +129,17 @@ fn main() -> Result<()> {
             }
         }
         Commands::Eval {
+            all,
             case,
             method,
             budget,
         } => {
-            let report = eval_fixture(case.into(), method.into(), budget)?;
-            println!("{}", serde_json::to_string_pretty(&report)?);
+            let json = if all {
+                serde_json::to_string_pretty(&eval_suite(budget)?)?
+            } else {
+                serde_json::to_string_pretty(&eval_fixture(case.into(), method.into(), budget)?)?
+            };
+            println!("{json}");
         }
     }
     Ok(())
