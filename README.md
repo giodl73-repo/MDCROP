@@ -184,6 +184,12 @@ Manifest roots are resolved relative to the manifest file unless they are
 absolute paths. The optional `view` label names the crop recipe being tested
 without changing the underlying local-only benchmark mechanics.
 
+Manifest output includes both per-case rows and an `aggregate` block. The
+aggregate reports method `crop`, case count, total source/unit/edge counts,
+total selected tokens, mean selected size, mean quality score, mean ingest/score
+/crop/total milliseconds, and max total milliseconds. Use the aggregate for
+quick run-to-run comparison and the case rows for debugging individual views.
+
 ## Rust API
 
 `crop-core` exposes the first local engine surface:

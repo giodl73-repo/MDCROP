@@ -244,9 +244,28 @@ pub struct BenchManifestCaseReport {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct BenchAggregate {
+    pub method: String,
+    pub case_count: usize,
+    pub total_source_count: usize,
+    pub total_unit_count: usize,
+    pub total_edge_count: usize,
+    pub total_selected_token_estimate: usize,
+    pub mean_selected_unit_count: f64,
+    pub mean_selected_token_estimate: f64,
+    pub mean_quality_score: f64,
+    pub mean_ingest_ms: f64,
+    pub mean_score_ms: f64,
+    pub mean_crop_ms: f64,
+    pub mean_total_ms: f64,
+    pub max_total_ms: u64,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct BenchManifestReport {
     pub schema_version: String,
     pub case_count: usize,
+    pub aggregate: BenchAggregate,
     pub cases: Vec<BenchManifestCaseReport>,
 }
 
@@ -625,6 +644,7 @@ pub fn bench_manifest(
     Ok(BenchManifestReport {
         schema_version: "crop.bench-report.v1".to_string(),
         case_count: cases.len(),
+        aggregate: aggregate_bench_cases(&cases),
         cases,
     })
 }
@@ -899,6 +919,46 @@ fn aggregate_method(method: EvalMethod, rows: &[EvalReport]) -> EvalAggregate {
     }
 }
 
+fn aggregate_bench_cases(cases: &[BenchManifestCaseReport]) -> BenchAggregate {
+    let case_count = cases.len();
+    BenchAggregate {
+        method: "crop".to_string(),
+        case_count,
+        total_source_count: cases
+            .iter()
+            .map(|case| case.report.source_count)
+            .sum::<usize>(),
+        total_unit_count: cases
+            .iter()
+            .map(|case| case.report.unit_count)
+            .sum::<usize>(),
+        total_edge_count: cases
+            .iter()
+            .map(|case| case.report.edge_count)
+            .sum::<usize>(),
+        total_selected_token_estimate: cases
+            .iter()
+            .map(|case| case.report.selected_token_estimate)
+            .sum::<usize>(),
+        mean_selected_unit_count: mean_bench_by(cases, |case| {
+            case.report.selected_unit_count as f64
+        }),
+        mean_selected_token_estimate: mean_bench_by(cases, |case| {
+            case.report.selected_token_estimate as f64
+        }),
+        mean_quality_score: mean_bench_by(cases, |case| case.report.quality_score),
+        mean_ingest_ms: mean_bench_by(cases, |case| case.report.timings.ingest_ms as f64),
+        mean_score_ms: mean_bench_by(cases, |case| case.report.timings.score_ms as f64),
+        mean_crop_ms: mean_bench_by(cases, |case| case.report.timings.crop_ms as f64),
+        mean_total_ms: mean_bench_by(cases, |case| case.report.timings.total_ms as f64),
+        max_total_ms: cases
+            .iter()
+            .map(|case| case.report.timings.total_ms)
+            .max()
+            .unwrap_or(0),
+    }
+}
+
 fn mean_by<F>(rows: &[&EvalReport], value: F) -> f64
 where
     F: Fn(&EvalReport) -> f64,
@@ -907,6 +967,16 @@ where
         return 0.0;
     }
     rows.iter().map(|row| value(row)).sum::<f64>() / rows.len() as f64
+}
+
+fn mean_bench_by<F>(cases: &[BenchManifestCaseReport], value: F) -> f64
+where
+    F: Fn(&BenchManifestCaseReport) -> f64,
+{
+    if cases.is_empty() {
+        return 0.0;
+    }
+    cases.iter().map(value).sum::<f64>() / cases.len() as f64
 }
 
 struct EvalFixture {
@@ -1935,10 +2005,45 @@ mod tests {
 
         assert_eq!(report.schema_version, "crop.bench-report.v1");
         assert_eq!(report.case_count, 2);
+        assert_eq!(report.aggregate.method, "crop");
+        assert_eq!(report.aggregate.case_count, 2);
         assert_eq!(report.cases[0].id, "docs-view");
         assert_eq!(report.cases[0].view.as_deref(), Some("docs-only"));
         assert_eq!(report.cases[0].report.source_count, 2);
         assert!(report.cases[1].report.unit_count >= report.cases[0].report.unit_count);
+        assert_eq!(
+            report.aggregate.total_source_count,
+            report
+                .cases
+                .iter()
+                .map(|case| case.report.source_count)
+                .sum::<usize>()
+        );
+        assert_eq!(
+            report.aggregate.total_selected_token_estimate,
+            report
+                .cases
+                .iter()
+                .map(|case| case.report.selected_token_estimate)
+                .sum::<usize>()
+        );
+        assert!(
+            report.aggregate.mean_quality_score
+                <= report
+                    .cases
+                    .iter()
+                    .map(|case| case.report.quality_score)
+                    .fold(f64::NEG_INFINITY, f64::max)
+        );
+        assert!(
+            report.aggregate.max_total_ms
+                >= report
+                    .cases
+                    .iter()
+                    .map(|case| case.report.timings.total_ms)
+                    .max()
+                    .unwrap()
+        );
         assert!(report
             .cases
             .iter()
