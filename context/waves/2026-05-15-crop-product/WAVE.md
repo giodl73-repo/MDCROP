@@ -14,7 +14,7 @@ provenance-aware context packs for AI agents.
 | 02 | Markdown/repo ingest | done | Added deterministic file ingest, source hashes, chunks, Markdown-link edges, task scoring, and `crop pack`. |
 | 03 | Crop boundary engine | todo | Add graph-cut/budgeted crop scoring, bridge selection, and crop reasons. |
 | 04 | Context pack manifest | todo | Emit replayable JSON manifests with source trails and deterministic hashes. |
-| 05 | Evaluation fixtures | todo | Compare CROP against top-k retrieval fixtures for noise and missing-bridge cases. |
+| 05 | Evaluation fixtures | in progress | Added first missing-bridge apple-to-apple eval against score top-k. |
 
 ## Validation baseline
 

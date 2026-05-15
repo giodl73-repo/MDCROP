@@ -131,6 +131,32 @@ pub struct CropPack {
     pub quality_score: f64,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum EvalCase {
+    MissingBridge,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum EvalMethod {
+    Crop,
+    ScoreTopK,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct EvalReport {
+    pub case: EvalCase,
+    pub method: EvalMethod,
+    pub token_budget: usize,
+    pub selected_unit_ids: Vec<String>,
+    pub token_estimate: usize,
+    pub gold_recall: f64,
+    pub bridge_recall: f64,
+    pub noise_rate: f64,
+    pub quality_score: f64,
+}
+
 pub fn shared_kernel_probe(seed: usize) -> (&'static str, SeedPart) {
     (RCTX_VERSION, SeedPart::Usize(seed))
 }
@@ -168,6 +194,19 @@ pub fn fixture_graph() -> EvidenceGraph {
             ),
         ],
         adjacency: vec![vec![1, 3], vec![0, 2], vec![1], vec![0]],
+    }
+}
+
+pub fn eval_fixture(
+    case: EvalCase,
+    method: EvalMethod,
+    token_budget: usize,
+) -> Result<EvalReport, CropError> {
+    if token_budget == 0 {
+        return Err(CropError::NonPositiveBudget);
+    }
+    match case {
+        EvalCase::MissingBridge => eval_missing_bridge(method, token_budget),
     }
 }
 
@@ -387,6 +426,102 @@ pub fn crop_context(graph: &EvidenceGraph, options: CropOptions) -> Result<CropP
         relevance_mean,
         quality_score,
     })
+}
+
+fn eval_missing_bridge(method: EvalMethod, token_budget: usize) -> Result<EvalReport, CropError> {
+    let graph = fixture_graph();
+    let crop_pack;
+    let selected = match method {
+        EvalMethod::Crop => {
+            crop_pack = Some(crop_context(
+                &graph,
+                CropOptions {
+                    seed: 0,
+                    token_budget,
+                },
+            )?);
+            crop_pack
+                .as_ref()
+                .expect("crop pack exists")
+                .units
+                .iter()
+                .map(|unit| unit.id.clone())
+                .collect::<Vec<_>>()
+        }
+        EvalMethod::ScoreTopK => {
+            crop_pack = None;
+            score_top_k_selection(&graph, token_budget)
+        }
+    };
+    let selected_set = selected.iter().cloned().collect::<BTreeSet<_>>();
+    let token_estimate = graph
+        .units
+        .iter()
+        .filter(|unit| selected_set.contains(&unit.id))
+        .map(|unit| unit.token_estimate)
+        .sum::<usize>();
+    let gold = ["task-seed", "bridge-note", "target-note"];
+    let bridge = ["bridge-note"];
+    let noise = ["stale-noise"];
+    let gold_recall = recall(&selected_set, &gold);
+    let bridge_recall = recall(&selected_set, &bridge);
+    let noise_rate = if selected.is_empty() {
+        0.0
+    } else {
+        noise
+            .iter()
+            .filter(|unit_id| selected_set.contains(**unit_id))
+            .count() as f64
+            / selected.len() as f64
+    };
+    let quality_score = crop_pack
+        .as_ref()
+        .map(|pack| pack.quality_score)
+        .unwrap_or(gold_recall - noise_rate);
+
+    Ok(EvalReport {
+        case: EvalCase::MissingBridge,
+        method,
+        token_budget,
+        selected_unit_ids: selected,
+        token_estimate,
+        gold_recall,
+        bridge_recall,
+        noise_rate,
+        quality_score,
+    })
+}
+
+fn score_top_k_selection(graph: &EvidenceGraph, token_budget: usize) -> Vec<String> {
+    let mut candidates = graph.units.iter().enumerate().collect::<Vec<_>>();
+    candidates.sort_by(|(left_index, left), (right_index, right)| {
+        right
+            .relevance
+            .total_cmp(&left.relevance)
+            .then_with(|| left.token_estimate.cmp(&right.token_estimate))
+            .then_with(|| left_index.cmp(right_index))
+    });
+
+    let mut token_estimate = 0usize;
+    let mut selected = Vec::new();
+    for (_, unit) in candidates {
+        if token_estimate + unit.token_estimate <= token_budget {
+            token_estimate += unit.token_estimate;
+            selected.push(unit.id.clone());
+        }
+    }
+    selected.sort();
+    selected
+}
+
+fn recall(selected: &BTreeSet<String>, gold: &[&str]) -> f64 {
+    if gold.is_empty() {
+        return 1.0;
+    }
+    gold.iter()
+        .filter(|unit_id| selected.contains(**unit_id))
+        .count() as f64
+        / gold.len() as f64
 }
 
 fn supported_files(root: &Path) -> Result<Vec<PathBuf>, CropError> {
@@ -679,6 +814,27 @@ mod tests {
     #[test]
     fn links_all_shared_kernel_dependencies() {
         assert_eq!(shared_kernel_probe(7), ("0.1", SeedPart::Usize(7)));
+    }
+
+    #[test]
+    fn eval_missing_bridge_shows_crop_beats_score_top_k() {
+        let crop = eval_fixture(EvalCase::MissingBridge, EvalMethod::Crop, 160).unwrap();
+        let top_k = eval_fixture(EvalCase::MissingBridge, EvalMethod::ScoreTopK, 160).unwrap();
+
+        assert_eq!(
+            crop.selected_unit_ids,
+            vec!["task-seed", "bridge-note", "target-note"]
+        );
+        assert_eq!(
+            top_k.selected_unit_ids,
+            vec!["stale-noise", "target-note", "task-seed"]
+        );
+        assert_eq!(crop.gold_recall, 1.0);
+        assert_eq!(crop.bridge_recall, 1.0);
+        assert_eq!(crop.noise_rate, 0.0);
+        assert!(top_k.gold_recall < crop.gold_recall);
+        assert_eq!(top_k.bridge_recall, 0.0);
+        assert!(top_k.noise_rate > 0.0);
     }
 
     #[test]

@@ -39,7 +39,8 @@ provenance paths; exclude stale duplicates and noisy periphery.
 4. **Agent harness**: CLI commands that emit model-ready context packs and a
    replayable manifest.
 5. **Evaluation loop**: fixtures and benchmarks against top-k vector retrieval,
-   measuring noise, missing bridges, source coverage, and latency.
+   measuring noise, missing bridges, source coverage, and latency. **First
+   missing-bridge apple-to-apple fixture done via `crop eval`.**
 
 ## Upstream kernel asks
 

@@ -1,6 +1,9 @@
 use anyhow::Result;
-use clap::{Parser, Subcommand};
-use crop_core::{crop_context, fixture_graph, ingest_path, score_graph_for_task, CropOptions};
+use clap::{Parser, Subcommand, ValueEnum};
+use crop_core::{
+    crop_context, eval_fixture, fixture_graph, ingest_path, score_graph_for_task, CropOptions,
+    EvalCase, EvalMethod,
+};
 use std::fs;
 use std::path::PathBuf;
 
@@ -38,6 +41,29 @@ enum Commands {
         #[arg(long)]
         output: Option<PathBuf>,
     },
+    /// Run deterministic apple-to-apple retrieval evaluations.
+    Eval {
+        /// Fixture case to evaluate.
+        #[arg(long, value_enum, default_value_t = EvalCaseArg::MissingBridge)]
+        case: EvalCaseArg,
+        /// Retrieval method to evaluate.
+        #[arg(long, value_enum, default_value_t = EvalMethodArg::Crop)]
+        method: EvalMethodArg,
+        /// Token budget for the evaluated context.
+        #[arg(long, default_value_t = 160)]
+        budget: usize,
+    },
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum EvalCaseArg {
+    MissingBridge,
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum EvalMethodArg {
+    Crop,
+    ScoreTopK,
 }
 
 fn main() -> Result<()> {
@@ -76,6 +102,31 @@ fn main() -> Result<()> {
                 println!("{json}");
             }
         }
+        Commands::Eval {
+            case,
+            method,
+            budget,
+        } => {
+            let report = eval_fixture(case.into(), method.into(), budget)?;
+            println!("{}", serde_json::to_string_pretty(&report)?);
+        }
     }
     Ok(())
+}
+
+impl From<EvalCaseArg> for EvalCase {
+    fn from(value: EvalCaseArg) -> Self {
+        match value {
+            EvalCaseArg::MissingBridge => EvalCase::MissingBridge,
+        }
+    }
+}
+
+impl From<EvalMethodArg> for EvalMethod {
+    fn from(value: EvalMethodArg) -> Self {
+        match value {
+            EvalMethodArg::Crop => EvalMethod::Crop,
+            EvalMethodArg::ScoreTopK => EvalMethod::ScoreTopK,
+        }
+    }
 }

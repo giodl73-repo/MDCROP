@@ -33,6 +33,17 @@ cargo run -p crop-cli -- pack --root C:\src\CROP --task "explain graph context b
 
 Add `--output context.crop.json` to write the pack to disk instead of stdout.
 
+Run the first apple-to-apple fixture evaluation:
+
+```powershell
+cargo run -p crop-cli -- eval --case missing-bridge --method crop --budget 160
+cargo run -p crop-cli -- eval --case missing-bridge --method score-top-k --budget 160
+```
+
+The missing-bridge fixture uses the same units, relevance scores, token budget,
+and gold labels for both methods. Metrics include gold recall, bridge recall,
+noise rate, token use, and quality score.
+
 ## Rust API
 
 `crop-core` exposes the first local engine surface:
@@ -42,6 +53,8 @@ Add `--output context.crop.json` to write the pack to disk instead of stdout.
   chunks text, hashes sources, and builds same-file plus Markdown-link edges.
 - `score_graph_for_task(graph, task)` assigns deterministic lexical relevance.
 - `crop_context(graph, CropOptions)` emits a provenance-aware `CropPack`.
+- `eval_fixture(case, method, budget)` runs deterministic apple-to-apple
+  retrieval comparisons.
 
 ## Development
 
