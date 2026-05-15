@@ -13,7 +13,7 @@ provenance-aware context packs for AI agents.
 | 01 | Repository foundation | done | Rust workspace, BISECT dependency wiring, product docs, skills, and initial crop fixture. |
 | 02 | Markdown/repo ingest | done | Added deterministic file ingest, source hashes, chunks, Markdown-link edges, task scoring, and `crop pack`. |
 | 03 | Crop boundary engine | todo | Add graph-cut/budgeted crop scoring, bridge selection, and crop reasons. |
-| 04 | Context pack manifest | todo | Emit replayable JSON manifests with source trails and deterministic hashes. |
+| 04 | Context pack manifest | done | Added prefix-cache-aware pack manifests with stable prefix hashes and task tails. |
 | 05 | Evaluation fixtures | in progress | Added first missing-bridge apple-to-apple eval against score top-k. |
 
 ## Validation baseline

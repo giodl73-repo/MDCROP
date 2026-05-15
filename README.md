@@ -33,6 +33,24 @@ cargo run -p crop-cli -- pack --root C:\src\CROP --task "explain graph context b
 
 Add `--output context.crop.json` to write the pack to disk instead of stdout.
 
+Emit a prefix-cache-aware pack:
+
+```powershell
+cargo run -p crop-cli -- pack --root C:\src\CROP --task "explain graph context boundary" --budget 12000 --prefix-cache generic
+```
+
+Prefix-cache output separates stable corpus metadata from the selected crop and
+task tail:
+
+- `prefix`: stable schema, source index, content hashes, counts, and graph edge
+  count.
+- `cache_key` / `prefix_hash`: deterministic hash of the prefix block.
+- `body`: task-specific selected crop units.
+- `task_tail`: volatile task, seed, and budget.
+
+When only `--task` changes against the same root, the prefix hash remains stable
+so provider-side prompt prefix caching can reuse the prefix bytes.
+
 Run apple-to-apple fixture evaluations:
 
 ```powershell
@@ -58,6 +76,8 @@ periphery, stale duplicates, budget packing, and cross-link chains.
   chunks text, hashes sources, and builds same-file plus Markdown-link edges.
 - `score_graph_for_task(graph, task)` assigns deterministic lexical relevance.
 - `crop_context(graph, CropOptions)` emits a provenance-aware `CropPack`.
+- `prefix_cached_pack(ingested, pack, task, options, profile)` wraps a crop in a
+  cache-aware prefix/body/task-tail manifest.
 - `eval_fixture(case, method, budget)` runs deterministic apple-to-apple
   retrieval comparisons.
 

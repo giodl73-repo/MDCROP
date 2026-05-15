@@ -37,7 +37,8 @@ provenance paths; exclude stale duplicates and noisy periphery.
 3. **Crop engine**: task seed expansion, boundary scoring, bridge selection,
    dedupe, token-budget packing.
 4. **Agent harness**: CLI commands that emit model-ready context packs and a
-   replayable manifest.
+   replayable manifest. **Prefix-cache-aware pack output is available with
+   `--prefix-cache generic`.**
 5. **Evaluation loop**: fixtures and benchmarks against top-k vector retrieval,
    measuring noise, missing bridges, source coverage, and latency. **Five
    apple-to-apple fixture cases are available via `crop eval`.**

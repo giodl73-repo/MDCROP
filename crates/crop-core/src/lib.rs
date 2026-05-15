@@ -63,6 +63,8 @@ pub enum CropError {
     Budget(#[from] RoptError),
     #[error("[KERNEL] cluster summary failed: {0}")]
     Cluster(String),
+    #[error("[CACHE] failed to serialize prefix block: {0}")]
+    PrefixSerialize(#[from] serde_json::Error),
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -129,6 +131,48 @@ pub struct CropPack {
     pub boundary_conductance: f64,
     pub relevance_mean: f64,
     pub quality_score: f64,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum PrefixCacheProfile {
+    Generic,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PrefixSourceEntry {
+    pub source_id: String,
+    pub content_hash: String,
+    pub unit_count: usize,
+    pub token_estimate: usize,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PrefixBlock {
+    pub schema_version: String,
+    pub profile: PrefixCacheProfile,
+    pub engine: String,
+    pub root: String,
+    pub source_count: usize,
+    pub unit_count: usize,
+    pub edge_count: usize,
+    pub sources: Vec<PrefixSourceEntry>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct TaskTail {
+    pub task: String,
+    pub seed: usize,
+    pub token_budget: usize,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct PrefixCachedPack {
+    pub cache_key: String,
+    pub prefix_hash: String,
+    pub prefix: PrefixBlock,
+    pub body: CropPack,
+    pub task_tail: TaskTail,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -210,6 +254,34 @@ pub fn eval_fixture(
         return Err(CropError::NonPositiveBudget);
     }
     eval_case(fixture_for_case(case), method, token_budget)
+}
+
+pub fn prefix_cached_pack(
+    ingested: &IngestedEvidence,
+    body: CropPack,
+    task: impl Into<String>,
+    options: CropOptions,
+    profile: PrefixCacheProfile,
+) -> Result<PrefixCachedPack, CropError> {
+    let prefix = prefix_block(ingested, profile);
+    let prefix_bytes = serde_json::to_vec(&prefix)?;
+    let prefix_hash = sha256_hex(&prefix_bytes);
+    let cache_key = format!(
+        "crop-prefix:{}:{}",
+        prefix_profile_name(profile),
+        prefix_hash.trim_start_matches("sha256:")
+    );
+    Ok(PrefixCachedPack {
+        cache_key,
+        prefix_hash,
+        prefix,
+        body,
+        task_tail: TaskTail {
+            task: task.into(),
+            seed: options.seed,
+            token_budget: options.token_budget,
+        },
+    })
 }
 
 pub fn ingest_path(root: impl AsRef<Path>) -> Result<IngestedEvidence, CropError> {
@@ -428,6 +500,39 @@ pub fn crop_context(graph: &EvidenceGraph, options: CropOptions) -> Result<CropP
         relevance_mean,
         quality_score,
     })
+}
+
+fn prefix_block(ingested: &IngestedEvidence, profile: PrefixCacheProfile) -> PrefixBlock {
+    let mut sources = BTreeMap::<String, PrefixSourceEntry>::new();
+    for unit in &ingested.graph.units {
+        let entry = sources
+            .entry(unit.source_id.clone())
+            .or_insert_with(|| PrefixSourceEntry {
+                source_id: unit.source_id.clone(),
+                content_hash: unit.content_hash.clone(),
+                unit_count: 0,
+                token_estimate: 0,
+            });
+        entry.unit_count += 1;
+        entry.token_estimate += unit.token_estimate;
+    }
+
+    PrefixBlock {
+        schema_version: "crop.prefix.v1".to_string(),
+        profile,
+        engine: format!("crop-core/{}", env!("CARGO_PKG_VERSION")),
+        root: ingested.report.root.clone(),
+        source_count: ingested.report.source_count,
+        unit_count: ingested.report.unit_count,
+        edge_count: ingested.report.edge_count,
+        sources: sources.into_values().collect(),
+    }
+}
+
+fn prefix_profile_name(profile: PrefixCacheProfile) -> &'static str {
+    match profile {
+        PrefixCacheProfile::Generic => "generic",
+    }
 }
 
 struct EvalFixture {
@@ -1023,6 +1128,44 @@ mod tests {
     }
 
     #[test]
+    fn prefix_cache_key_is_stable_when_only_task_changes() {
+        let root = unique_temp_dir("crop-prefix");
+        fs::write(
+            root.with_extension("md"),
+            "# Prefix Cache\n\nStable source body for repeated crops.",
+        )
+        .unwrap();
+        let path = root.with_extension("md");
+
+        let first = prefix_cached_pack_for_task(&path, "explain prefix cache");
+        let second = prefix_cached_pack_for_task(&path, "summarize stable corpus");
+
+        assert_eq!(first.prefix_hash, second.prefix_hash);
+        assert_eq!(first.cache_key, second.cache_key);
+        assert_eq!(first.prefix, second.prefix);
+        assert_ne!(first.task_tail.task, second.task_tail.task);
+        assert!(first.cache_key.starts_with("crop-prefix:generic:"));
+        assert_eq!(first.prefix.sources.len(), 1);
+
+        fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn prefix_cache_key_changes_when_source_content_changes() {
+        let path = unique_temp_dir("crop-prefix-change").with_extension("md");
+        fs::write(&path, "Original source.").unwrap();
+        let original = prefix_cached_pack_for_task(&path, "explain source");
+
+        fs::write(&path, "Changed source.").unwrap();
+        let changed = prefix_cached_pack_for_task(&path, "explain source");
+
+        assert_ne!(original.prefix_hash, changed.prefix_hash);
+        assert_ne!(original.cache_key, changed.cache_key);
+
+        fs::remove_file(path).unwrap();
+    }
+
+    #[test]
     fn ingest_skips_git_and_target_directories() {
         let root = unique_temp_dir("crop-ignore");
         fs::create_dir_all(root.join(".git")).unwrap();
@@ -1077,6 +1220,17 @@ mod tests {
                 .unwrap()
                 .as_nanos()
         ))
+    }
+
+    fn prefix_cached_pack_for_task(path: &Path, task: &str) -> PrefixCachedPack {
+        let mut ingested = ingest_path(path).unwrap();
+        score_graph_for_task(&mut ingested.graph, task);
+        let options = CropOptions {
+            seed: 0,
+            token_budget: 160,
+        };
+        let pack = crop_context(&ingested.graph, options.clone()).unwrap();
+        prefix_cached_pack(&ingested, pack, task, options, PrefixCacheProfile::Generic).unwrap()
     }
 }
 
