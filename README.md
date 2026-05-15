@@ -53,9 +53,9 @@ cargo run -p crop-cli -- links --view examples\views\whole-repo-view.json
 ```
 
 `crop links` emits `crop.markdown-link-audit.v1` JSON with source, target,
-status, resolved source, and aggregate ok/broken counts. External links and pure
-same-page anchors are ignored so PROOF can focus this report on local corpus
-health.
+status, resolved source, error details, and aggregate ok/broken counts. It uses
+MDPATH-compatible resolution for `md://` URIs and heading fragments, while
+ignoring external links so PROOF can focus this report on local corpus health.
 
 Run a persisted named view recipe:
 
@@ -319,7 +319,7 @@ caveats.
   Markdown source indexes for documentation tools such as PROOF.
 - `markdown_link_audit(root, options)` and
   `markdown_link_audit_for_view_json(json, base_dir)` report local Markdown link
-  health as structured side-info.
+  and MDPATH heading health as structured side-info.
 - `run_view_json(json, base_dir)` runs a persisted `crop.view.v1` recipe and
   returns `crop.view-run.v1` with the produced context pack.
 - `run_view_prefix_cached_json(json, base_dir, profile)` runs a view and returns

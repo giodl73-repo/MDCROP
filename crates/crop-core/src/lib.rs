@@ -376,6 +376,8 @@ pub struct MarkdownLinkEntry {
     pub status: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub resolved_source: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1067,19 +1069,12 @@ pub fn markdown_link_audit(
         };
         let source = source_id(&resolved_root, file);
         for target in raw_local_markdown_targets(&text) {
-            let path_part = target.split('#').next().unwrap_or(&target);
-            if path_part.is_empty() {
-                continue;
-            }
-            let candidate = parent.join(path_part);
-            let candidate_exists = candidate.exists();
-            let resolved_source = candidate_exists.then(|| source_id(&resolved_root, &candidate));
-            links.push(MarkdownLinkEntry {
-                source: source.clone(),
+            links.push(resolve_markdown_link_target(
+                &resolved_root,
+                parent,
+                &source,
                 target,
-                status: if candidate_exists { "ok" } else { "broken" }.to_string(),
-                resolved_source,
-            });
+            ));
         }
     }
 
@@ -2099,6 +2094,107 @@ fn display_path(path: &Path) -> String {
         .to_string()
 }
 
+fn resolve_markdown_link_target(
+    root: &Path,
+    parent: &Path,
+    source: &str,
+    target: String,
+) -> MarkdownLinkEntry {
+    if target.starts_with("md://") {
+        return resolve_mdpath_target(root, source, target);
+    }
+
+    let (path_part, fragment) = target.split_once('#').unwrap_or((&target, ""));
+    let candidate = if path_part.is_empty() {
+        root.join(source)
+    } else {
+        parent.join(path_part)
+    };
+    let candidate_exists = candidate.exists();
+    if !candidate_exists {
+        return MarkdownLinkEntry {
+            source: source.to_string(),
+            target,
+            status: "broken".to_string(),
+            resolved_source: None,
+            error: Some("target file does not exist".to_string()),
+        };
+    }
+
+    let resolved_source = source_id(root, &candidate);
+    if fragment.is_empty() {
+        return MarkdownLinkEntry {
+            source: source.to_string(),
+            target,
+            status: "ok".to_string(),
+            resolved_source: Some(resolved_source),
+            error: None,
+        };
+    }
+
+    let uri = format!("md://{resolved_source}#{fragment}");
+    match mdpath::parse(&uri).and_then(|uri| mdpath::resolve(&uri, root)) {
+        Ok(_) => MarkdownLinkEntry {
+            source: source.to_string(),
+            target,
+            status: "ok".to_string(),
+            resolved_source: Some(resolved_source),
+            error: None,
+        },
+        Err(error) => MarkdownLinkEntry {
+            source: source.to_string(),
+            target,
+            status: "broken".to_string(),
+            resolved_source: Some(resolved_source),
+            error: Some(error.to_string()),
+        },
+    }
+}
+
+fn resolve_mdpath_target(root: &Path, source: &str, target: String) -> MarkdownLinkEntry {
+    let parsed = match mdpath::parse(&target) {
+        Ok(parsed) => parsed,
+        Err(error) => {
+            return MarkdownLinkEntry {
+                source: source.to_string(),
+                target,
+                status: "broken".to_string(),
+                resolved_source: None,
+                error: Some(error.to_string()),
+            }
+        }
+    };
+    let resolved_source = Some(parsed.path.clone());
+    let requires_element_resolution = target.contains('#') || target.contains(':');
+    if !requires_element_resolution {
+        let candidate = root.join(&parsed.path);
+        return MarkdownLinkEntry {
+            source: source.to_string(),
+            target,
+            status: if candidate.exists() { "ok" } else { "broken" }.to_string(),
+            resolved_source,
+            error: (!candidate.exists()).then(|| "target file does not exist".to_string()),
+        };
+    }
+
+    match mdpath::resolve(&parsed, root) {
+        Ok(resolved) => MarkdownLinkEntry {
+            source: source.to_string(),
+            target,
+            status: "ok".to_string(),
+            resolved_source: Some(source_id(root, &resolved.file)),
+            error: None,
+        },
+        Err(error) => MarkdownLinkEntry {
+            source: source.to_string(),
+            target,
+            status: "broken".to_string(),
+            resolved_source,
+            error: Some(error.to_string()),
+        },
+    }
+}
+
 fn text_chunks(text: &str) -> Vec<&str> {
     let mut starts = Vec::new();
     let mut cursor = 0;
@@ -2162,7 +2258,6 @@ fn raw_local_markdown_targets(text: &str) -> Vec<String> {
         if target.starts_with("http://")
             || target.starts_with("https://")
             || target.starts_with("mailto:")
-            || target.starts_with('#')
             || target.is_empty()
         {
             continue;
@@ -3138,7 +3233,7 @@ mod tests {
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("intro.md"),
-            "# Intro\n\nSee [API](api.md), [Missing](missing.md), and [web](https://example.com).",
+            "# Intro\n\nSee [API](api.md), [API section](api.md#API), [same page](#Intro), [Missing](missing.md), and [web](https://example.com).",
         )
         .unwrap();
         fs::write(root.join("docs").join("api.md"), "# API\n\nDetails.").unwrap();
@@ -3154,8 +3249,8 @@ mod tests {
 
         assert_eq!(audit.schema_version, "crop.markdown-link-audit.v1");
         assert_eq!(audit.source_count, 2);
-        assert_eq!(audit.link_count, 2);
-        assert_eq!(audit.ok_count, 1);
+        assert_eq!(audit.link_count, 4);
+        assert_eq!(audit.ok_count, 3);
         assert_eq!(audit.broken_count, 1);
         assert_eq!(audit.links[0].source, "docs/intro.md");
         assert_eq!(audit.links[0].target, "api.md");
@@ -3164,8 +3259,48 @@ mod tests {
             audit.links[0].resolved_source.as_deref(),
             Some("docs/api.md")
         );
-        assert_eq!(audit.links[1].target, "missing.md");
+        assert_eq!(audit.links[1].target, "api.md#API");
+        assert_eq!(audit.links[1].status, "ok");
+        assert_eq!(audit.links[2].target, "#Intro");
+        assert_eq!(audit.links[2].status, "ok");
+        assert_eq!(audit.links[3].target, "missing.md");
+        assert_eq!(audit.links[3].status, "broken");
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn markdown_link_audit_resolves_mdpath_targets_and_missing_headings() {
+        let root = unique_temp_dir("crop-markdown-mdpath-links");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(
+            root.join("docs").join("intro.md"),
+            "# Intro\n\n[Good](md://docs/api.md#Reference)\n[Bad](md://docs/api.md#Missing)",
+        )
+        .unwrap();
+        fs::write(root.join("docs").join("api.md"), "# Reference\n\nDetails.").unwrap();
+
+        let audit = markdown_link_audit(
+            &root,
+            &IngestOptions {
+                include_extensions: vec!["md".to_string()],
+                exclude_dirs: Vec::new(),
+            },
+        )
+        .unwrap();
+
+        assert_eq!(audit.link_count, 2);
+        assert_eq!(audit.ok_count, 1);
+        assert_eq!(audit.broken_count, 1);
+        assert_eq!(audit.links[0].target, "md://docs/api.md#Reference");
+        assert_eq!(audit.links[0].status, "ok");
+        assert_eq!(
+            audit.links[0].resolved_source.as_deref(),
+            Some("docs/api.md")
+        );
+        assert_eq!(audit.links[1].target, "md://docs/api.md#Missing");
         assert_eq!(audit.links[1].status, "broken");
+        assert!(audit.links[1].error.as_ref().unwrap().contains("missing"));
 
         fs::remove_dir_all(root).unwrap();
     }

@@ -23,6 +23,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
 | 05 | Extension profiles | done | Added per-view and aggregate extension counts for choosing large-corpus filters. |
 | 06 | Markdown index API | done | Added reusable README/TOC-style Markdown index generation for PROOF integration. |
 | 07 | Markdown link audit | done | Added root/view local Markdown link audit JSON for PROOF and docs curation. |
+| 08 | MDPATH link resolution | done | Upgraded link audits to validate heading fragments and `md://` targets using MDPATH. |
 
 ## Success criteria
 
@@ -42,5 +43,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
   depend on without adopting CROP's CLI.
 - CROP exposes reusable Markdown link side-info so downstream generators can
   report local link health.
+- Link side-info uses MDPATH-compatible heading and `md://` resolution for PROOF
+  workflows.
 - `cargo fmt`, `cargo test --workspace`, inspect smoke runs, and `git diff
   --check` pass.

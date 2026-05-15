@@ -64,7 +64,8 @@ provenance paths; exclude stale duplicates and noisy periphery.
    that PROOF can consume while keeping rendering and compile targets in PROOF.**
 10. **Docs link side-info**: local Markdown link audits for generators and
     curators. **First slice; `crop links` and `crop-core` link audit APIs report
-    ok/broken local links for roots or views.**
+    ok/broken local links, heading fragments, and `md://` targets for roots or
+    views using MDPATH-compatible resolution.**
 
 ## Upstream kernel asks
 

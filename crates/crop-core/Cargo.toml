@@ -10,6 +10,7 @@ rctx-core.workspace = true
 rgraph-core.workspace = true
 rstat-core.workspace = true
 ropt-core.workspace = true
+mdpath.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
