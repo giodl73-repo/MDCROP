@@ -370,6 +370,26 @@ pub struct MarkdownIndex {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MarkdownLinkEntry {
+    pub source: String,
+    pub target: String,
+    pub status: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resolved_source: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MarkdownLinkAudit {
+    pub schema_version: String,
+    pub root: String,
+    pub source_count: usize,
+    pub link_count: usize,
+    pub ok_count: usize,
+    pub broken_count: usize,
+    pub links: Vec<MarkdownLinkEntry>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CropViewSummary {
     pub file: String,
     pub name: String,
@@ -995,6 +1015,84 @@ pub fn markdown_index_report(
         source_count: entries.len(),
         extension_counts: extension_counts(&files),
         entries,
+    })
+}
+
+pub fn markdown_link_audit_for_view_json(
+    json: &str,
+    base_dir: impl AsRef<Path>,
+) -> Result<MarkdownLinkAudit, CropError> {
+    let view: CropView =
+        serde_json::from_str(json).map_err(|source| CropError::ViewImport(source))?;
+    validate_view(&view)?;
+    let root = manifest_root(base_dir.as_ref(), &view.root);
+    markdown_link_audit(root, &view_ingest_options(&view))
+}
+
+pub fn markdown_link_audit(
+    root: impl AsRef<Path>,
+    options: &IngestOptions,
+) -> Result<MarkdownLinkAudit, CropError> {
+    let root = root.as_ref();
+    if !root.exists() {
+        return Err(CropError::RootDoesNotExist {
+            path: root.display().to_string(),
+        });
+    }
+    let resolved_root = fs::canonicalize(root).map_err(|source| CropError::InspectPath {
+        path: root.display().to_string(),
+        source,
+    })?;
+    let files = supported_files(&resolved_root, options)?;
+    if files.is_empty() {
+        return Err(CropError::NoSupportedFiles {
+            path: resolved_root.display().to_string(),
+        });
+    }
+
+    let mut links = Vec::new();
+    for file in &files {
+        if !is_markdown_file(file) {
+            continue;
+        }
+        let bytes = fs::read(file).map_err(|source| CropError::ReadFile {
+            path: file.display().to_string(),
+            source,
+        })?;
+        let text = String::from_utf8(bytes).map_err(|_| CropError::NonUtf8File {
+            path: file.display().to_string(),
+        })?;
+        let Some(parent) = file.parent() else {
+            continue;
+        };
+        let source = source_id(&resolved_root, file);
+        for target in raw_local_markdown_targets(&text) {
+            let path_part = target.split('#').next().unwrap_or(&target);
+            if path_part.is_empty() {
+                continue;
+            }
+            let candidate = parent.join(path_part);
+            let candidate_exists = candidate.exists();
+            let resolved_source = candidate_exists.then(|| source_id(&resolved_root, &candidate));
+            links.push(MarkdownLinkEntry {
+                source: source.clone(),
+                target,
+                status: if candidate_exists { "ok" } else { "broken" }.to_string(),
+                resolved_source,
+            });
+        }
+    }
+
+    let ok_count = links.iter().filter(|link| link.status == "ok").count();
+    let broken_count = links.len().saturating_sub(ok_count);
+    Ok(MarkdownLinkAudit {
+        schema_version: "crop.markdown-link-audit.v1".to_string(),
+        root: display_path(&resolved_root),
+        source_count: files.len(),
+        link_count: links.len(),
+        ok_count,
+        broken_count,
+        links,
     })
 }
 
@@ -1896,6 +1994,16 @@ fn is_supported_file(path: &Path, options: &IngestOptions) -> bool {
     )
 }
 
+fn is_markdown_file(path: &Path) -> bool {
+    matches!(
+        path.extension()
+            .and_then(|extension| extension.to_str())
+            .map(str::to_ascii_lowercase)
+            .as_deref(),
+        Some("md" | "markdown")
+    )
+}
+
 fn normalized_extensions(extensions: &[String]) -> BTreeSet<&str> {
     extensions
         .iter()
@@ -2023,29 +2131,16 @@ fn text_chunks(text: &str) -> Vec<&str> {
 }
 
 fn markdown_links(root: &Path, file: &Path, text: &str) -> Vec<String> {
-    if !matches!(
-        file.extension()
-            .and_then(|extension| extension.to_str())
-            .map(str::to_ascii_lowercase)
-            .as_deref(),
-        Some("md" | "markdown")
-    ) {
+    if !is_markdown_file(file) {
         return Vec::new();
     }
 
     let mut links = BTreeSet::new();
-    for segment in text.split("](").skip(1) {
-        let Some((target, _)) = segment.split_once(')') else {
-            continue;
-        };
-        if target.starts_with("http://")
-            || target.starts_with("https://")
-            || target.starts_with('#')
-            || target.is_empty()
-        {
+    for target in raw_local_markdown_targets(text) {
+        let target = target.split('#').next().unwrap_or(&target);
+        if target.is_empty() {
             continue;
         }
-        let target = target.split('#').next().unwrap_or(target);
         let Some(parent) = file.parent() else {
             continue;
         };
@@ -2055,6 +2150,26 @@ fn markdown_links(root: &Path, file: &Path, text: &str) -> Vec<String> {
         }
     }
     links.into_iter().collect()
+}
+
+fn raw_local_markdown_targets(text: &str) -> Vec<String> {
+    let mut targets = Vec::new();
+    for segment in text.split("](").skip(1) {
+        let Some((target, _)) = segment.split_once(')') else {
+            continue;
+        };
+        let target = target.trim();
+        if target.starts_with("http://")
+            || target.starts_with("https://")
+            || target.starts_with("mailto:")
+            || target.starts_with('#')
+            || target.is_empty()
+        {
+            continue;
+        }
+        targets.push(target.to_string());
+    }
+    targets
 }
 
 fn add_undirected_edge(edge_sets: &mut [BTreeSet<usize>], left: usize, right: usize) {
@@ -3013,6 +3128,75 @@ mod tests {
         assert!(markdown.contains("# proof-view"));
         assert!(markdown.contains("[`readme.md`](readme.md)"));
         assert!(!markdown.contains("skip.txt"));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn markdown_link_audit_reports_ok_and_broken_local_links() {
+        let root = unique_temp_dir("crop-markdown-links");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(
+            root.join("docs").join("intro.md"),
+            "# Intro\n\nSee [API](api.md), [Missing](missing.md), and [web](https://example.com).",
+        )
+        .unwrap();
+        fs::write(root.join("docs").join("api.md"), "# API\n\nDetails.").unwrap();
+
+        let audit = markdown_link_audit(
+            &root,
+            &IngestOptions {
+                include_extensions: vec!["md".to_string()],
+                exclude_dirs: Vec::new(),
+            },
+        )
+        .unwrap();
+
+        assert_eq!(audit.schema_version, "crop.markdown-link-audit.v1");
+        assert_eq!(audit.source_count, 2);
+        assert_eq!(audit.link_count, 2);
+        assert_eq!(audit.ok_count, 1);
+        assert_eq!(audit.broken_count, 1);
+        assert_eq!(audit.links[0].source, "docs/intro.md");
+        assert_eq!(audit.links[0].target, "api.md");
+        assert_eq!(audit.links[0].status, "ok");
+        assert_eq!(
+            audit.links[0].resolved_source.as_deref(),
+            Some("docs/api.md")
+        );
+        assert_eq!(audit.links[1].target, "missing.md");
+        assert_eq!(audit.links[1].status, "broken");
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn markdown_link_audit_for_view_json_uses_view_filters() {
+        let root = unique_temp_dir("crop-markdown-links-view");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(root.join("docs").join("one.md"), "# One\n\n[Two](two.md)").unwrap();
+        fs::write(root.join("docs").join("two.md"), "# Two\n\nDone.").unwrap();
+        fs::write(
+            root.join("docs").join("ignored.txt"),
+            "[Missing](missing.md)",
+        )
+        .unwrap();
+
+        let view = r#"{
+          "schema_version": "crop.view.v1",
+          "name": "links-view",
+          "root": "docs",
+          "task": "audit links",
+          "token_budget": 160,
+          "seed": 0,
+          "include_extensions": ["md"]
+        }"#;
+
+        let audit = markdown_link_audit_for_view_json(view, &root).unwrap();
+
+        assert_eq!(audit.source_count, 2);
+        assert_eq!(audit.link_count, 1);
+        assert_eq!(audit.broken_count, 0);
 
         fs::remove_dir_all(root).unwrap();
     }

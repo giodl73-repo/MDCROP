@@ -62,6 +62,9 @@ provenance paths; exclude stale duplicates and noisy periphery.
 9. **Docs indexes for generators**: Markdown README/TOC index primitives.
    **First slice; `crop index` and `crop-core` index APIs generate source tables
    that PROOF can consume while keeping rendering and compile targets in PROOF.**
+10. **Docs link side-info**: local Markdown link audits for generators and
+    curators. **First slice; `crop links` and `crop-core` link audit APIs report
+    ok/broken local links for roots or views.**
 
 ## Upstream kernel asks
 

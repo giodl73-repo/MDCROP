@@ -3,9 +3,9 @@ use clap::{Parser, Subcommand, ValueEnum};
 use crop_core::{
     bench_manifest_json, bench_pack, crop_context, eval_competitor_json, eval_fixture, eval_suite,
     fixture_graph, ingest_path, inspect_view_json, inspect_view_store, list_views, markdown_index,
-    markdown_index_for_view_json, prefix_cached_pack, run_view_json, run_view_prefix_cached_json,
-    score_graph_for_task, CropOptions, CropView, EvalCase, EvalMethod, IngestOptions,
-    PrefixCacheProfile,
+    markdown_index_for_view_json, markdown_link_audit, markdown_link_audit_for_view_json,
+    prefix_cached_pack, run_view_json, run_view_prefix_cached_json, score_graph_for_task,
+    CropOptions, CropView, EvalCase, EvalMethod, IngestOptions, PrefixCacheProfile,
 };
 use std::fs;
 use std::path::Path;
@@ -105,6 +105,24 @@ enum Commands {
         #[arg(long = "exclude-dir")]
         exclude_dirs: Vec<String>,
         /// Optional Markdown output path. Defaults to stdout.
+        #[arg(long)]
+        output: Option<PathBuf>,
+    },
+    /// Audit local Markdown links from a root or named view.
+    Links {
+        /// Root directory or file to audit.
+        #[arg(long)]
+        root: Option<PathBuf>,
+        /// crop.view.v1 recipe to audit.
+        #[arg(long)]
+        view: Option<PathBuf>,
+        /// Restrict audited files to one or more extensions, e.g. -e md.
+        #[arg(short = 'e', long = "extension")]
+        extensions: Vec<String>,
+        /// Exclude directories by basename while auditing.
+        #[arg(long = "exclude-dir")]
+        exclude_dirs: Vec<String>,
+        /// Optional JSON output path. Defaults to stdout.
         #[arg(long)]
         output: Option<PathBuf>,
     },
@@ -298,6 +316,46 @@ fn main() -> Result<()> {
                 fs::write(output, markdown)?;
             } else {
                 println!("{markdown}");
+            }
+        }
+        Commands::Links {
+            root,
+            view,
+            extensions,
+            exclude_dirs,
+            output,
+        } => {
+            if root.is_some() && view.is_some() {
+                bail!("--root and --view cannot be combined");
+            }
+            let json = if let Some(view) = view {
+                let input = fs::read_to_string(&view)?;
+                let base_dir = view.parent().unwrap_or_else(|| Path::new("."));
+                let mut recipe: CropView = serde_json::from_str(&input)?;
+                if !extensions.is_empty() {
+                    recipe.include_extensions = extensions;
+                }
+                recipe.exclude_dirs.extend(exclude_dirs);
+                let view_json = serde_json::to_string(&recipe)?;
+                serde_json::to_string_pretty(&markdown_link_audit_for_view_json(
+                    &view_json, base_dir,
+                )?)?
+            } else {
+                let Some(root) = root else {
+                    bail!("--root or --view is required");
+                };
+                serde_json::to_string_pretty(&markdown_link_audit(
+                    root,
+                    &IngestOptions {
+                        include_extensions: extensions,
+                        exclude_dirs,
+                    },
+                )?)?
+            };
+            if let Some(output) = output {
+                fs::write(output, json)?;
+            } else {
+                println!("{json}");
             }
         }
         Commands::View {

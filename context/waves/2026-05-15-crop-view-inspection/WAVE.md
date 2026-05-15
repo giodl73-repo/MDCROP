@@ -22,6 +22,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
 | 04 | Store inspect aggregates | done | Added total and max supported source counts to store inspection reports. |
 | 05 | Extension profiles | done | Added per-view and aggregate extension counts for choosing large-corpus filters. |
 | 06 | Markdown index API | done | Added reusable README/TOC-style Markdown index generation for PROOF integration. |
+| 07 | Markdown link audit | done | Added root/view local Markdown link audit JSON for PROOF and docs curation. |
 
 ## Success criteria
 
@@ -39,5 +40,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
   and source-code filters.
 - CROP exposes reusable Markdown index primitives that downstream generators can
   depend on without adopting CROP's CLI.
+- CROP exposes reusable Markdown link side-info so downstream generators can
+  report local link health.
 - `cargo fmt`, `cargo test --workspace`, inspect smoke runs, and `git diff
   --check` pass.

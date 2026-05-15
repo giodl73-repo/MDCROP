@@ -45,6 +45,18 @@ source path, title, directory, extension, and outbound Markdown-link count. It i
 designed as a reusable `crop-core` surface for tools such as PROOF, which can own
 its compile/render pipeline while depending on CROP for corpus index primitives.
 
+Audit local Markdown links as structured side-info:
+
+```powershell
+cargo run -p crop-cli -- links --root C:\src\proof -e md --exclude-dir target
+cargo run -p crop-cli -- links --view examples\views\whole-repo-view.json
+```
+
+`crop links` emits `crop.markdown-link-audit.v1` JSON with source, target,
+status, resolved source, and aggregate ok/broken counts. External links and pure
+same-page anchors are ignored so PROOF can focus this report on local corpus
+health.
+
 Run a persisted named view recipe:
 
 ```powershell
@@ -305,6 +317,9 @@ caveats.
 - `markdown_index(root, title, options)` and
   `markdown_index_for_view_json(json, base_dir)` generate README/TOC-style
   Markdown source indexes for documentation tools such as PROOF.
+- `markdown_link_audit(root, options)` and
+  `markdown_link_audit_for_view_json(json, base_dir)` report local Markdown link
+  health as structured side-info.
 - `run_view_json(json, base_dir)` runs a persisted `crop.view.v1` recipe and
   returns `crop.view-run.v1` with the produced context pack.
 - `run_view_prefix_cached_json(json, base_dir, profile)` runs a view and returns
