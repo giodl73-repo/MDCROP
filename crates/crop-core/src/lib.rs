@@ -1,6 +1,6 @@
 use rctx_core::RCTX_VERSION;
 use rgraph_core::{shortest_connector_path, undirected_boundary_metrics};
-use ropt_core::SeedPart;
+use ropt_core::{exact_budgeted_selection, BudgetItem, RoptError, SeedPart};
 use rstat_core::scoring::{weighted_component_score, ScoringError};
 use rstat_core::summary::{summary_stats, SummaryError};
 use serde::{Deserialize, Serialize};
@@ -35,6 +35,8 @@ pub enum CropError {
     Summary(#[from] SummaryError),
     #[error("[KERNEL] scoring failed: {0}")]
     Scoring(#[from] ScoringError),
+    #[error("[KERNEL] budget packing failed: {0}")]
+    Budget(#[from] RoptError),
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -131,22 +133,33 @@ pub fn crop_context(graph: &EvidenceGraph, options: CropOptions) -> Result<CropP
         }
     }
 
-    let mut neighbors = graph.adjacency[options.seed].clone();
-    neighbors.sort_unstable_by(|&a, &b| {
-        graph.units[b]
-            .relevance
-            .total_cmp(&graph.units[a].relevance)
-            .then_with(|| graph.units[a].id.cmp(&graph.units[b].id))
-    });
-
-    for neighbor in neighbors {
-        let unit = &graph.units[neighbor];
-        if selected[neighbor] || token_estimate + unit.token_estimate > options.token_budget {
-            continue;
+    let remaining_budget = options.token_budget.saturating_sub(token_estimate);
+    let mut neighbor_candidates = graph.adjacency[options.seed]
+        .iter()
+        .copied()
+        .filter(|&neighbor| !selected[neighbor])
+        .collect::<Vec<_>>();
+    neighbor_candidates.sort_unstable();
+    neighbor_candidates.dedup();
+    let budget_items = neighbor_candidates
+        .iter()
+        .map(|&neighbor| BudgetItem {
+            score: graph.units[neighbor].relevance,
+            cost: graph.units[neighbor].token_estimate,
+        })
+        .collect::<Vec<_>>();
+    if remaining_budget > 0
+        && budget_items
+            .iter()
+            .any(|item| item.cost <= remaining_budget)
+    {
+        let packed = exact_budgeted_selection(&budget_items, remaining_budget)?;
+        for packed_index in packed.selected_indices {
+            let neighbor = neighbor_candidates[packed_index];
+            selected[neighbor] = true;
+            reasons[neighbor] = Some(CropReason::RelevantNeighbor);
+            token_estimate += graph.units[neighbor].token_estimate;
         }
-        selected[neighbor] = true;
-        reasons[neighbor] = Some(CropReason::RelevantNeighbor);
-        token_estimate += unit.token_estimate;
     }
 
     let boundary_metrics = undirected_boundary_metrics(&graph.adjacency, &selected)
