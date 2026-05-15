@@ -33,6 +33,28 @@ cargo run -p crop-cli -- pack --root C:\src\CROP --task "explain graph context b
 
 Add `--output context.crop.json` to write the pack to disk instead of stdout.
 
+Run a persisted named view recipe:
+
+```powershell
+cargo run -p crop-cli -- view --file examples\views\docs-view.json
+```
+
+View files use `crop.view.v1` JSON:
+
+```json
+{
+  "schema_version": "crop.view.v1",
+  "name": "crop-benchmark-docs-view",
+  "root": "../../docs",
+  "task": "explain CROP benchmark and view workflows",
+  "token_budget": 12000,
+  "seed": 0
+}
+```
+
+Relative roots resolve from the view file location. The output is
+`crop.view-run.v1` JSON containing the view metadata and produced context pack.
+
 Emit a prefix-cache-aware pack:
 
 ```powershell
@@ -209,6 +231,8 @@ caveats.
   and returns a benchmark summary with stage timings.
 - `bench_manifest_json(json, base_dir)` runs repeatable named benchmark/view
   cases from `crop.bench-manifest.v1` JSON.
+- `run_view_json(json, base_dir)` runs a persisted `crop.view.v1` recipe and
+  returns `crop.view-run.v1` with the produced context pack.
 - `eval_fixture(case, method, budget)` runs deterministic apple-to-apple
    retrieval comparisons.
 - `eval_suite(budget)` runs every case against every local method and returns

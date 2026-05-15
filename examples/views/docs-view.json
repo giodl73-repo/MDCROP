@@ -1,0 +1,8 @@
+{
+  "schema_version": "crop.view.v1",
+  "name": "crop-benchmark-docs-view",
+  "root": "../../docs",
+  "task": "explain CROP benchmark and view workflows",
+  "token_budget": 12000,
+  "seed": 0
+}

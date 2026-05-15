@@ -2,8 +2,8 @@ use anyhow::{bail, Result};
 use clap::{Parser, Subcommand, ValueEnum};
 use crop_core::{
     bench_manifest_json, bench_pack, crop_context, eval_competitor_json, eval_fixture, eval_suite,
-    fixture_graph, ingest_path, prefix_cached_pack, score_graph_for_task, CropOptions, EvalCase,
-    EvalMethod, PrefixCacheProfile,
+    fixture_graph, ingest_path, prefix_cached_pack, run_view_json, score_graph_for_task,
+    CropOptions, EvalCase, EvalMethod, PrefixCacheProfile,
 };
 use std::fs;
 use std::path::Path;
@@ -84,6 +84,12 @@ enum Commands {
         /// Seed unit index for crop expansion.
         #[arg(long, default_value_t = 0)]
         seed: usize,
+    },
+    /// Run a persisted named context view recipe.
+    View {
+        /// JSON file using the crop.view.v1 recipe schema.
+        #[arg(long)]
+        file: PathBuf,
     },
 }
 
@@ -202,6 +208,14 @@ fn main() -> Result<()> {
                 )?)?
             };
             println!("{json}");
+        }
+        Commands::View { file } => {
+            let input = fs::read_to_string(&file)?;
+            let base_dir = file.parent().unwrap_or_else(|| Path::new("."));
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&run_view_json(&input, base_dir)?)?
+            );
         }
     }
     Ok(())

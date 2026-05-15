@@ -2,7 +2,8 @@
 
 ## Active wave
 
-None.
+`2026-05-15-crop-named-views` — turn ad hoc crop recipes into persisted named
+views for reusable context packs, benchmarks, and prefix-cache workflows.
 
 ## Completed waves
 

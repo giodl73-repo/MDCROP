@@ -15,6 +15,7 @@ use thiserror::Error;
 
 pub const COMPETITOR_RESULTS_SCHEMA: &str = "crop.competitor-results.v1";
 pub const BENCH_MANIFEST_SCHEMA: &str = "crop.bench-manifest.v1";
+pub const CROP_VIEW_SCHEMA: &str = "crop.view.v1";
 
 #[derive(Debug, Error)]
 pub enum CropError {
@@ -83,6 +84,10 @@ pub enum CropError {
     UnsupportedBenchManifestSchema { schema_version: String },
     #[error("[BENCH] benchmark manifest must contain at least one case")]
     EmptyBenchManifest,
+    #[error("[VIEW] failed to parse crop view: {0}")]
+    ViewImport(serde_json::Error),
+    #[error("[VIEW] unsupported crop view schema: {schema_version}")]
+    UnsupportedViewSchema { schema_version: String },
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -267,6 +272,27 @@ pub struct BenchManifestReport {
     pub case_count: usize,
     pub aggregate: BenchAggregate,
     pub cases: Vec<BenchManifestCaseReport>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CropView {
+    pub schema_version: String,
+    pub name: String,
+    pub root: String,
+    pub task: String,
+    pub token_budget: usize,
+    pub seed: usize,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct CropViewRun {
+    pub schema_version: String,
+    pub name: String,
+    pub root: String,
+    pub task: String,
+    pub token_budget: usize,
+    pub seed: usize,
+    pub pack: CropPack,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -646,6 +672,43 @@ pub fn bench_manifest(
         case_count: cases.len(),
         aggregate: aggregate_bench_cases(&cases),
         cases,
+    })
+}
+
+pub fn run_view_json(json: &str, base_dir: impl AsRef<Path>) -> Result<CropViewRun, CropError> {
+    let view = serde_json::from_str(json).map_err(|source| CropError::ViewImport(source))?;
+    run_view(view, base_dir)
+}
+
+pub fn run_view(view: CropView, base_dir: impl AsRef<Path>) -> Result<CropViewRun, CropError> {
+    if view.schema_version != CROP_VIEW_SCHEMA {
+        return Err(CropError::UnsupportedViewSchema {
+            schema_version: view.schema_version,
+        });
+    }
+    if view.token_budget == 0 {
+        return Err(CropError::NonPositiveBudget);
+    }
+
+    let root = manifest_root(base_dir.as_ref(), &view.root);
+    let mut ingested = ingest_path(root)?;
+    score_graph_for_task(&mut ingested.graph, &view.task);
+    let pack = crop_context(
+        &ingested.graph,
+        CropOptions {
+            seed: view.seed,
+            token_budget: view.token_budget,
+        },
+    )?;
+
+    Ok(CropViewRun {
+        schema_version: "crop.view-run.v1".to_string(),
+        name: view.name,
+        root: view.root,
+        task: view.task,
+        token_budget: view.token_budget,
+        seed: view.seed,
+        pack,
     })
 }
 
@@ -2080,6 +2143,76 @@ mod tests {
         assert!(matches!(
             bench_manifest(empty, &root),
             Err(CropError::EmptyBenchManifest)
+        ));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn run_view_json_emits_named_context_pack() {
+        let root = unique_temp_dir("crop-view");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(
+            root.join("docs").join("index.md"),
+            "View recipe links to [target](target.md).\n\nTask seed context.",
+        )
+        .unwrap();
+        fs::write(
+            root.join("docs").join("target.md"),
+            "Target view evidence explains persisted crops.",
+        )
+        .unwrap();
+
+        let view = r#"{
+          "schema_version": "crop.view.v1",
+          "name": "docs-view",
+          "root": "docs",
+          "task": "persisted view crops",
+          "token_budget": 160,
+          "seed": 0
+        }"#;
+
+        let run = run_view_json(view, &root).unwrap();
+
+        assert_eq!(run.schema_version, "crop.view-run.v1");
+        assert_eq!(run.name, "docs-view");
+        assert_eq!(run.root, "docs");
+        assert_eq!(run.token_budget, 160);
+        assert!(!run.pack.units.is_empty());
+        assert!(run.pack.token_estimate <= 160);
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn run_view_rejects_bad_schema_and_zero_budget() {
+        let root = unique_temp_dir("crop-view-bad");
+        fs::create_dir_all(&root).unwrap();
+
+        let bad_schema = CropView {
+            schema_version: "crop.view.v0".to_string(),
+            name: "bad".to_string(),
+            root: ".".to_string(),
+            task: "bad".to_string(),
+            token_budget: 160,
+            seed: 0,
+        };
+        assert!(matches!(
+            run_view(bad_schema, &root),
+            Err(CropError::UnsupportedViewSchema { .. })
+        ));
+
+        let zero_budget = CropView {
+            schema_version: CROP_VIEW_SCHEMA.to_string(),
+            name: "zero".to_string(),
+            root: ".".to_string(),
+            task: "bad".to_string(),
+            token_budget: 0,
+            seed: 0,
+        };
+        assert!(matches!(
+            run_view(zero_budget, &root),
+            Err(CropError::NonPositiveBudget)
         ));
 
         fs::remove_dir_all(root).unwrap();
