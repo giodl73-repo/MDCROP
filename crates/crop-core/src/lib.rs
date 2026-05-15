@@ -190,6 +190,8 @@ pub enum EvalCase {
 pub enum EvalMethod {
     Crop,
     ScoreTopK,
+    LexicalTopK,
+    HybridTopK,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -537,6 +539,7 @@ fn prefix_profile_name(profile: PrefixCacheProfile) -> &'static str {
 
 struct EvalFixture {
     case: EvalCase,
+    task: &'static str,
     graph: EvidenceGraph,
     gold: Vec<&'static str>,
     bridge: Vec<&'static str>,
@@ -547,6 +550,7 @@ fn fixture_for_case(case: EvalCase) -> EvalFixture {
     match case {
         EvalCase::MissingBridge => EvalFixture {
             case,
+            task: "target evidence",
             graph: fixture_graph(),
             gold: vec!["task-seed", "bridge-note", "target-note"],
             bridge: vec!["bridge-note"],
@@ -554,6 +558,7 @@ fn fixture_for_case(case: EvalCase) -> EvalFixture {
         },
         EvalCase::NoisyPeriphery => EvalFixture {
             case,
+            task: "target evidence",
             graph: EvidenceGraph {
                 units: vec![
                     unit_with_source("seed", "fixture:task", "Task seed.", 1.0, 80),
@@ -575,6 +580,7 @@ fn fixture_for_case(case: EvalCase) -> EvalFixture {
         },
         EvalCase::StaleDuplicate => EvalFixture {
             case,
+            task: "current canonical task seed",
             graph: EvidenceGraph {
                 units: vec![
                     unit_with_source("seed", "fixture:task", "Task seed.", 1.0, 60),
@@ -601,6 +607,7 @@ fn fixture_for_case(case: EvalCase) -> EvalFixture {
         },
         EvalCase::BudgetPacking => EvalFixture {
             case,
+            task: "small gold",
             graph: EvidenceGraph {
                 units: vec![
                     unit_with_source("seed", "fixture:task", "Task seed.", 1.0, 20),
@@ -622,6 +629,7 @@ fn fixture_for_case(case: EvalCase) -> EvalFixture {
         },
         EvalCase::CrossLinkChain => EvalFixture {
             case,
+            task: "linked target evidence",
             graph: EvidenceGraph {
                 units: vec![
                     unit_with_source("seed", "fixture:task", "Task seed.", 1.0, 40),
@@ -679,6 +687,14 @@ fn eval_case(
             crop_pack = None;
             score_top_k_selection(&graph, token_budget)
         }
+        EvalMethod::LexicalTopK => {
+            crop_pack = None;
+            lexical_top_k_selection(&graph, fixture.task, token_budget)
+        }
+        EvalMethod::HybridTopK => {
+            crop_pack = None;
+            hybrid_top_k_selection(&graph, fixture.task, token_budget)
+        }
     };
     let selected_set = selected.iter().cloned().collect::<BTreeSet<_>>();
     let token_estimate = graph
@@ -718,11 +734,29 @@ fn eval_case(
 }
 
 fn score_top_k_selection(graph: &EvidenceGraph, token_budget: usize) -> Vec<String> {
+    ranked_selection(graph, token_budget, |_, unit| unit.relevance)
+}
+
+fn lexical_top_k_selection(graph: &EvidenceGraph, task: &str, token_budget: usize) -> Vec<String> {
+    let terms = task_terms(task);
+    ranked_selection(graph, token_budget, |_, unit| relevance_score(unit, &terms))
+}
+
+fn hybrid_top_k_selection(graph: &EvidenceGraph, task: &str, token_budget: usize) -> Vec<String> {
+    let terms = task_terms(task);
+    ranked_selection(graph, token_budget, |_, unit| {
+        (unit.relevance + relevance_score(unit, &terms)) / 2.0
+    })
+}
+
+fn ranked_selection<F>(graph: &EvidenceGraph, token_budget: usize, mut score: F) -> Vec<String>
+where
+    F: FnMut(usize, &EvidenceUnit) -> f64,
+{
     let mut candidates = graph.units.iter().enumerate().collect::<Vec<_>>();
     candidates.sort_by(|(left_index, left), (right_index, right)| {
-        right
-            .relevance
-            .total_cmp(&left.relevance)
+        score(*right_index, right)
+            .total_cmp(&score(*left_index, left))
             .then_with(|| left.token_estimate.cmp(&right.token_estimate))
             .then_with(|| left_index.cmp(right_index))
     });
@@ -1094,6 +1128,42 @@ mod tests {
         );
         assert_eq!(crop.bridge_recall, 1.0);
         assert!(top_k.bridge_recall < crop.bridge_recall);
+    }
+
+    #[test]
+    fn lexical_and_hybrid_baselines_can_win_when_graph_is_not_needed() {
+        let lexical = eval_fixture(EvalCase::StaleDuplicate, EvalMethod::LexicalTopK, 110).unwrap();
+        let hybrid = eval_fixture(EvalCase::StaleDuplicate, EvalMethod::HybridTopK, 110).unwrap();
+        let score = eval_fixture(EvalCase::StaleDuplicate, EvalMethod::ScoreTopK, 110).unwrap();
+
+        assert_eq!(lexical.selected_unit_ids, vec!["current-canonical", "seed"]);
+        assert_eq!(hybrid.selected_unit_ids, vec!["current-canonical", "seed"]);
+        assert_eq!(lexical.gold_recall, 1.0);
+        assert_eq!(hybrid.gold_recall, 1.0);
+        assert_eq!(lexical.noise_rate, 0.0);
+        assert_eq!(hybrid.noise_rate, 0.0);
+        assert!(score.noise_rate > lexical.noise_rate);
+    }
+
+    #[test]
+    fn lexical_and_hybrid_are_budgeted_and_deterministic() {
+        let lexical = eval_fixture(EvalCase::MissingBridge, EvalMethod::LexicalTopK, 160).unwrap();
+        let hybrid = eval_fixture(EvalCase::MissingBridge, EvalMethod::HybridTopK, 160).unwrap();
+
+        assert!(lexical.token_estimate <= 160);
+        assert!(hybrid.token_estimate <= 160);
+        assert_eq!(
+            lexical.selected_unit_ids,
+            eval_fixture(EvalCase::MissingBridge, EvalMethod::LexicalTopK, 160)
+                .unwrap()
+                .selected_unit_ids
+        );
+        assert_eq!(
+            hybrid.selected_unit_ids,
+            eval_fixture(EvalCase::MissingBridge, EvalMethod::HybridTopK, 160)
+                .unwrap()
+                .selected_unit_ids
+        );
     }
 
     #[test]

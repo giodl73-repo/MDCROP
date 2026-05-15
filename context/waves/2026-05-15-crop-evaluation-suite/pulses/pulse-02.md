@@ -2,7 +2,7 @@
 
 ## Status
 
-Todo.
+Done.
 
 ## Goal
 
@@ -11,11 +11,11 @@ services.
 
 ## Deliverables
 
-- Add `lexical-top-k` using deterministic task-term overlap.
-- Add `hybrid-top-k` combining lexical score and fixture relevance score.
-- Keep `score-top-k` as the rank-only baseline.
-- Ensure every method uses the same token budget and tie-breaking contract.
-- Add tests where lexical/hybrid win or tie where graph structure is irrelevant,
+- [x] Add `lexical-top-k` using deterministic task-term overlap.
+- [x] Add `hybrid-top-k` combining lexical score and fixture relevance score.
+- [x] Keep `score-top-k` as the rank-only baseline.
+- [x] Ensure every method uses the same token budget and tie-breaking contract.
+- [x] Add tests where lexical/hybrid win or tie where graph structure is irrelevant,
   so the suite is not biased to CROP-only wins.
 
 ## Scout commands

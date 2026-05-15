@@ -71,6 +71,8 @@ enum EvalCaseArg {
 enum EvalMethodArg {
     Crop,
     ScoreTopK,
+    LexicalTopK,
+    HybridTopK,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -152,6 +154,8 @@ impl From<EvalMethodArg> for EvalMethod {
         match value {
             EvalMethodArg::Crop => EvalMethod::Crop,
             EvalMethodArg::ScoreTopK => EvalMethod::ScoreTopK,
+            EvalMethodArg::LexicalTopK => EvalMethod::LexicalTopK,
+            EvalMethodArg::HybridTopK => EvalMethod::HybridTopK,
         }
     }
 }
