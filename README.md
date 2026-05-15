@@ -458,3 +458,7 @@ Copy-Item .cargo\config.local.example.toml .cargo\config.toml
 Then Cargo will patch `rctx-core`, `rgraph-core`, `rstat-core`, and `ropt-core`
 to the sibling checkout.
 
+## License
+
+MIT. See [`LICENSE`](LICENSE).
+
