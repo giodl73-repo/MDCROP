@@ -1,5 +1,5 @@
 use rctx_core::RCTX_VERSION;
-use rgraph_core::undirected_edge_cut;
+use rgraph_core::undirected_boundary_metrics;
 use ropt_core::SeedPart;
 use rstat_core::summary::{summary_stats, SummaryError};
 use serde::{Deserialize, Serialize};
@@ -74,6 +74,7 @@ pub struct CropPack {
     pub units: Vec<CropUnit>,
     pub token_estimate: usize,
     pub boundary_cut_edges: usize,
+    pub boundary_conductance: f64,
     pub relevance_mean: f64,
 }
 
@@ -114,7 +115,7 @@ pub fn crop_context(graph: &EvidenceGraph, options: CropOptions) -> Result<CropP
         token_estimate += unit.token_estimate;
     }
 
-    let boundary_cut_edges = undirected_edge_cut(&graph.adjacency, &selected)
+    let boundary_metrics = undirected_boundary_metrics(&graph.adjacency, &selected)
         .map_err(|err| CropError::EdgeCut(err.to_string()))?;
 
     let mut units = Vec::new();
@@ -140,7 +141,8 @@ pub fn crop_context(graph: &EvidenceGraph, options: CropOptions) -> Result<CropP
     Ok(CropPack {
         units,
         token_estimate,
-        boundary_cut_edges,
+        boundary_cut_edges: boundary_metrics.boundary_edges,
+        boundary_conductance: boundary_metrics.conductance,
         relevance_mean,
     })
 }
@@ -201,6 +203,7 @@ mod tests {
 
         assert_eq!(pack.token_estimate, 150);
         assert_eq!(pack.boundary_cut_edges, 1);
+        assert_eq!(pack.boundary_conductance, 1.0);
         assert_eq!(
             pack.units
                 .iter()
