@@ -45,14 +45,15 @@ provenance paths; exclude stale duplicates and noisy periphery.
 CROP should keep product-specific UX and packaging in this repo, while reusable
 graph/stat/math primitives land in BISECT shared kernels:
 
-| BISECT issue | Kernel area | Why CROP needs it |
-|--------------|-------------|-------------------|
-| [#5](https://github.com/giodl73-repo/BISECT/issues/5) | `rgraph-core` boundary metrics | Score context crop boundaries with cut size, conductance-like ratios, and internal/external degree. |
-| [#6](https://github.com/giodl73-repo/BISECT/issues/6) | `rgraph-core` / `ropt-core` bridge helpers | Recover connector artifacts that plain top-k retrieval misses. |
-| [#8](https://github.com/giodl73-repo/BISECT/issues/8) | `rstat-core` evidence scoring | Normalize relevance, authority, freshness, diversity, and provenance confidence. |
-| [#9](https://github.com/giodl73-repo/BISECT/issues/9) | `rmath-core` / `ropt-core` budgeted packing | Optimize context packs under token budgets rather than truncating ranked lists. |
-| [#10](https://github.com/giodl73-repo/BISECT/issues/10) | `rgraph-core` clustering | Build cluster-aware context packs from actual evidence neighborhoods. |
-| [#11](https://github.com/giodl73-repo/BISECT/issues/11) | graph/stat/math fixtures | Prove graph-native wins against top-k retrieval before adding LLM calls. |
+| BISECT issue | Status | Kernel area | Why CROP needs it |
+|--------------|--------|-------------|-------------------|
+| [#4](https://github.com/giodl73-repo/BISECT/issues/4) | Done | shared-kernel contract | Keep `rctx-core`, `rgraph-core`, `rstat-core`, and `ropt-core` stable as external Git dependencies. |
+| [#5](https://github.com/giodl73-repo/BISECT/issues/5) | Done | `rgraph-core` boundary metrics | Score context crop boundaries with cut size, conductance-like ratios, and internal/external degree. |
+| [#6](https://github.com/giodl73-repo/BISECT/issues/6) | Done | `rgraph-core` / `ropt-core` bridge helpers | Recover connector artifacts that plain top-k retrieval misses. |
+| [#8](https://github.com/giodl73-repo/BISECT/issues/8) | Done | `rstat-core` evidence scoring | Normalize relevance, authority, freshness, diversity, and provenance confidence. |
+| [#9](https://github.com/giodl73-repo/BISECT/issues/9) | Done | `ropt-core` budgeted packing | Optimize context packs under token budgets rather than truncating ranked lists. |
+| [#10](https://github.com/giodl73-repo/BISECT/issues/10) | Done | `rgraph-core` clustering | Build cluster-aware context packs from actual evidence neighborhoods. |
+| [#11](https://github.com/giodl73-repo/BISECT/issues/11) | Done | graph/stat/math fixtures | Prove graph-native wins against top-k retrieval before adding LLM calls. |
 
 ## First command shape
 
