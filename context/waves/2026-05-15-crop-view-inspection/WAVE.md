@@ -35,6 +35,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
 | 17 | Side-info status tables | done | Added Markdown output for links, backlinks, frontmatter, and heading reports. |
 | 18 | Corpus status page | done | Added `crop status` to compose catalog and side-info tables for any Markdown corpus. |
 | 19 | View-backed status page | done | Added `crop status --view` for tag/frontmatter-filtered status pages. |
+| 20 | Strict corpus status | done | Added `crop status --strict` to render then fail on corpus-health issues. |
 
 ## Success criteria
 
@@ -80,5 +81,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
   side-info sections.
 - Status pages can use named views, including `frontmatter_query` filters, to
   generate tag/status-specific pages.
+- Status pages can run in strict mode for CI gating on broken links, orphan
+  pages, or duplicate heading anchors while still rendering output.
 - `cargo fmt`, `cargo test --workspace`, inspect smoke runs, and `git diff
   --check` pass.

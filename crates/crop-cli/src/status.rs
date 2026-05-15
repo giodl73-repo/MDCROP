@@ -17,6 +17,7 @@ pub fn run(
     title: String,
     extensions: Vec<String>,
     exclude_dirs: Vec<String>,
+    strict: bool,
     output: Option<PathBuf>,
 ) -> Result<()> {
     if root.is_some() && view.is_some() {
@@ -38,6 +39,12 @@ pub fn run(
     } else {
         println!("{markdown}");
     }
+    if strict {
+        let issue_count = docs.issue_count();
+        if issue_count > 0 {
+            bail!("corpus status found {issue_count} issue(s)");
+        }
+    }
     Ok(())
 }
 
@@ -48,6 +55,12 @@ struct StatusDocs {
     backlinks: crop_core::MarkdownBacklinkReport,
     frontmatter: crop_core::MarkdownFrontmatterInventory,
     headings: crop_core::MarkdownHeadingInventory,
+}
+
+impl StatusDocs {
+    fn issue_count(&self) -> usize {
+        self.links.broken_count + self.backlinks.orphan_count + self.headings.duplicate_anchor_count
+    }
 }
 
 fn status_docs_for_root(
@@ -159,6 +172,7 @@ mod tests {
             "Fixture Status".to_string(),
             vec!["md".to_string()],
             Vec::new(),
+            false,
             Some(output.clone()),
         )
         .unwrap();
@@ -188,6 +202,7 @@ mod tests {
             "View Status".to_string(),
             Vec::new(),
             Vec::new(),
+            false,
             Some(output.clone()),
         )
         .unwrap();
@@ -210,7 +225,65 @@ mod tests {
         assert!(result.is_err());
     }
 
+    #[test]
+    fn status_strict_fails_after_writing_when_issues_exist() {
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("..");
+        let fixture = repo.join("examples").join("proof-fixture");
+        let output = unique_temp_file("crop-status-strict.md");
+
+        let result = run(
+            Some(fixture.join("src")),
+            None,
+            "Strict Status".to_string(),
+            vec!["md".to_string()],
+            Vec::new(),
+            true,
+            Some(output.clone()),
+        );
+
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("corpus status found"));
+        assert!(fs::read_to_string(&output)
+            .unwrap()
+            .contains("# Strict Status"));
+
+        fs::remove_file(output).unwrap();
+    }
+
+    #[test]
+    fn status_strict_allows_clean_corpus() {
+        let root = unique_temp_dir("crop-status-clean");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(root.join("docs").join("one.md"), "# One\n\n[Two](two.md)\n").unwrap();
+        fs::write(root.join("docs").join("two.md"), "# Two\n\n[One](one.md)\n").unwrap();
+
+        run(
+            Some(root.join("docs")),
+            None,
+            "Clean Status".to_string(),
+            vec!["md".to_string()],
+            Vec::new(),
+            true,
+            None,
+        )
+        .unwrap();
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
     fn unique_temp_file(name: &str) -> PathBuf {
+        let nanos = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        std::env::temp_dir().join(format!("{nanos}-{name}"))
+    }
+
+    fn unique_temp_dir(name: &str) -> PathBuf {
         let nanos = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()

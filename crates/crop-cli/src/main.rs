@@ -128,6 +128,9 @@ enum Commands {
         /// Exclude directories by basename while scanning docs.
         #[arg(long = "exclude-dir")]
         exclude_dirs: Vec<String>,
+        /// Exit non-zero after rendering when links, orphans, or duplicate anchors report issues.
+        #[arg(long)]
+        strict: bool,
         /// Optional Markdown output path. Defaults to stdout.
         #[arg(long)]
         output: Option<PathBuf>,
@@ -424,8 +427,9 @@ fn main() -> Result<()> {
             title,
             extensions,
             exclude_dirs,
+            strict,
             output,
-        } => status::run(root, view, title, extensions, exclude_dirs, output)?,
+        } => status::run(root, view, title, extensions, exclude_dirs, strict, output)?,
         Commands::Index {
             root,
             view,

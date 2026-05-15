@@ -102,7 +102,8 @@ provenance paths; exclude stale duplicates and noisy periphery.
 19. **Corpus status page composition**: one command for generated health pages.
     **First slice; `crop status` composes catalog, link, backlink, frontmatter,
     and heading tables into a single Markdown status page, and can source
-    documentation side-info from a named view.**
+    documentation side-info from a named view. `--strict` can gate CI on broken
+    links, orphan pages, or duplicate anchors after rendering the page.**
 
 ## Upstream kernel asks
 

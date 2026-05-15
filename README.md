@@ -78,16 +78,19 @@ Generate a combined Markdown corpus status page:
 ```powershell
 cargo run -p crop-cli -- status --root C:\src\maxim --output STATUS.md
 cargo run -p crop-cli -- status --view examples\proof-fixture\proof-ready-view.json --output STATUS.md
+cargo run -p crop-cli -- status --root C:\src\maxim --strict --output STATUS.md
 ```
 
 `crop status` composes the catalog, link audit, backlinks, frontmatter, and
 headings into one Markdown page for any Markdown corpus. JSON remains available
 from the individual side-info commands; this command is for generated
 README/status surfaces. Use `--view` to generate the page from a named
-`crop.view.v1` recipe, including frontmatter/tag filters.
+`crop.view.v1` recipe, including frontmatter/tag filters. Add `--strict` in CI
+to exit non-zero after rendering when broken links, orphan pages, or duplicate
+anchors are present.
 
-Stable PROOF-facing schema notes live in [`docs\specs`](docs/specs), with a
-deterministic local contract fixture under `examples\proof-fixture`.
+Stable schema and consumer-integration notes live in [`docs\specs`](docs/specs),
+with a deterministic local contract fixture under `examples\proof-fixture`.
 
 Audit local Markdown links as structured side-info:
 
