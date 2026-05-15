@@ -20,6 +20,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
 | 02 | Store inspect preflight | done | Added `crop view --inspect --dir` with per-view ok/failed status rows. |
 | 03 | Strict inspect gate | done | Added `--strict` so store inspection prints JSON and exits non-zero on failed recipes. |
 | 04 | Store inspect aggregates | done | Added total and max supported source counts to store inspection reports. |
+| 05 | Extension profiles | done | Added per-view and aggregate extension counts for choosing large-corpus filters. |
 
 ## Success criteria
 
@@ -33,5 +34,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
   printing the inspection artifact.
 - Store inspection includes aggregate matched-source counts for quick scope
   comparison.
+- Inspection includes extension-count profiles for choosing Markdown, TeX, Bib,
+  and source-code filters.
 - `cargo fmt`, `cargo test --workspace`, inspect smoke runs, and `git diff
   --check` pass.

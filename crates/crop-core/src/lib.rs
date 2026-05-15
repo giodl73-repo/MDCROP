@@ -324,6 +324,7 @@ pub struct CropViewInspect {
     pub include_extensions: Vec<String>,
     pub exclude_dirs: Vec<String>,
     pub supported_source_count: usize,
+    pub extension_counts: BTreeMap<String, usize>,
     pub sample_sources: Vec<String>,
 }
 
@@ -346,6 +347,7 @@ pub struct CropViewStoreInspect {
     pub failed_count: usize,
     pub total_supported_source_count: usize,
     pub max_supported_source_count: usize,
+    pub aggregate_extension_counts: BTreeMap<String, usize>,
     pub views: Vec<CropViewStoreInspectEntry>,
 }
 
@@ -798,6 +800,7 @@ pub fn inspect_view(
         .take(10)
         .map(|file| source_id(&resolved_root, file))
         .collect::<Vec<_>>();
+    let extension_counts = extension_counts(&files);
 
     Ok(CropViewInspect {
         schema_version: "crop.view-inspect.v1".to_string(),
@@ -810,6 +813,7 @@ pub fn inspect_view(
         include_extensions: view.include_extensions,
         exclude_dirs: view.exclude_dirs,
         supported_source_count: files.len(),
+        extension_counts,
         sample_sources,
     })
 }
@@ -873,6 +877,14 @@ pub fn inspect_view_store(store: impl AsRef<Path>) -> Result<CropViewStoreInspec
         .collect::<Vec<_>>();
     let total_supported_source_count = source_counts.iter().sum::<usize>();
     let max_supported_source_count = source_counts.into_iter().max().unwrap_or(0);
+    let mut aggregate_extension_counts = BTreeMap::new();
+    for inspect in views.iter().filter_map(|view| view.inspect.as_ref()) {
+        for (extension, count) in &inspect.extension_counts {
+            *aggregate_extension_counts
+                .entry(extension.clone())
+                .or_insert(0) += count;
+        }
+    }
     Ok(CropViewStoreInspect {
         schema_version: "crop.view-store-inspect.v1".to_string(),
         store: store.display().to_string(),
@@ -881,6 +893,7 @@ pub fn inspect_view_store(store: impl AsRef<Path>) -> Result<CropViewStoreInspec
         failed_count,
         total_supported_source_count,
         max_supported_source_count,
+        aggregate_extension_counts,
         views,
     })
 }
@@ -1806,6 +1819,19 @@ fn source_id(root: &Path, file: &Path) -> String {
         .join("/")
 }
 
+fn extension_counts(files: &[PathBuf]) -> BTreeMap<String, usize> {
+    let mut counts = BTreeMap::new();
+    for file in files {
+        let extension = file
+            .extension()
+            .and_then(|extension| extension.to_str())
+            .map(str::to_ascii_lowercase)
+            .unwrap_or_else(|| "(none)".to_string());
+        *counts.entry(extension).or_insert(0) += 1;
+    }
+    counts
+}
+
 fn display_path(path: &Path) -> String {
     let rendered = path.display().to_string();
     rendered
@@ -2666,6 +2692,7 @@ mod tests {
         assert_eq!(inspect.include_extensions, vec!["md"]);
         assert_eq!(inspect.exclude_dirs, vec!["archive"]);
         assert_eq!(inspect.supported_source_count, 1);
+        assert_eq!(inspect.extension_counts.get("md"), Some(&1));
         assert_eq!(inspect.sample_sources, vec!["alpha.md"]);
 
         fs::remove_dir_all(root).unwrap();
@@ -2748,6 +2775,7 @@ mod tests {
         assert_eq!(inspect.failed_count, 1);
         assert_eq!(inspect.total_supported_source_count, 1);
         assert_eq!(inspect.max_supported_source_count, 1);
+        assert_eq!(inspect.aggregate_extension_counts.get("md"), Some(&1));
         assert_eq!(inspect.views[0].file, "a-ok.json");
         assert_eq!(inspect.views[0].status, "ok");
         assert_eq!(

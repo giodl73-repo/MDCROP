@@ -57,14 +57,14 @@ cargo run -p crop-cli -- view --inspect --dir examples\views --strict
 ```
 
 Inspection emits `crop.view-inspect.v1` with the resolved root, active task and
-filters, supported source count, and up to ten sample source IDs. It fails on bad
-schemas, zero budgets, missing roots, and filters that match no supported files,
-without building a full context crop.
+filters, supported source count, extension counts, and up to ten sample source
+IDs. It fails on bad schemas, zero budgets, missing roots, and filters that match
+no supported files, without building a full context crop.
 Store inspection emits `crop.view-store-inspect.v1` with sorted per-file `ok` or
-`failed` rows plus total and maximum supported source counts, so a local
-`.crop\views` directory can be audited in one command. Use `--strict` for CI or
-agent gates: CROP prints the inspection artifact, then exits non-zero when any
-recipe failed.
+`failed` rows plus total/max supported source counts and aggregate extension
+counts, so a local `.crop\views` directory can be audited in one command. Use
+`--strict` for CI or agent gates: CROP prints the inspection artifact, then exits
+non-zero when any recipe failed.
 
 Use the whole-repo and troubleshooting views as templates for `.crop\views` in
 other repositories. Use the Maxim and Resonance examples as local large-corpus
