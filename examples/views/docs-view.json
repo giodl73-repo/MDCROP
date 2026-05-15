@@ -4,5 +4,7 @@
   "root": "../../docs",
   "task": "explain CROP benchmark and view workflows",
   "token_budget": 12000,
-  "seed": 0
+  "seed": 0,
+  "include_extensions": ["md"],
+  "exclude_dirs": []
 }

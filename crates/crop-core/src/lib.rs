@@ -137,6 +137,12 @@ pub struct IngestedEvidence {
     pub report: IngestReport,
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct IngestOptions {
+    pub include_extensions: Vec<String>,
+    pub exclude_dirs: Vec<String>,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CropReason {
     Seed,
@@ -282,6 +288,10 @@ pub struct CropView {
     pub task: String,
     pub token_budget: usize,
     pub seed: usize,
+    #[serde(default)]
+    pub include_extensions: Vec<String>,
+    #[serde(default)]
+    pub exclude_dirs: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -757,7 +767,11 @@ fn run_view_pack(
     base_dir: impl AsRef<Path>,
 ) -> Result<(IngestedEvidence, CropPack), CropError> {
     let root = manifest_root(base_dir.as_ref(), &view.root);
-    let mut ingested = ingest_path(root)?;
+    let ingest_options = IngestOptions {
+        include_extensions: view.include_extensions.clone(),
+        exclude_dirs: view.exclude_dirs.clone(),
+    };
+    let mut ingested = ingest_path_with_options(root, &ingest_options)?;
     score_graph_for_task(&mut ingested.graph, &view.task);
     let pack = crop_context(
         &ingested.graph,
@@ -841,6 +855,13 @@ pub fn list_views(store: impl AsRef<Path>) -> Result<CropViewList, CropError> {
 }
 
 pub fn ingest_path(root: impl AsRef<Path>) -> Result<IngestedEvidence, CropError> {
+    ingest_path_with_options(root, &IngestOptions::default())
+}
+
+pub fn ingest_path_with_options(
+    root: impl AsRef<Path>,
+    options: &IngestOptions,
+) -> Result<IngestedEvidence, CropError> {
     let root = root.as_ref();
     if !root.exists() {
         return Err(CropError::RootDoesNotExist {
@@ -848,7 +869,7 @@ pub fn ingest_path(root: impl AsRef<Path>) -> Result<IngestedEvidence, CropError
         });
     }
 
-    let files = supported_files(root)?;
+    let files = supported_files(root, options)?;
     if files.is_empty() {
         return Err(CropError::NoSupportedFiles {
             path: root.display().to_string(),
@@ -1500,9 +1521,9 @@ fn source_coverage(graph: &EvidenceGraph, selected: &BTreeSet<String>, gold: &[&
     selected_gold_sources.len() as f64 / gold_sources.len() as f64
 }
 
-fn supported_files(root: &Path) -> Result<Vec<PathBuf>, CropError> {
+fn supported_files(root: &Path, options: &IngestOptions) -> Result<Vec<PathBuf>, CropError> {
     let mut files = Vec::new();
-    collect_supported_files(root, &mut files)?;
+    collect_supported_files(root, &mut files, options)?;
     files.sort();
     Ok(files)
 }
@@ -1516,19 +1537,23 @@ fn manifest_root(base_dir: &Path, root: &str) -> PathBuf {
     }
 }
 
-fn collect_supported_files(path: &Path, files: &mut Vec<PathBuf>) -> Result<(), CropError> {
+fn collect_supported_files(
+    path: &Path,
+    files: &mut Vec<PathBuf>,
+    options: &IngestOptions,
+) -> Result<(), CropError> {
     let metadata = fs::metadata(path).map_err(|source| CropError::InspectPath {
         path: path.display().to_string(),
         source,
     })?;
     if metadata.is_file() {
-        if is_supported_file(path) {
+        if is_supported_file(path, options) {
             files.push(path.to_path_buf());
         }
         return Ok(());
     }
     if metadata.is_dir() {
-        if is_ignored_dir(path) {
+        if is_ignored_dir(path, options) {
             return Ok(());
         }
         let mut children = fs::read_dir(path)
@@ -1543,27 +1568,55 @@ fn collect_supported_files(path: &Path, files: &mut Vec<PathBuf>) -> Result<(), 
             })?;
         children.sort_by_key(|entry| entry.path());
         for child in children {
-            collect_supported_files(&child.path(), files)?;
+            collect_supported_files(&child.path(), files, options)?;
         }
     }
     Ok(())
 }
 
-fn is_ignored_dir(path: &Path) -> bool {
+fn is_ignored_dir(path: &Path, options: &IngestOptions) -> bool {
+    let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
+        return false;
+    };
+    matches!(name, ".git" | "target" | "node_modules" | ".venv" | "venv")
+        || options.exclude_dirs.iter().any(|excluded| excluded == name)
+}
+
+fn is_supported_file(path: &Path, options: &IngestOptions) -> bool {
+    let extension = path
+        .extension()
+        .and_then(|extension| extension.to_str())
+        .map(str::to_ascii_lowercase);
+    if !options.include_extensions.is_empty() {
+        let allowed = normalized_extensions(&options.include_extensions);
+        return extension
+            .as_deref()
+            .is_some_and(|extension| allowed.contains(extension));
+    }
     matches!(
-        path.file_name().and_then(|name| name.to_str()),
-        Some(".git" | "target")
+        extension.as_deref(),
+        Some(
+            "md" | "markdown"
+                | "txt"
+                | "json"
+                | "toml"
+                | "yaml"
+                | "yml"
+                | "rs"
+                | "tex"
+                | "bib"
+                | "py"
+                | "html"
+        )
     )
 }
 
-fn is_supported_file(path: &Path) -> bool {
-    matches!(
-        path.extension()
-            .and_then(|extension| extension.to_str())
-            .map(str::to_ascii_lowercase)
-            .as_deref(),
-        Some("md" | "markdown" | "txt" | "json" | "toml" | "yaml" | "yml" | "rs")
-    )
+fn normalized_extensions(extensions: &[String]) -> BTreeSet<&str> {
+    extensions
+        .iter()
+        .map(|extension| extension.trim_start_matches('.'))
+        .filter(|extension| !extension.is_empty())
+        .collect()
 }
 
 fn source_id(root: &Path, file: &Path) -> String {
@@ -1640,7 +1693,7 @@ fn markdown_links(root: &Path, file: &Path, text: &str) -> Vec<String> {
             continue;
         };
         let candidate = parent.join(target);
-        if candidate.exists() && is_supported_file(&candidate) {
+        if candidate.exists() && is_supported_file(&candidate, &IngestOptions::default()) {
             links.insert(source_id(root, &candidate));
         }
     }
@@ -2360,6 +2413,47 @@ mod tests {
     }
 
     #[test]
+    fn run_view_supports_extension_and_directory_filters() {
+        let root = unique_temp_dir("crop-view-filters");
+        fs::create_dir_all(root.join("research")).unwrap();
+        fs::create_dir_all(root.join("archive")).unwrap();
+        fs::write(
+            root.join("research").join("paper.tex"),
+            "Filtered TeX evidence explains tc parameter views.",
+        )
+        .unwrap();
+        fs::write(
+            root.join("research").join("notes.md"),
+            "Markdown note should be excluded by extension filter.",
+        )
+        .unwrap();
+        fs::write(
+            root.join("archive").join("old.tex"),
+            "Archived TeX should be excluded by directory filter.",
+        )
+        .unwrap();
+
+        let view = r#"{
+          "schema_version": "crop.view.v1",
+          "name": "tex-view",
+          "root": ".",
+          "task": "tc parameter views",
+          "token_budget": 160,
+          "seed": 0,
+          "include_extensions": ["tex"],
+          "exclude_dirs": ["archive"]
+        }"#;
+
+        let run = run_view_json(view, &root).unwrap();
+
+        assert_eq!(run.name, "tex-view");
+        assert_eq!(run.pack.units.len(), 1);
+        assert_eq!(run.pack.units[0].source_id, "research/paper.tex");
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
     fn run_view_rejects_bad_schema_and_zero_budget() {
         let root = unique_temp_dir("crop-view-bad");
         fs::create_dir_all(&root).unwrap();
@@ -2371,6 +2465,8 @@ mod tests {
             task: "bad".to_string(),
             token_budget: 160,
             seed: 0,
+            include_extensions: Vec::new(),
+            exclude_dirs: Vec::new(),
         };
         assert!(matches!(
             run_view(bad_schema, &root),
@@ -2384,6 +2480,8 @@ mod tests {
             task: "bad".to_string(),
             token_budget: 0,
             seed: 0,
+            include_extensions: Vec::new(),
+            exclude_dirs: Vec::new(),
         };
         assert!(matches!(
             run_view(zero_budget, &root),

@@ -51,7 +51,8 @@ provenance paths; exclude stale duplicates and noisy periphery.
 7. **Named views**: persisted task/root/budget recipes that produce reusable
    context packs. **Active wave; `crop view --file` runs recipes and
    `crop view --list` discovers local view stores; views can emit
-   prefix-cache-aware packs with `--prefix-cache generic`.**
+   prefix-cache-aware packs with `--prefix-cache generic`, and runtime query /
+   extension filters support large corpora.**
 
 ## Upstream kernel asks
 

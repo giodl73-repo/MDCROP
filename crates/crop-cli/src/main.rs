@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand, ValueEnum};
 use crop_core::{
     bench_manifest_json, bench_pack, crop_context, eval_competitor_json, eval_fixture, eval_suite,
     fixture_graph, ingest_path, list_views, prefix_cached_pack, run_view_json,
-    run_view_prefix_cached_json, score_graph_for_task, CropOptions, EvalCase, EvalMethod,
+    run_view_prefix_cached_json, score_graph_for_task, CropOptions, CropView, EvalCase, EvalMethod,
     PrefixCacheProfile,
 };
 use std::fs;
@@ -100,6 +100,15 @@ enum Commands {
         /// Emit prefix-cache-aware JSON for the view pack.
         #[arg(long, value_enum)]
         prefix_cache: Option<PrefixCacheArg>,
+        /// Override the view task for a one-off searchable run.
+        #[arg(long)]
+        query: Option<String>,
+        /// Restrict view ingest to one or more file extensions, e.g. -e md -e tex.
+        #[arg(short = 'e', long = "extension")]
+        extensions: Vec<String>,
+        /// Exclude directories by basename while running the view.
+        #[arg(long = "exclude-dir")]
+        exclude_dirs: Vec<String>,
     },
 }
 
@@ -224,6 +233,9 @@ fn main() -> Result<()> {
             file,
             dir,
             prefix_cache,
+            query,
+            extensions,
+            exclude_dirs,
         } => {
             let json = if list {
                 serde_json::to_string_pretty(&list_views(dir)?)?
@@ -233,14 +245,23 @@ fn main() -> Result<()> {
                 };
                 let input = fs::read_to_string(&file)?;
                 let base_dir = file.parent().unwrap_or_else(|| Path::new("."));
+                let mut view: CropView = serde_json::from_str(&input)?;
+                if let Some(query) = query {
+                    view.task = query;
+                }
+                if !extensions.is_empty() {
+                    view.include_extensions = extensions;
+                }
+                view.exclude_dirs.extend(exclude_dirs);
+                let view_json = serde_json::to_string(&view)?;
                 if let Some(prefix_cache) = prefix_cache {
                     serde_json::to_string_pretty(&run_view_prefix_cached_json(
-                        &input,
+                        &view_json,
                         base_dir,
                         prefix_cache.into(),
                     )?)?
                 } else {
-                    serde_json::to_string_pretty(&run_view_json(&input, base_dir)?)?
+                    serde_json::to_string_pretty(&run_view_json(&view_json, base_dir)?)?
                 }
             };
             println!("{json}");

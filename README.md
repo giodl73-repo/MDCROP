@@ -75,6 +75,17 @@ This returns `crop.view-prefix-cache.v1` JSON with the view name and a
 `PrefixCachedPack`. For repeated runs over the same view root, the prefix hash is
 stable when only the task changes; task, seed, and budget stay in `task_tail`.
 
+Views can also be searched with runtime parameters:
+
+```powershell
+cargo run -p crop-cli -- view --file examples\views\docs-view.json --query "prefix cache" -e md
+```
+
+`--query` overrides the view task for one run, `-e/--extension` restricts ingest
+to specific file types, and `--exclude-dir` skips matching directory basenames.
+See [`docs\VIEWS.md`](docs/VIEWS.md) for large-corpus view candidates for
+`C:\src\maxim` and `C:\src\resonance`.
+
 Emit a prefix-cache-aware pack:
 
 ```powershell
