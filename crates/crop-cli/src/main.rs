@@ -2,8 +2,8 @@ use anyhow::{bail, Result};
 use clap::{Parser, Subcommand, ValueEnum};
 use crop_core::{
     bench_manifest_json, bench_pack, crop_context, eval_competitor_json, eval_fixture, eval_suite,
-    fixture_graph, ingest_path, prefix_cached_pack, run_view_json, score_graph_for_task,
-    CropOptions, EvalCase, EvalMethod, PrefixCacheProfile,
+    fixture_graph, ingest_path, list_views, prefix_cached_pack, run_view_json,
+    score_graph_for_task, CropOptions, EvalCase, EvalMethod, PrefixCacheProfile,
 };
 use std::fs;
 use std::path::Path;
@@ -87,9 +87,15 @@ enum Commands {
     },
     /// Run a persisted named context view recipe.
     View {
+        /// List view recipes in a store directory.
+        #[arg(long)]
+        list: bool,
         /// JSON file using the crop.view.v1 recipe schema.
         #[arg(long)]
-        file: PathBuf,
+        file: Option<PathBuf>,
+        /// View store directory for --list. Defaults to .crop\views.
+        #[arg(long, default_value = ".crop\\views")]
+        dir: PathBuf,
     },
 }
 
@@ -209,13 +215,18 @@ fn main() -> Result<()> {
             };
             println!("{json}");
         }
-        Commands::View { file } => {
-            let input = fs::read_to_string(&file)?;
-            let base_dir = file.parent().unwrap_or_else(|| Path::new("."));
-            println!(
-                "{}",
+        Commands::View { list, file, dir } => {
+            let json = if list {
+                serde_json::to_string_pretty(&list_views(dir)?)?
+            } else {
+                let Some(file) = file else {
+                    bail!("--file is required unless --list is provided");
+                };
+                let input = fs::read_to_string(&file)?;
+                let base_dir = file.parent().unwrap_or_else(|| Path::new("."));
                 serde_json::to_string_pretty(&run_view_json(&input, base_dir)?)?
-            );
+            };
+            println!("{json}");
         }
     }
     Ok(())

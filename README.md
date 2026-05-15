@@ -55,6 +55,16 @@ View files use `crop.view.v1` JSON:
 Relative roots resolve from the view file location. The output is
 `crop.view-run.v1` JSON containing the view metadata and produced context pack.
 
+List persisted views in a store:
+
+```powershell
+cargo run -p crop-cli -- view --list --dir examples\views
+```
+
+By convention, local user views live in `.crop\views`; `--dir` can point at any
+directory of `crop.view.v1` JSON files. Non-JSON files are ignored and output is
+sorted by file name.
+
 Emit a prefix-cache-aware pack:
 
 ```powershell
@@ -233,6 +243,8 @@ caveats.
   cases from `crop.bench-manifest.v1` JSON.
 - `run_view_json(json, base_dir)` runs a persisted `crop.view.v1` recipe and
   returns `crop.view-run.v1` with the produced context pack.
+- `list_views(store)` lists `crop.view.v1` recipes from a local store directory
+  as `crop.view-list.v1` JSON.
 - `eval_fixture(case, method, budget)` runs deterministic apple-to-apple
    retrieval comparisons.
 - `eval_suite(budget)` runs every case against every local method and returns

@@ -49,7 +49,8 @@ provenance paths; exclude stale duplicates and noisy periphery.
    checked competitor export examples live under `examples/competitors/`.
    Fair-comparison guidance is documented in `docs/BENCHMARKS.md`. Done.**
 7. **Named views**: persisted task/root/budget recipes that produce reusable
-   context packs. **Active wave; first slice is `crop view --file`.**
+   context packs. **Active wave; `crop view --file` runs recipes and
+   `crop view --list` discovers local view stores.**
 
 ## Upstream kernel asks
 

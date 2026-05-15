@@ -295,6 +295,24 @@ pub struct CropViewRun {
     pub pack: CropPack,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CropViewSummary {
+    pub file: String,
+    pub name: String,
+    pub root: String,
+    pub task: String,
+    pub token_budget: usize,
+    pub seed: usize,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CropViewList {
+    pub schema_version: String,
+    pub store: String,
+    pub view_count: usize,
+    pub views: Vec<CropViewSummary>,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum EvalCase {
@@ -709,6 +727,64 @@ pub fn run_view(view: CropView, base_dir: impl AsRef<Path>) -> Result<CropViewRu
         token_budget: view.token_budget,
         seed: view.seed,
         pack,
+    })
+}
+
+pub fn list_views(store: impl AsRef<Path>) -> Result<CropViewList, CropError> {
+    let store = store.as_ref();
+    if !store.exists() {
+        return Err(CropError::RootDoesNotExist {
+            path: store.display().to_string(),
+        });
+    }
+
+    let mut entries = fs::read_dir(store)
+        .map_err(|source| CropError::InspectPath {
+            path: store.display().to_string(),
+            source,
+        })?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|source| CropError::InspectPath {
+            path: store.display().to_string(),
+            source,
+        })?;
+    entries.sort_by_key(|entry| entry.path());
+
+    let mut views = Vec::new();
+    for entry in entries {
+        let path = entry.path();
+        if !matches!(path.extension().and_then(|ext| ext.to_str()), Some("json")) {
+            continue;
+        }
+        let json = fs::read_to_string(&path).map_err(|source| CropError::ReadFile {
+            path: path.display().to_string(),
+            source,
+        })?;
+        let view: CropView =
+            serde_json::from_str(&json).map_err(|source| CropError::ViewImport(source))?;
+        if view.schema_version != CROP_VIEW_SCHEMA {
+            return Err(CropError::UnsupportedViewSchema {
+                schema_version: view.schema_version,
+            });
+        }
+        views.push(CropViewSummary {
+            file: path
+                .file_name()
+                .map(|name| name.to_string_lossy().to_string())
+                .unwrap_or_else(|| path.display().to_string()),
+            name: view.name,
+            root: view.root,
+            task: view.task,
+            token_budget: view.token_budget,
+            seed: view.seed,
+        });
+    }
+
+    Ok(CropViewList {
+        schema_version: "crop.view-list.v1".to_string(),
+        store: store.display().to_string(),
+        view_count: views.len(),
+        views,
     })
 }
 
@@ -2214,6 +2290,48 @@ mod tests {
             run_view(zero_budget, &root),
             Err(CropError::NonPositiveBudget)
         ));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn list_views_reads_sorted_json_view_store() {
+        let root = unique_temp_dir("crop-view-list");
+        fs::create_dir_all(&root).unwrap();
+        fs::write(root.join("ignore.txt"), "not a view").unwrap();
+        fs::write(
+            root.join("b-view.json"),
+            r#"{
+              "schema_version": "crop.view.v1",
+              "name": "beta",
+              "root": "docs",
+              "task": "beta task",
+              "token_budget": 200,
+              "seed": 1
+            }"#,
+        )
+        .unwrap();
+        fs::write(
+            root.join("a-view.json"),
+            r#"{
+              "schema_version": "crop.view.v1",
+              "name": "alpha",
+              "root": ".",
+              "task": "alpha task",
+              "token_budget": 100,
+              "seed": 0
+            }"#,
+        )
+        .unwrap();
+
+        let list = list_views(&root).unwrap();
+
+        assert_eq!(list.schema_version, "crop.view-list.v1");
+        assert_eq!(list.view_count, 2);
+        assert_eq!(list.views[0].file, "a-view.json");
+        assert_eq!(list.views[0].name, "alpha");
+        assert_eq!(list.views[1].file, "b-view.json");
+        assert_eq!(list.views[1].token_budget, 200);
 
         fs::remove_dir_all(root).unwrap();
     }
