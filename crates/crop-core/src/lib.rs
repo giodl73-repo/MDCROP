@@ -1,5 +1,7 @@
 use rctx_core::RCTX_VERSION;
-use rgraph_core::{shortest_connector_path, undirected_boundary_metrics};
+use rgraph_core::{
+    shortest_connector_path, undirected_boundary_metrics, undirected_cluster_summaries,
+};
 use ropt_core::{exact_budgeted_selection, BudgetItem, RoptError, SeedPart};
 use rstat_core::scoring::{weighted_component_score, ScoringError};
 use rstat_core::summary::{summary_stats, SummaryError};
@@ -37,6 +39,8 @@ pub enum CropError {
     Scoring(#[from] ScoringError),
     #[error("[KERNEL] budget packing failed: {0}")]
     Budget(#[from] RoptError),
+    #[error("[KERNEL] cluster summary failed: {0}")]
+    Cluster(String),
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -79,6 +83,7 @@ pub enum CropReason {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CropPack {
     pub units: Vec<CropUnit>,
+    pub representative_unit_id: String,
     pub token_estimate: usize,
     pub boundary_cut_edges: usize,
     pub boundary_conductance: f64,
@@ -180,6 +185,18 @@ pub fn crop_context(graph: &EvidenceGraph, options: CropOptions) -> Result<CropP
         }
     }
 
+    let selected_indices = selected
+        .iter()
+        .enumerate()
+        .filter_map(|(index, is_selected)| is_selected.then_some(index))
+        .collect::<Vec<_>>();
+    let cluster_summary = undirected_cluster_summaries(&graph.adjacency, &[selected_indices])
+        .map_err(|err| CropError::Cluster(err.to_string()))?
+        .into_iter()
+        .next()
+        .expect("selected crop always includes seed");
+    let representative_unit_id = graph.units[cluster_summary.representative_node].id.clone();
+
     let relevance_mean = summary_stats(&relevance)?.mean;
     let quality_score = weighted_component_score(
         &[relevance_mean, 1.0 - boundary_metrics.conductance],
@@ -187,6 +204,7 @@ pub fn crop_context(graph: &EvidenceGraph, options: CropOptions) -> Result<CropP
     )?;
     Ok(CropPack {
         units,
+        representative_unit_id,
         token_estimate,
         boundary_cut_edges: boundary_metrics.boundary_edges,
         boundary_conductance: boundary_metrics.conductance,
@@ -265,6 +283,7 @@ mod tests {
         .unwrap();
 
         assert_eq!(pack.token_estimate, 160);
+        assert_eq!(pack.representative_unit_id, "bridge");
         assert_eq!(pack.boundary_cut_edges, 1);
         assert_eq!(pack.boundary_conductance, 1.0);
         assert!((pack.quality_score - 0.573_333_333_333_333_4).abs() < 1e-12);

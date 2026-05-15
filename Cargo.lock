@@ -287,7 +287,7 @@ dependencies = [
 [[package]]
 name = "rctx-core"
 version = "0.1.0"
-source = "git+https://github.com/giodl73-repo/BISECT.git?branch=main#ef6ba54f42ba1fac4e11b791949f679a65802a00"
+source = "git+https://github.com/giodl73-repo/BISECT.git?branch=main#8c832ff2262e4498dca5b8120381d4eba6bfd56c"
 dependencies = [
  "serde",
  "serde_json",
@@ -298,7 +298,7 @@ dependencies = [
 [[package]]
 name = "rgraph-core"
 version = "0.1.0"
-source = "git+https://github.com/giodl73-repo/BISECT.git?branch=main#ef6ba54f42ba1fac4e11b791949f679a65802a00"
+source = "git+https://github.com/giodl73-repo/BISECT.git?branch=main#8c832ff2262e4498dca5b8120381d4eba6bfd56c"
 dependencies = [
  "thiserror",
 ]
@@ -306,7 +306,7 @@ dependencies = [
 [[package]]
 name = "ropt-core"
 version = "0.1.0"
-source = "git+https://github.com/giodl73-repo/BISECT.git?branch=main#ef6ba54f42ba1fac4e11b791949f679a65802a00"
+source = "git+https://github.com/giodl73-repo/BISECT.git?branch=main#8c832ff2262e4498dca5b8120381d4eba6bfd56c"
 dependencies = [
  "sha2",
  "thiserror",
@@ -315,7 +315,7 @@ dependencies = [
 [[package]]
 name = "rstat-core"
 version = "0.1.0"
-source = "git+https://github.com/giodl73-repo/BISECT.git?branch=main#ef6ba54f42ba1fac4e11b791949f679a65802a00"
+source = "git+https://github.com/giodl73-repo/BISECT.git?branch=main#8c832ff2262e4498dca5b8120381d4eba6bfd56c"
 dependencies = [
  "rand",
  "thiserror",
