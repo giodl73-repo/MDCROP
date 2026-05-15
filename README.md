@@ -58,6 +58,19 @@ counts, orphan flags, and selected frontmatter fields such as `status`, `tags`,
 while the structured JSON side-info remains available through `links`,
 `backlinks`, `frontmatter`, and `headings`.
 
+Report PROOF generated artifact health:
+
+```powershell
+cargo run -p crop-cli -- artifacts --root C:\src\proof
+cargo run -p crop-cli -- artifacts --manifest C:\src\proof\.proof\artifacts.json
+```
+
+`crop artifacts` emits `crop.proof-artifacts.v1` JSON from PROOF's
+`.proof\artifacts.json` contract. It maps source files to generated outputs and
+reports missing outputs, stale outputs, cache status, directive counts, and
+diagnostic counts so PROOF can keep generated Markdown, ASCII, and HTML
+surfaces aligned with source.
+
 Audit local Markdown links as structured side-info:
 
 ```powershell

@@ -29,6 +29,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
 | 11 | Frontmatter inventory | done | Added root/view frontmatter inventories with field maps and aggregate key counts. |
 | 12 | Markdown catalog | done | Added root/view catalog tables carrying frontmatter tags/status plus link side-info. |
 | 13 | Frontmatter query views | done | Added OData-style `frontmatter_query` view filters over tags and arbitrary metadata fields. |
+| 14 | PROOF artifact manifests | done | Added artifact manifest reports for generated output existence, staleness, and diagnostics. |
 
 ## Success criteria
 
@@ -60,5 +61,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
   side-info into ready-to-embed README/TOC tables.
 - Views can filter Markdown sources by frontmatter predicates such as tag
   membership, status, wave, version, or other top-level metadata fields.
+- Artifact reports map PROOF source files to generated outputs and flag missing
+  or stale generated Markdown/ASCII/HTML surfaces.
 - `cargo fmt`, `cargo test --workspace`, inspect smoke runs, and `git diff
   --check` pass.

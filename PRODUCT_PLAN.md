@@ -86,6 +86,10 @@ provenance paths; exclude stale duplicates and noisy periphery.
     **First slice; `crop.view.v1` supports `frontmatter_query` predicates like
     `tags has 'computing' and status ne 'draft'` over arbitrary top-level
     frontmatter fields for Maxim/PROOF-style reusable views.**
+16. **PROOF artifact manifests**: generated-output health for docs pipelines.
+    **First slice; `crop artifacts` reads PROOF `.proof/artifacts.json` records
+    and reports source/output mappings, missing outputs, stale outputs, cache
+    status, directive counts, and diagnostics.**
 
 ## Upstream kernel asks
 
