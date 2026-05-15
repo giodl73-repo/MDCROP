@@ -12,6 +12,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 
+pub const COMPETITOR_RESULTS_SCHEMA: &str = "crop.competitor-results.v1";
+
 #[derive(Debug, Error)]
 pub enum CropError {
     #[error("[INPUT] evidence graph must contain at least one unit")]
@@ -65,6 +67,14 @@ pub enum CropError {
     Cluster(String),
     #[error("[CACHE] failed to serialize prefix block: {0}")]
     PrefixSerialize(#[from] serde_json::Error),
+    #[error("[EVAL] failed to parse competitor results: {0}")]
+    CompetitorImport(serde_json::Error),
+    #[error("[EVAL] unsupported competitor result schema: {schema_version}")]
+    UnsupportedCompetitorSchema { schema_version: String },
+    #[error("[EVAL] competitor result references unknown unit ID: {unit_id}")]
+    UnknownCompetitorUnit { unit_id: String },
+    #[error("[EVAL] competitor result repeats unit ID: {unit_id}")]
+    DuplicateCompetitorUnit { unit_id: String },
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -232,6 +242,64 @@ pub struct EvalSuiteReport {
     pub aggregates: Vec<EvalAggregate>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum CompetitorClass {
+    Vector,
+    Lexical,
+    Hybrid,
+    RagOrchestration,
+    Graph,
+    Other,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CompetitorMethodMetadata {
+    pub method_id: String,
+    pub competitor_class: CompetitorClass,
+    pub implementation: String,
+    pub version: Option<String>,
+    pub notes: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct CompetitorSelectedUnit {
+    pub unit_id: String,
+    pub score: Option<f64>,
+    pub token_estimate: Option<usize>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct CompetitorEvalInput {
+    pub schema_version: String,
+    pub case: EvalCase,
+    pub token_budget: usize,
+    pub method: CompetitorMethodMetadata,
+    pub selected_units: Vec<CompetitorSelectedUnit>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct CompetitorEvalReport {
+    pub schema_version: String,
+    pub case: EvalCase,
+    pub method: CompetitorMethodMetadata,
+    pub token_budget: usize,
+    pub selected_unit_ids: Vec<String>,
+    pub token_estimate: usize,
+    pub reported_token_estimate: Option<usize>,
+    pub gold_recall: f64,
+    pub bridge_recall: f64,
+    pub noise_rate: f64,
+    pub source_coverage: f64,
+    pub budget_efficiency: f64,
+    pub noise_token_share: f64,
+    pub quality_score: f64,
+}
+
+pub trait CompetitorAdapter {
+    fn export_competitor_results(&self) -> CompetitorEvalInput;
+}
+
 pub fn shared_kernel_probe(seed: usize) -> (&'static str, SeedPart) {
     (RCTX_VERSION, SeedPart::Usize(seed))
 }
@@ -305,6 +373,51 @@ pub fn eval_suite(token_budget: usize) -> Result<EvalSuiteReport, CropError> {
         methods,
         rows,
         aggregates,
+    })
+}
+
+pub fn eval_competitor_json(json: &str) -> Result<CompetitorEvalReport, CropError> {
+    let input = serde_json::from_str(json).map_err(|source| CropError::CompetitorImport(source))?;
+    eval_competitor_results(input)
+}
+
+pub fn eval_competitor_results(
+    input: CompetitorEvalInput,
+) -> Result<CompetitorEvalReport, CropError> {
+    if input.token_budget == 0 {
+        return Err(CropError::NonPositiveBudget);
+    }
+    if input.schema_version != COMPETITOR_RESULTS_SCHEMA {
+        return Err(CropError::UnsupportedCompetitorSchema {
+            schema_version: input.schema_version,
+        });
+    }
+    let fixture = fixture_for_case(input.case);
+    let selected = validate_competitor_selection(&fixture.graph, &input.selected_units)?;
+    let report = eval_selected_units(&fixture, &selected, input.token_budget, None)?;
+    let reported_token_estimate = input
+        .selected_units
+        .iter()
+        .map(|unit| unit.token_estimate)
+        .try_fold(0usize, |sum, token_estimate| {
+            token_estimate.map(|token_estimate| sum + token_estimate)
+        });
+
+    Ok(CompetitorEvalReport {
+        schema_version: input.schema_version,
+        case: input.case,
+        method: input.method,
+        token_budget: input.token_budget,
+        selected_unit_ids: report.selected_unit_ids,
+        token_estimate: report.token_estimate,
+        reported_token_estimate,
+        gold_recall: report.gold_recall,
+        bridge_recall: report.bridge_recall,
+        noise_rate: report.noise_rate,
+        source_coverage: report.source_coverage,
+        budget_efficiency: report.budget_efficiency,
+        noise_token_share: report.noise_token_share,
+        quality_score: report.quality_score,
     })
 }
 
@@ -762,7 +875,7 @@ fn eval_case(
     method: EvalMethod,
     token_budget: usize,
 ) -> Result<EvalReport, CropError> {
-    let graph = fixture.graph;
+    let graph = &fixture.graph;
     let crop_pack;
     let selected = match method {
         EvalMethod::Crop => {
@@ -794,8 +907,21 @@ fn eval_case(
             hybrid_top_k_selection(&graph, fixture.task, token_budget)
         }
     };
+    eval_selected_units(&fixture, &selected, token_budget, crop_pack.as_ref()).map(|mut report| {
+        report.method = method;
+        report
+    })
+}
+
+fn eval_selected_units(
+    fixture: &EvalFixture,
+    selected: &[String],
+    token_budget: usize,
+    crop_pack: Option<&CropPack>,
+) -> Result<EvalReport, CropError> {
     let selected_set = selected.iter().cloned().collect::<BTreeSet<_>>();
-    let token_estimate = graph
+    let token_estimate = fixture
+        .graph
         .units
         .iter()
         .filter(|unit| selected_set.contains(&unit.id))
@@ -803,7 +929,7 @@ fn eval_case(
         .sum::<usize>();
     let gold_recall = recall(&selected_set, &fixture.gold);
     let bridge_recall = recall(&selected_set, &fixture.bridge);
-    let source_coverage = source_coverage(&graph, &selected_set, &fixture.gold);
+    let source_coverage = source_coverage(&fixture.graph, &selected_set, &fixture.gold);
     let budget_efficiency = if token_estimate == 0 {
         0.0
     } else {
@@ -830,7 +956,7 @@ fn eval_case(
         fixture
             .noise
             .iter()
-            .filter_map(|unit_id| graph.units.iter().find(|unit| unit.id == *unit_id))
+            .filter_map(|unit_id| fixture.graph.units.iter().find(|unit| unit.id == *unit_id))
             .filter(|unit| selected_set.contains(&unit.id))
             .map(|unit| unit.token_estimate)
             .sum::<usize>() as f64
@@ -843,9 +969,9 @@ fn eval_case(
 
     Ok(EvalReport {
         case: fixture.case,
-        method,
+        method: EvalMethod::ScoreTopK,
         token_budget,
-        selected_unit_ids: selected,
+        selected_unit_ids: selected.to_vec(),
         token_estimate,
         gold_recall,
         bridge_recall,
@@ -855,6 +981,33 @@ fn eval_case(
         noise_token_share,
         quality_score,
     })
+}
+
+fn validate_competitor_selection(
+    graph: &EvidenceGraph,
+    selected_units: &[CompetitorSelectedUnit],
+) -> Result<Vec<String>, CropError> {
+    let known = graph
+        .units
+        .iter()
+        .map(|unit| unit.id.as_str())
+        .collect::<BTreeSet<_>>();
+    let mut seen = BTreeSet::new();
+    let mut selected = Vec::new();
+    for unit in selected_units {
+        if !known.contains(unit.unit_id.as_str()) {
+            return Err(CropError::UnknownCompetitorUnit {
+                unit_id: unit.unit_id.clone(),
+            });
+        }
+        if !seen.insert(unit.unit_id.clone()) {
+            return Err(CropError::DuplicateCompetitorUnit {
+                unit_id: unit.unit_id.clone(),
+            });
+        }
+        selected.push(unit.unit_id.clone());
+    }
+    Ok(selected)
 }
 
 fn score_top_k_selection(graph: &EvidenceGraph, token_budget: usize) -> Vec<String> {
@@ -1340,6 +1493,87 @@ mod tests {
     }
 
     #[test]
+    fn competitor_import_scores_saved_results_with_same_metrics() {
+        let input = CompetitorEvalInput {
+            schema_version: COMPETITOR_RESULTS_SCHEMA.to_string(),
+            case: EvalCase::MissingBridge,
+            token_budget: 160,
+            method: competitor_method("qdrant-fixture"),
+            selected_units: vec![
+                competitor_unit("task-seed", 0.99, 80),
+                competitor_unit("target-note", 0.98, 40),
+                competitor_unit("stale-noise", 0.97, 40),
+            ],
+        };
+
+        let report = eval_competitor_results(input).unwrap();
+
+        assert_eq!(report.schema_version, "crop.competitor-results.v1");
+        assert_eq!(report.method.method_id, "qdrant-fixture");
+        assert_eq!(
+            report.selected_unit_ids,
+            vec!["task-seed", "target-note", "stale-noise"]
+        );
+        assert_eq!(report.token_estimate, 160);
+        assert_eq!(report.reported_token_estimate, Some(160));
+        assert_eq!(report.gold_recall, 2.0 / 3.0);
+        assert_eq!(report.bridge_recall, 0.0);
+        assert_eq!(report.noise_rate, 1.0 / 3.0);
+        assert_eq!(report.source_coverage, 2.0 / 3.0);
+        assert_eq!(report.budget_efficiency, 2.0 / 160.0);
+        assert_eq!(report.noise_token_share, 40.0 / 160.0);
+        assert_eq!(report.quality_score, report.gold_recall - report.noise_rate);
+    }
+
+    #[test]
+    fn competitor_json_import_rejects_unknown_and_duplicate_units() {
+        let unknown = CompetitorEvalInput {
+            schema_version: COMPETITOR_RESULTS_SCHEMA.to_string(),
+            case: EvalCase::MissingBridge,
+            token_budget: 160,
+            method: competitor_method("bad-import"),
+            selected_units: vec![competitor_unit("missing-unit", 0.5, 40)],
+        };
+        assert!(matches!(
+            eval_competitor_results(unknown),
+            Err(CropError::UnknownCompetitorUnit { .. })
+        ));
+
+        let unsupported = CompetitorEvalInput {
+            schema_version: "crop.competitor-results.v0".to_string(),
+            case: EvalCase::MissingBridge,
+            token_budget: 160,
+            method: competitor_method("bad-schema"),
+            selected_units: vec![competitor_unit("task-seed", 0.5, 80)],
+        };
+        assert!(matches!(
+            eval_competitor_results(unsupported),
+            Err(CropError::UnsupportedCompetitorSchema { .. })
+        ));
+
+        let duplicate = r#"{
+          "schema_version": "crop.competitor-results.v1",
+          "case": "missing-bridge",
+          "token_budget": 160,
+          "method": {
+            "method_id": "duplicate-import",
+            "competitor_class": "vector",
+            "implementation": "offline-fixture",
+            "version": null,
+            "notes": null
+          },
+          "selected_units": [
+            {"unit_id": "task-seed", "score": 0.9, "token_estimate": 80},
+            {"unit_id": "task-seed", "score": 0.8, "token_estimate": 80}
+          ]
+        }"#;
+        assert!(matches!(
+            eval_competitor_json(duplicate),
+            Err(CropError::DuplicateCompetitorUnit { .. })
+        ));
+    }
+
+    #[test]
     fn ingests_markdown_links_and_scores_task_terms() {
         let root = unique_temp_dir("crop-ingest");
         fs::create_dir_all(root.join("docs")).unwrap();
@@ -1474,6 +1708,24 @@ mod tests {
         };
         let pack = crop_context(&ingested.graph, options.clone()).unwrap();
         prefix_cached_pack(&ingested, pack, task, options, PrefixCacheProfile::Generic).unwrap()
+    }
+
+    fn competitor_method(method_id: &str) -> CompetitorMethodMetadata {
+        CompetitorMethodMetadata {
+            method_id: method_id.to_string(),
+            competitor_class: CompetitorClass::Vector,
+            implementation: "offline-fixture".to_string(),
+            version: Some("test".to_string()),
+            notes: None,
+        }
+    }
+
+    fn competitor_unit(unit_id: &str, score: f64, token_estimate: usize) -> CompetitorSelectedUnit {
+        CompetitorSelectedUnit {
+            unit_id: unit_id.to_string(),
+            score: Some(score),
+            token_estimate: Some(token_estimate),
+        }
     }
 }
 

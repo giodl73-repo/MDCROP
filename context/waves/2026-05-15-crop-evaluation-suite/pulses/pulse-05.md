@@ -2,7 +2,7 @@
 
 ## Status
 
-Todo.
+Done.
 
 ## Goal
 
@@ -12,13 +12,18 @@ vendor lock-in.
 ## Deliverables
 
 - Define an adapter trait/JSON contract for external retrieval results:
-  selected unit IDs, scores, token use, and method metadata.
+  selected unit IDs, scores, token use, and method metadata. **Done** via
+  `CompetitorEvalInput`, `CompetitorMethodMetadata`, and
+  `CompetitorSelectedUnit`, plus the `CompetitorAdapter` trait for exporters.
 - Add an import path for saved competitor results so vector/search systems can
-  be evaluated offline against the same labels.
+  be evaluated offline against the same labels. **Done** via
+  `eval_competitor_json`, `eval_competitor_results`, and
+  `crop eval-import --input`.
 - Document candidate competitors: Qdrant/Chroma for vector, Lucene/Tantivy for
   lexical, LlamaIndex/LangChain-style retrievers for RAG orchestration, and
-  GraphRAG/Neo4j-style graph systems for graph comparison.
-- Keep the first implementation local-only; no network calls in tests.
+  GraphRAG/Neo4j-style graph systems for graph comparison. **Done** in
+  `README.md`.
+- Keep the first implementation local-only; no network calls in tests. **Done**.
 
 ## Scout commands
 
@@ -34,3 +39,10 @@ cargo fmt
 cargo test --workspace
 git diff --check
 ```
+
+## Outcome
+
+External systems can now export saved fixture selections using
+`crop.competitor-results.v1`; CROP validates selected unit IDs, rejects duplicate
+or unknown units, and scores the imported results with the same metric contract
+used by local fixture methods.

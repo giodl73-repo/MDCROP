@@ -2,11 +2,13 @@
 
 ## Active wave
 
-`2026-05-15-crop-evaluation-suite` — build the apple-to-apple fixture and
-baseline suite that proves when graph-cut context cropping beats ordinary
-ranking/index approaches.
+None.
 
 ## Completed waves
+
+`2026-05-15-crop-evaluation-suite` — built the apple-to-apple fixture and
+baseline suite, metrics contract, and offline competitor import contract that
+prove when graph-cut context cropping beats ordinary ranking/index approaches.
 
 `2026-05-15-crop-product` — established the local-first CROP engine and product
 surface for graph-cut context cropping.

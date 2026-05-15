@@ -87,6 +87,40 @@ Evaluation metrics:
 Latency is intentionally not part of fixture metrics yet; it should be measured
 on real corpora where filesystem and process noise can be handled separately.
 
+Score saved external competitor results offline:
+
+```powershell
+cargo run -p crop-cli -- eval-import --input competitor-results.json
+```
+
+The competitor JSON contract is intentionally local-only and dependency-free:
+
+```json
+{
+  "schema_version": "crop.competitor-results.v1",
+  "case": "missing-bridge",
+  "token_budget": 160,
+  "method": {
+    "method_id": "qdrant-demo",
+    "competitor_class": "vector",
+    "implementation": "qdrant",
+    "version": null,
+    "notes": "offline export; no network call during CROP eval"
+  },
+  "selected_units": [
+    { "unit_id": "task-seed", "score": 0.99, "token_estimate": 80 },
+    { "unit_id": "target-note", "score": 0.98, "token_estimate": 40 }
+  ]
+}
+```
+
+Candidate competitor classes are vector databases such as Qdrant and Chroma,
+lexical/search indexes such as Lucene and Tantivy, hybrid retrievers, RAG
+orchestrators such as LlamaIndex and LangChain, and graph systems such as
+GraphRAG or Neo4j-backed retrieval. Their exported unit IDs are scored against
+the same fixture labels, canonical token counts, and metrics as CROP and the
+local baselines.
+
 ## Rust API
 
 `crop-core` exposes the first local engine surface:
@@ -99,9 +133,13 @@ on real corpora where filesystem and process noise can be handled separately.
 - `prefix_cached_pack(ingested, pack, task, options, profile)` wraps a crop in a
   cache-aware prefix/body/task-tail manifest.
 - `eval_fixture(case, method, budget)` runs deterministic apple-to-apple
-  retrieval comparisons.
+   retrieval comparisons.
 - `eval_suite(budget)` runs every case against every local method and returns
-  aggregate means.
+   aggregate means.
+- `eval_competitor_json(json)` imports saved external retrieval results and
+  scores them against the same fixture labels and metric contract.
+- `CompetitorAdapter` defines the minimal export trait for adapters that want to
+  emit the same competitor result contract from Rust.
 
 ## Development
 

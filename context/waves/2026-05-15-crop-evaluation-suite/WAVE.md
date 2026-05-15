@@ -31,7 +31,8 @@ not define a separate benchmark.
    task string, token budget, and gold/noise labels.
 2. No LLM calls are allowed in fixture scoring.
 3. Metrics must be deterministic JSON: selected units, token use, gold recall,
-   bridge recall, noise rate, source coverage, budget efficiency, and latency.
+   bridge recall, noise rate, source coverage, budget efficiency, noise-token
+   share, and quality score. Latency is deferred to real-corpus benchmarks.
 4. A fixture is only accepted when it has a positive CROP expectation and a
    baseline failure mode documented in the pulse.
 5. Baselines must be strong enough to be fair: deterministic tie-breaking,
@@ -45,17 +46,19 @@ not define a separate benchmark.
 | 02 | Baseline methods | done | Added lexical and hybrid top-k baselines beside score top-k. |
 | 03 | Eval aggregate command | done | Added `crop eval --all` and suite-level JSON aggregate summaries. |
 | 04 | Metrics contract | done | Added source coverage, budget efficiency, noise-token share, and metric docs. |
-| 05 | Competitor adapter spec | todo | Define external vector/search adapter contract without adding hosted dependencies. |
+| 05 | Competitor adapter spec | done | Added offline competitor JSON contract, import scoring, CLI path, and competitor docs. |
 
 ## Success criteria
 
 - `cargo run -p crop-cli -- eval --all --budget 160` produces deterministic JSON.
 - At least four fixture cases compare `crop` and `score-top-k`.
 - At least two fixture cases compare `crop`, `score-top-k`, `lexical-top-k`, and
-  `hybrid-top-k`.
+   `hybrid-top-k`.
 - The README explains what CROP wins, where it does not yet compete, and how to
-  reproduce every comparison locally.
+   reproduce every comparison locally.
 - All evaluation fixtures are covered by unit tests and CLI smoke runs.
+- External competitor exports can be scored offline through
+  `crop eval-import --input` without adding hosted dependencies.
 
 ## Risks and mitigations
 

@@ -40,8 +40,9 @@ provenance paths; exclude stale duplicates and noisy periphery.
    replayable manifest. **Prefix-cache-aware pack output is available with
    `--prefix-cache generic`.**
 5. **Evaluation loop**: fixtures and benchmarks against top-k vector retrieval,
-   measuring noise, missing bridges, source coverage, and latency. **Five
-   apple-to-apple fixture cases are available via `crop eval`.**
+    measuring noise, missing bridges, source coverage, and later real-corpus
+    latency. **Five apple-to-apple fixture cases are available via `crop eval`;
+    offline external competitor exports can be scored with `crop eval-import`.**
 
 ## Upstream kernel asks
 

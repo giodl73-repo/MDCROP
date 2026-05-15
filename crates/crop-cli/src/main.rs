@@ -1,8 +1,9 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand, ValueEnum};
 use crop_core::{
-    crop_context, eval_fixture, eval_suite, fixture_graph, ingest_path, prefix_cached_pack,
-    score_graph_for_task, CropOptions, EvalCase, EvalMethod, PrefixCacheProfile,
+    crop_context, eval_competitor_json, eval_fixture, eval_suite, fixture_graph, ingest_path,
+    prefix_cached_pack, score_graph_for_task, CropOptions, EvalCase, EvalMethod,
+    PrefixCacheProfile,
 };
 use std::fs;
 use std::path::PathBuf;
@@ -58,6 +59,12 @@ enum Commands {
         /// Token budget for the evaluated context.
         #[arg(long, default_value_t = 160)]
         budget: usize,
+    },
+    /// Score saved external competitor retrieval results against fixture labels.
+    EvalImport {
+        /// JSON file using the competitor result contract.
+        #[arg(long)]
+        input: PathBuf,
     },
 }
 
@@ -140,6 +147,13 @@ fn main() -> Result<()> {
                 serde_json::to_string_pretty(&eval_fixture(case.into(), method.into(), budget)?)?
             };
             println!("{json}");
+        }
+        Commands::EvalImport { input } => {
+            let json = fs::read_to_string(input)?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&eval_competitor_json(&json)?)?
+            );
         }
     }
     Ok(())
