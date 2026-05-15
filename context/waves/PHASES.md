@@ -2,14 +2,14 @@
 
 ## Active wave
 
-`2026-05-15-crop-product` — establish the local-first CROP engine and product
-surface for graph-cut context cropping.
-
-## Planned waves
-
 `2026-05-15-crop-evaluation-suite` — build the apple-to-apple fixture and
 baseline suite that proves when graph-cut context cropping beats ordinary
 ranking/index approaches.
+
+## Completed waves
+
+`2026-05-15-crop-product` — established the local-first CROP engine and product
+surface for graph-cut context cropping.
 
 ## Operating protocol
 

@@ -135,6 +135,10 @@ pub struct CropPack {
 #[serde(rename_all = "kebab-case")]
 pub enum EvalCase {
     MissingBridge,
+    NoisyPeriphery,
+    StaleDuplicate,
+    BudgetPacking,
+    CrossLinkChain,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -205,9 +209,7 @@ pub fn eval_fixture(
     if token_budget == 0 {
         return Err(CropError::NonPositiveBudget);
     }
-    match case {
-        EvalCase::MissingBridge => eval_missing_bridge(method, token_budget),
-    }
+    eval_case(fixture_for_case(case), method, token_budget)
 }
 
 pub fn ingest_path(root: impl AsRef<Path>) -> Result<IngestedEvidence, CropError> {
@@ -428,8 +430,128 @@ pub fn crop_context(graph: &EvidenceGraph, options: CropOptions) -> Result<CropP
     })
 }
 
-fn eval_missing_bridge(method: EvalMethod, token_budget: usize) -> Result<EvalReport, CropError> {
-    let graph = fixture_graph();
+struct EvalFixture {
+    case: EvalCase,
+    graph: EvidenceGraph,
+    gold: Vec<&'static str>,
+    bridge: Vec<&'static str>,
+    noise: Vec<&'static str>,
+}
+
+fn fixture_for_case(case: EvalCase) -> EvalFixture {
+    match case {
+        EvalCase::MissingBridge => EvalFixture {
+            case,
+            graph: fixture_graph(),
+            gold: vec!["task-seed", "bridge-note", "target-note"],
+            bridge: vec!["bridge-note"],
+            noise: vec!["stale-noise"],
+        },
+        EvalCase::NoisyPeriphery => EvalFixture {
+            case,
+            graph: EvidenceGraph {
+                units: vec![
+                    unit_with_source("seed", "fixture:task", "Task seed.", 1.0, 80),
+                    unit_with_source("bridge", "fixture:bridge", "Relevant bridge.", 0.25, 40),
+                    unit_with_source("target", "fixture:target", "Target evidence.", 0.95, 40),
+                    unit_with_source(
+                        "periphery-noise",
+                        "fixture:noise",
+                        "Nearby noisy aside.",
+                        0.9,
+                        40,
+                    ),
+                ],
+                adjacency: vec![vec![1, 3], vec![0, 2], vec![1], vec![0]],
+            },
+            gold: vec!["seed", "bridge", "target"],
+            bridge: vec!["bridge"],
+            noise: vec!["periphery-noise"],
+        },
+        EvalCase::StaleDuplicate => EvalFixture {
+            case,
+            graph: EvidenceGraph {
+                units: vec![
+                    unit_with_source("seed", "fixture:task", "Task seed.", 1.0, 60),
+                    unit_with_source(
+                        "current-canonical",
+                        "fixture:current",
+                        "Current canonical evidence.",
+                        0.85,
+                        50,
+                    ),
+                    unit_with_source(
+                        "stale-duplicate",
+                        "fixture:stale",
+                        "Stale duplicate with misleading score.",
+                        0.99,
+                        50,
+                    ),
+                ],
+                adjacency: vec![vec![1], vec![0], vec![]],
+            },
+            gold: vec!["seed", "current-canonical"],
+            bridge: vec![],
+            noise: vec!["stale-duplicate"],
+        },
+        EvalCase::BudgetPacking => EvalFixture {
+            case,
+            graph: EvidenceGraph {
+                units: vec![
+                    unit_with_source("seed", "fixture:task", "Task seed.", 1.0, 20),
+                    unit_with_source("small-gold-a", "fixture:a", "Small gold A.", 0.7, 60),
+                    unit_with_source("small-gold-b", "fixture:b", "Small gold B.", 0.7, 60),
+                    unit_with_source(
+                        "large-distractor",
+                        "fixture:large",
+                        "Large distracting context.",
+                        0.95,
+                        120,
+                    ),
+                ],
+                adjacency: vec![vec![1, 2], vec![0], vec![0], vec![]],
+            },
+            gold: vec!["seed", "small-gold-a", "small-gold-b"],
+            bridge: vec![],
+            noise: vec!["large-distractor"],
+        },
+        EvalCase::CrossLinkChain => EvalFixture {
+            case,
+            graph: EvidenceGraph {
+                units: vec![
+                    unit_with_source("seed", "fixture:task", "Task seed.", 1.0, 40),
+                    unit_with_source("link-a", "fixture:a", "First cross-link hop.", 0.15, 40),
+                    unit_with_source("link-b", "fixture:b", "Second cross-link hop.", 0.15, 40),
+                    unit_with_source(
+                        "target",
+                        "fixture:target",
+                        "Linked target evidence.",
+                        0.9,
+                        40,
+                    ),
+                    unit_with_source(
+                        "shortcut-noise",
+                        "fixture:noise",
+                        "High scoring shortcut noise.",
+                        0.85,
+                        40,
+                    ),
+                ],
+                adjacency: vec![vec![1, 4], vec![0, 2], vec![1, 3], vec![2], vec![0]],
+            },
+            gold: vec!["seed", "link-a", "link-b", "target"],
+            bridge: vec!["link-a", "link-b"],
+            noise: vec!["shortcut-noise"],
+        },
+    }
+}
+
+fn eval_case(
+    fixture: EvalFixture,
+    method: EvalMethod,
+    token_budget: usize,
+) -> Result<EvalReport, CropError> {
+    let graph = fixture.graph;
     let crop_pack;
     let selected = match method {
         EvalMethod::Crop => {
@@ -460,15 +582,13 @@ fn eval_missing_bridge(method: EvalMethod, token_budget: usize) -> Result<EvalRe
         .filter(|unit| selected_set.contains(&unit.id))
         .map(|unit| unit.token_estimate)
         .sum::<usize>();
-    let gold = ["task-seed", "bridge-note", "target-note"];
-    let bridge = ["bridge-note"];
-    let noise = ["stale-noise"];
-    let gold_recall = recall(&selected_set, &gold);
-    let bridge_recall = recall(&selected_set, &bridge);
+    let gold_recall = recall(&selected_set, &fixture.gold);
+    let bridge_recall = recall(&selected_set, &fixture.bridge);
     let noise_rate = if selected.is_empty() {
         0.0
     } else {
-        noise
+        fixture
+            .noise
             .iter()
             .filter(|unit_id| selected_set.contains(**unit_id))
             .count() as f64
@@ -480,7 +600,7 @@ fn eval_missing_bridge(method: EvalMethod, token_budget: usize) -> Result<EvalRe
         .unwrap_or(gold_recall - noise_rate);
 
     Ok(EvalReport {
-        case: EvalCase::MissingBridge,
+        case: fixture.case,
         method,
         token_budget,
         selected_unit_ids: selected,
@@ -835,6 +955,40 @@ mod tests {
         assert!(top_k.gold_recall < crop.gold_recall);
         assert_eq!(top_k.bridge_recall, 0.0);
         assert!(top_k.noise_rate > 0.0);
+    }
+
+    #[test]
+    fn eval_expanded_fixtures_show_distinct_crop_wins() {
+        for case in [
+            EvalCase::NoisyPeriphery,
+            EvalCase::StaleDuplicate,
+            EvalCase::BudgetPacking,
+            EvalCase::CrossLinkChain,
+        ] {
+            let crop = eval_fixture(case, EvalMethod::Crop, 160).unwrap();
+            let top_k = eval_fixture(case, EvalMethod::ScoreTopK, 160).unwrap();
+
+            assert_eq!(crop.gold_recall, 1.0, "{case:?}");
+            assert_eq!(crop.noise_rate, 0.0, "{case:?}");
+            assert!(
+                top_k.gold_recall < crop.gold_recall || top_k.noise_rate > crop.noise_rate,
+                "{case:?}"
+            );
+            assert!(top_k.noise_rate > crop.noise_rate, "{case:?}");
+        }
+    }
+
+    #[test]
+    fn eval_cross_link_chain_tracks_bridge_recall() {
+        let crop = eval_fixture(EvalCase::CrossLinkChain, EvalMethod::Crop, 160).unwrap();
+        let top_k = eval_fixture(EvalCase::CrossLinkChain, EvalMethod::ScoreTopK, 160).unwrap();
+
+        assert_eq!(
+            crop.selected_unit_ids,
+            vec!["seed", "link-a", "link-b", "target"]
+        );
+        assert_eq!(crop.bridge_recall, 1.0);
+        assert!(top_k.bridge_recall < crop.bridge_recall);
     }
 
     #[test]

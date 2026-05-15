@@ -33,16 +33,21 @@ cargo run -p crop-cli -- pack --root C:\src\CROP --task "explain graph context b
 
 Add `--output context.crop.json` to write the pack to disk instead of stdout.
 
-Run the first apple-to-apple fixture evaluation:
+Run apple-to-apple fixture evaluations:
 
 ```powershell
 cargo run -p crop-cli -- eval --case missing-bridge --method crop --budget 160
 cargo run -p crop-cli -- eval --case missing-bridge --method score-top-k --budget 160
+cargo run -p crop-cli -- eval --case noisy-periphery --method crop --budget 160
+cargo run -p crop-cli -- eval --case stale-duplicate --method crop --budget 160
+cargo run -p crop-cli -- eval --case budget-packing --method crop --budget 160
+cargo run -p crop-cli -- eval --case cross-link-chain --method crop --budget 160
 ```
 
-The missing-bridge fixture uses the same units, relevance scores, token budget,
-and gold labels for both methods. Metrics include gold recall, bridge recall,
-noise rate, token use, and quality score.
+The fixture suite uses the same units, relevance scores, token budget, and gold
+labels for each method. Metrics include gold recall, bridge recall, noise rate,
+token use, and quality score. Current cases cover missing bridges, noisy
+periphery, stale duplicates, budget packing, and cross-link chains.
 
 ## Rust API
 

@@ -58,6 +58,10 @@ enum Commands {
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum EvalCaseArg {
     MissingBridge,
+    NoisyPeriphery,
+    StaleDuplicate,
+    BudgetPacking,
+    CrossLinkChain,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -118,6 +122,10 @@ impl From<EvalCaseArg> for EvalCase {
     fn from(value: EvalCaseArg) -> Self {
         match value {
             EvalCaseArg::MissingBridge => EvalCase::MissingBridge,
+            EvalCaseArg::NoisyPeriphery => EvalCase::NoisyPeriphery,
+            EvalCaseArg::StaleDuplicate => EvalCase::StaleDuplicate,
+            EvalCaseArg::BudgetPacking => EvalCase::BudgetPacking,
+            EvalCaseArg::CrossLinkChain => EvalCase::CrossLinkChain,
         }
     }
 }

@@ -2,7 +2,7 @@
 
 ## Status
 
-Todo.
+Done.
 
 ## Goal
 
@@ -11,15 +11,15 @@ failure modes.
 
 ## Deliverables
 
-- Add `noisy-periphery`: high-scoring nearby noise should be excluded by a tighter
+- [x] Add `noisy-periphery`: high-scoring nearby noise should be excluded by a tighter
   crop boundary.
-- Add `stale-duplicate`: stale high-score duplicate should lose to current or
+- [x] Add `stale-duplicate`: stale high-score duplicate should lose to current or
   canonical evidence.
-- Add `budget-packing`: score top-k should waste budget on one large item while
+- [x] Add `budget-packing`: score top-k should waste budget on one large item while
   CROP packs multiple gold units.
-- Add `cross-link-chain`: explicit file links should carry CROP through
+- [x] Add `cross-link-chain`: explicit file links should carry CROP through
   intermediate context that top-k misses.
-- Add positive/negative tests for every case.
+- [x] Add positive/negative tests for every case.
 
 ## Scout commands
 
