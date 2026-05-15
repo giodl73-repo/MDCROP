@@ -30,6 +30,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
 | 12 | Markdown catalog | done | Added root/view catalog tables carrying frontmatter tags/status plus link side-info. |
 | 13 | Frontmatter query views | done | Added OData-style `frontmatter_query` view filters over tags and arbitrary metadata fields. |
 | 14 | PROOF artifact manifests | done | Added artifact manifest reports for generated output existence, staleness, and diagnostics. |
+| 15 | PROOF contracts | done | Added deterministic PROOF fixtures, schema docs/goldens, and a focused artifact module split. |
 
 ## Success criteria
 
@@ -63,5 +64,9 @@ before paying the cost of ingest/scoring/cropping a large corpus.
   membership, status, wave, version, or other top-level metadata fields.
 - Artifact reports map PROOF source files to generated outputs and flag missing
   or stale generated Markdown/ASCII/HTML surfaces.
+- PROOF side-info contracts have deterministic fixtures, documented schemas, and
+  golden examples for integration tests.
+- The PROOF artifact surface has focused core and CLI modules while preserving
+  existing public API and CLI behavior.
 - `cargo fmt`, `cargo test --workspace`, inspect smoke runs, and `git diff
   --check` pass.

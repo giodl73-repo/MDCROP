@@ -71,6 +71,9 @@ reports missing outputs, stale outputs, cache status, directive counts, and
 diagnostic counts so PROOF can keep generated Markdown, ASCII, and HTML
 surfaces aligned with source.
 
+Stable PROOF-facing schema notes live in [`docs\specs`](docs/specs), with a
+deterministic local contract fixture under `examples\proof-fixture`.
+
 Audit local Markdown links as structured side-info:
 
 ```powershell

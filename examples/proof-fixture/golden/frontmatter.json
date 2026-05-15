@@ -1,0 +1,22 @@
+{
+  "schema_version": "crop.markdown-frontmatter.v1",
+  "source_count": 3,
+  "page_count": 3,
+  "key_counts": {
+    "status": 3,
+    "tags": 3,
+    "title": 3,
+    "version": 3
+  },
+  "required_rows": [
+    {
+      "source": "guide.source.md",
+      "fields": {
+        "status": "ready",
+        "tags": "[proof, guide]",
+        "title": "Guide",
+        "version": "1.0"
+      }
+    }
+  ]
+}

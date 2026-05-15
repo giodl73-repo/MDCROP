@@ -1,0 +1,14 @@
+{
+  "schema_version": "crop.markdown-backlinks.v1",
+  "source_count": 3,
+  "ok_link_count": 1,
+  "orphan_count": 2,
+  "required_rows": [
+    {
+      "source": "reference.source.md",
+      "inbound_link_count": 1,
+      "outbound_link_count": 0,
+      "orphan": false
+    }
+  ]
+}

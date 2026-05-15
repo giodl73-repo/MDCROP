@@ -7,13 +7,15 @@ use crop_core::{
     markdown_catalog_for_view_json, markdown_frontmatter_inventory,
     markdown_frontmatter_inventory_for_view_json, markdown_heading_inventory,
     markdown_heading_inventory_for_view_json, markdown_index, markdown_index_for_view_json,
-    markdown_link_audit, markdown_link_audit_for_view_json, prefix_cached_pack, proof_artifacts,
-    proof_artifacts_for_root, run_view_json, run_view_prefix_cached_json, score_graph_for_task,
-    CropOptions, CropView, EvalCase, EvalMethod, IngestOptions, PrefixCacheProfile,
+    markdown_link_audit, markdown_link_audit_for_view_json, prefix_cached_pack, run_view_json,
+    run_view_prefix_cached_json, score_graph_for_task, CropOptions, CropView, EvalCase, EvalMethod,
+    IngestOptions, PrefixCacheProfile,
 };
 use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
+
+mod artifacts;
 
 #[derive(Debug, Parser)]
 #[command(name = "crop")]
@@ -369,25 +371,7 @@ fn main() -> Result<()> {
             root,
             manifest,
             output,
-        } => {
-            if root.is_some() && manifest.is_some() {
-                bail!("--root and --manifest cannot be combined");
-            }
-            let report = if let Some(manifest) = manifest {
-                proof_artifacts(manifest)?
-            } else {
-                let Some(root) = root else {
-                    bail!("--root or --manifest is required");
-                };
-                proof_artifacts_for_root(root)?
-            };
-            let json = serde_json::to_string_pretty(&report)?;
-            if let Some(output) = output {
-                fs::write(output, json)?;
-            } else {
-                println!("{json}");
-            }
-        }
+        } => artifacts::run(root, manifest, output)?,
         Commands::Index {
             root,
             view,

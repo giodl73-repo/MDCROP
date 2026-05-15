@@ -1,0 +1,21 @@
+# Markdown Frontmatter Schema
+
+Command: `crop frontmatter`
+
+Schema version: `crop.markdown-frontmatter.v1`
+
+## Required fields
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `schema_version` | string | Stable schema identifier. |
+| `root` | string | Resolved root that was scanned. |
+| `source_count` | number | Markdown sources considered. |
+| `page_count` | number | Markdown sources with frontmatter fields. |
+| `key_counts` | object | Count of pages containing each top-level key. |
+| `pages` | array | Rows with `source`, sorted `keys`, and string-valued `fields`. |
+
+CROP records simple top-level YAML-style key/value fields as strings. Array-like
+values such as tags remain string values, e.g. `[proof, guide]`.
+
+Golden fixture: `examples/proof-fixture/golden/frontmatter.json`.

@@ -1,0 +1,25 @@
+# PROOF Artifact Report Schema
+
+Command: `crop artifacts`
+
+Schema version: `crop.proof-artifacts.v1`
+
+## Required fields
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `schema_version` | string | Stable schema identifier. |
+| `manifest` | string | Artifact manifest path used for the report. |
+| `generated_by` | string | Producer recorded by PROOF. |
+| `artifact_count` | number | Artifact records in the manifest. |
+| `ok_count` | number | Records without missing or stale output. |
+| `missing_output_count` | number | Records whose output path does not exist. |
+| `stale_count` | number | Records whose source mtime is newer than output mtime. |
+| `diagnostic_count` | number | Total diagnostics across artifacts. |
+| `artifacts` | array | Rows with source/output paths, target, status, existence/stale flags, cache flag, directive count, and diagnostic count. |
+
+The input contract mirrors PROOF `.proof/artifacts.json`: `source_path`,
+`output_path`, `target`, `status`, `directives_resolved`, `from_cache`, and
+`diagnostics`.
+
+Golden fixture: `examples/proof-fixture/golden/artifacts.json`.

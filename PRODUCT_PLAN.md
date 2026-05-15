@@ -90,6 +90,10 @@ provenance paths; exclude stale duplicates and noisy periphery.
     **First slice; `crop artifacts` reads PROOF `.proof/artifacts.json` records
     and reports source/output mappings, missing outputs, stale outputs, cache
     status, directive counts, and diagnostics.**
+17. **PROOF contract hardening**: fixtures, schema docs, and module boundaries.
+    **First slice; deterministic `examples/proof-fixture` goldens and
+    `docs/specs` contracts cover PROOF side-info outputs, with the artifact
+    surface split into focused core/CLI modules.**
 
 ## Upstream kernel asks
 

@@ -1,0 +1,20 @@
+{
+  "schema_version": "crop.markdown-link-audit.v1",
+  "source_count": 3,
+  "link_count": 2,
+  "ok_count": 1,
+  "broken_count": 1,
+  "required_rows": [
+    {
+      "source": "guide.source.md",
+      "target": "reference.source.md#reference",
+      "status": "ok",
+      "resolved_source": "reference.source.md"
+    },
+    {
+      "source": "guide.source.md",
+      "target": "missing.source.md",
+      "status": "broken"
+    }
+  ]
+}
