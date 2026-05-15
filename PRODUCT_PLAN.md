@@ -55,7 +55,8 @@ provenance paths; exclude stale duplicates and noisy periphery.
    troubleshooting, Maxim, and Resonance slices.**
 8. **View inspection**: safe preflight for named views. **Active wave;
    `crop view --inspect` validates recipes, resolves roots, applies filters, and
-   reports matched source counts before running a full crop.**
+   reports matched source counts before running a full crop. Store-wide
+   inspection reports per-view status for local view directories.**
 
 ## Upstream kernel asks
 

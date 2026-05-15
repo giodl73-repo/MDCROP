@@ -52,12 +52,15 @@ Inspect first when a view points at a large or optional corpus:
 ```powershell
 cargo run -p crop-cli -- view --inspect --file examples\views\whole-repo-view.json -e md
 cargo run -p crop-cli -- view --inspect --file examples\views\resonance-theory-view.json -e md -e tex
+cargo run -p crop-cli -- view --inspect --dir examples\views
 ```
 
 Inspection emits `crop.view-inspect.v1` with the resolved root, active task and
 filters, supported source count, and up to ten sample source IDs. It fails on bad
 schemas, zero budgets, missing roots, and filters that match no supported files,
 without building a full context crop.
+Store inspection emits `crop.view-store-inspect.v1` with sorted per-file `ok` or
+`failed` rows, so a local `.crop\views` directory can be audited in one command.
 
 Use the whole-repo and troubleshooting views as templates for `.crop\views` in
 other repositories. Use the Maxim and Resonance examples as local large-corpus

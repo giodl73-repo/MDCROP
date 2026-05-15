@@ -81,11 +81,14 @@ Inspect a recipe before running a full crop:
 
 ```powershell
 cargo run -p crop-cli -- view --inspect --file examples\views\whole-repo-view.json -e md
+cargo run -p crop-cli -- view --inspect --dir examples\views
 ```
 
 This returns `crop.view-inspect.v1` JSON with the resolved root, active filters,
 supported source count, and a small source sample. It validates schemas, budgets,
 roots, and empty filters without scoring or selecting context units.
+Directory inspection returns `crop.view-store-inspect.v1` with one status row per
+JSON view recipe.
 
 Emit a prefix-cache-aware named view:
 
@@ -290,6 +293,8 @@ caveats.
   `crop.view-prefix-cache.v1` with a prefix-cache-aware pack.
 - `inspect_view_json(json, base_dir)` validates a view and returns
   `crop.view-inspect.v1` root/filter/source metadata without cropping.
+- `inspect_view_store(store)` validates every JSON view recipe in a store and
+  returns `crop.view-store-inspect.v1` per-view status rows.
 - `list_views(store)` lists `crop.view.v1` recipes from a local store directory
   as `crop.view-list.v1` JSON.
 - `eval_fixture(case, method, budget)` runs deterministic apple-to-apple

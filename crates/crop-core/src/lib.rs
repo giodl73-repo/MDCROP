@@ -328,6 +328,26 @@ pub struct CropViewInspect {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CropViewStoreInspectEntry {
+    pub file: String,
+    pub status: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub inspect: Option<CropViewInspect>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CropViewStoreInspect {
+    pub schema_version: String,
+    pub store: String,
+    pub view_count: usize,
+    pub ok_count: usize,
+    pub failed_count: usize,
+    pub views: Vec<CropViewStoreInspectEntry>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CropViewSummary {
     pub file: String,
     pub name: String,
@@ -792,6 +812,68 @@ pub fn inspect_view(
     })
 }
 
+pub fn inspect_view_store(store: impl AsRef<Path>) -> Result<CropViewStoreInspect, CropError> {
+    let store = store.as_ref();
+    if !store.exists() {
+        return Err(CropError::RootDoesNotExist {
+            path: store.display().to_string(),
+        });
+    }
+
+    let entries = view_store_json_entries(store)?;
+    let mut views = Vec::new();
+    for path in entries {
+        let file = path
+            .file_name()
+            .map(|name| name.to_string_lossy().to_string())
+            .unwrap_or_else(|| path.display().to_string());
+        let json = match fs::read_to_string(&path) {
+            Ok(json) => json,
+            Err(source) => {
+                views.push(CropViewStoreInspectEntry {
+                    file,
+                    status: "failed".to_string(),
+                    inspect: None,
+                    error: Some(
+                        CropError::ReadFile {
+                            path: path.display().to_string(),
+                            source,
+                        }
+                        .to_string(),
+                    ),
+                });
+                continue;
+            }
+        };
+        let base_dir = path.parent().unwrap_or(store);
+        match inspect_view_json(&json, base_dir) {
+            Ok(inspect) => views.push(CropViewStoreInspectEntry {
+                file,
+                status: "ok".to_string(),
+                inspect: Some(inspect),
+                error: None,
+            }),
+            Err(error) => views.push(CropViewStoreInspectEntry {
+                file,
+                status: "failed".to_string(),
+                inspect: None,
+                error: Some(error.to_string()),
+            }),
+        }
+    }
+
+    let ok_count = views.iter().filter(|view| view.status == "ok").count();
+    let failed_count = views.len().saturating_sub(ok_count);
+    Ok(CropViewStoreInspect {
+        schema_version: "crop.view-store-inspect.v1".to_string(),
+        store: store.display().to_string(),
+        view_count: views.len(),
+        ok_count,
+        failed_count,
+        views,
+    })
+}
+
 pub fn run_view(view: CropView, base_dir: impl AsRef<Path>) -> Result<CropViewRun, CropError> {
     validate_view(&view)?;
     let root_label = view.root.clone();
@@ -876,24 +958,10 @@ pub fn list_views(store: impl AsRef<Path>) -> Result<CropViewList, CropError> {
         });
     }
 
-    let mut entries = fs::read_dir(store)
-        .map_err(|source| CropError::InspectPath {
-            path: store.display().to_string(),
-            source,
-        })?
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(|source| CropError::InspectPath {
-            path: store.display().to_string(),
-            source,
-        })?;
-    entries.sort_by_key(|entry| entry.path());
+    let entries = view_store_json_entries(store)?;
 
     let mut views = Vec::new();
-    for entry in entries {
-        let path = entry.path();
-        if !matches!(path.extension().and_then(|ext| ext.to_str()), Some("json")) {
-            continue;
-        }
+    for path in entries {
         let json = fs::read_to_string(&path).map_err(|source| CropError::ReadFile {
             path: path.display().to_string(),
             source,
@@ -926,6 +994,25 @@ pub fn list_views(store: impl AsRef<Path>) -> Result<CropViewList, CropError> {
         view_count: views.len(),
         views,
     })
+}
+
+fn view_store_json_entries(store: &Path) -> Result<Vec<PathBuf>, CropError> {
+    let mut entries = fs::read_dir(store)
+        .map_err(|source| CropError::InspectPath {
+            path: store.display().to_string(),
+            source,
+        })?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|source| CropError::InspectPath {
+            path: store.display().to_string(),
+            source,
+        })?;
+    entries.sort_by_key(|entry| entry.path());
+    Ok(entries
+        .into_iter()
+        .map(|entry| entry.path())
+        .filter(|path| matches!(path.extension().and_then(|ext| ext.to_str()), Some("json")))
+        .collect())
 }
 
 pub fn ingest_path(root: impl AsRef<Path>) -> Result<IngestedEvidence, CropError> {
@@ -2605,6 +2692,66 @@ mod tests {
             inspect_view_json(filtered_empty, &root),
             Err(CropError::NoSupportedFiles { .. })
         ));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn inspect_view_store_reports_ok_and_failed_entries() {
+        let root = unique_temp_dir("crop-view-store-inspect");
+        let store = root.join("views");
+        fs::create_dir_all(store.join("docs")).unwrap();
+        fs::write(store.join("docs").join("guide.md"), "Guide view evidence.").unwrap();
+        fs::write(store.join("ignore.txt"), "not json").unwrap();
+        fs::write(
+            store.join("a-ok.json"),
+            r#"{
+              "schema_version": "crop.view.v1",
+              "name": "ok",
+              "root": "docs",
+              "task": "guide",
+              "token_budget": 160,
+              "seed": 0,
+              "include_extensions": ["md"]
+            }"#,
+        )
+        .unwrap();
+        fs::write(
+            store.join("b-bad.json"),
+            r#"{
+              "schema_version": "crop.view.v1",
+              "name": "bad",
+              "root": "missing",
+              "task": "bad",
+              "token_budget": 160,
+              "seed": 0
+            }"#,
+        )
+        .unwrap();
+
+        let inspect = inspect_view_store(&store).unwrap();
+
+        assert_eq!(inspect.schema_version, "crop.view-store-inspect.v1");
+        assert_eq!(inspect.view_count, 2);
+        assert_eq!(inspect.ok_count, 1);
+        assert_eq!(inspect.failed_count, 1);
+        assert_eq!(inspect.views[0].file, "a-ok.json");
+        assert_eq!(inspect.views[0].status, "ok");
+        assert_eq!(
+            inspect.views[0]
+                .inspect
+                .as_ref()
+                .unwrap()
+                .supported_source_count,
+            1
+        );
+        assert_eq!(inspect.views[1].file, "b-bad.json");
+        assert_eq!(inspect.views[1].status, "failed");
+        assert!(inspect.views[1]
+            .error
+            .as_ref()
+            .unwrap()
+            .contains("root path does not exist"));
 
         fs::remove_dir_all(root).unwrap();
     }

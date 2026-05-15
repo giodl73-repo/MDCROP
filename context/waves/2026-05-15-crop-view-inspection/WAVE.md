@@ -17,6 +17,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
 | Pulse | Title | Status | Outcome |
 |------:|-------|--------|---------|
 | 01 | View inspect preflight | done | Added `crop view --inspect --file` and list metadata for active filters. |
+| 02 | Store inspect preflight | done | Added `crop view --inspect --dir` with per-view ok/failed status rows. |
 
 ## Success criteria
 
@@ -24,5 +25,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
 - Inspection validates schema, budget, root existence, filters, and empty matches.
 - Inspection returns resolved root, active filters, source count, and sample
   source IDs without producing a context pack.
+- Store inspection reports every JSON recipe in a directory with sorted per-file
+  status rows.
 - `cargo fmt`, `cargo test --workspace`, inspect smoke runs, and `git diff
   --check` pass.

@@ -2,9 +2,9 @@ use anyhow::{bail, Result};
 use clap::{Parser, Subcommand, ValueEnum};
 use crop_core::{
     bench_manifest_json, bench_pack, crop_context, eval_competitor_json, eval_fixture, eval_suite,
-    fixture_graph, ingest_path, inspect_view_json, list_views, prefix_cached_pack, run_view_json,
-    run_view_prefix_cached_json, score_graph_for_task, CropOptions, CropView, EvalCase, EvalMethod,
-    PrefixCacheProfile,
+    fixture_graph, ingest_path, inspect_view_json, inspect_view_store, list_views,
+    prefix_cached_pack, run_view_json, run_view_prefix_cached_json, score_graph_for_task,
+    CropOptions, CropView, EvalCase, EvalMethod, PrefixCacheProfile,
 };
 use std::fs;
 use std::path::Path;
@@ -242,10 +242,21 @@ fn main() -> Result<()> {
             exclude_dirs,
         } => {
             let json = if list {
+                if inspect {
+                    bail!("--list cannot be combined with --inspect");
+                }
                 serde_json::to_string_pretty(&list_views(dir)?)?
+            } else if inspect && file.is_none() {
+                if prefix_cache.is_some() {
+                    bail!("--prefix-cache cannot be combined with --inspect");
+                }
+                if query.is_some() || !extensions.is_empty() || !exclude_dirs.is_empty() {
+                    bail!("--query, --extension, and --exclude-dir require --file when inspecting");
+                }
+                serde_json::to_string_pretty(&inspect_view_store(dir)?)?
             } else {
                 let Some(file) = file else {
-                    bail!("--file is required unless --list is provided");
+                    bail!("--file is required unless --list or --inspect --dir is provided");
                 };
                 let input = fs::read_to_string(&file)?;
                 let base_dir = file.parent().unwrap_or_else(|| Path::new("."));
