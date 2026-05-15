@@ -204,6 +204,9 @@ pub struct EvalReport {
     pub gold_recall: f64,
     pub bridge_recall: f64,
     pub noise_rate: f64,
+    pub source_coverage: f64,
+    pub budget_efficiency: f64,
+    pub noise_token_share: f64,
     pub quality_score: f64,
 }
 
@@ -214,6 +217,9 @@ pub struct EvalAggregate {
     pub mean_gold_recall: f64,
     pub mean_bridge_recall: f64,
     pub mean_noise_rate: f64,
+    pub mean_source_coverage: f64,
+    pub mean_budget_efficiency: f64,
+    pub mean_noise_token_share: f64,
     pub mean_quality_score: f64,
 }
 
@@ -612,6 +618,9 @@ fn aggregate_method(method: EvalMethod, rows: &[EvalReport]) -> EvalAggregate {
         mean_gold_recall: mean_by(&matching, |row| row.gold_recall),
         mean_bridge_recall: mean_by(&matching, |row| row.bridge_recall),
         mean_noise_rate: mean_by(&matching, |row| row.noise_rate),
+        mean_source_coverage: mean_by(&matching, |row| row.source_coverage),
+        mean_budget_efficiency: mean_by(&matching, |row| row.budget_efficiency),
+        mean_noise_token_share: mean_by(&matching, |row| row.noise_token_share),
         mean_quality_score: mean_by(&matching, |row| row.quality_score),
     }
 }
@@ -794,6 +803,17 @@ fn eval_case(
         .sum::<usize>();
     let gold_recall = recall(&selected_set, &fixture.gold);
     let bridge_recall = recall(&selected_set, &fixture.bridge);
+    let source_coverage = source_coverage(&graph, &selected_set, &fixture.gold);
+    let budget_efficiency = if token_estimate == 0 {
+        0.0
+    } else {
+        fixture
+            .gold
+            .iter()
+            .filter(|unit_id| selected_set.contains(**unit_id))
+            .count() as f64
+            / token_estimate as f64
+    };
     let noise_rate = if selected.is_empty() {
         0.0
     } else {
@@ -803,6 +823,18 @@ fn eval_case(
             .filter(|unit_id| selected_set.contains(**unit_id))
             .count() as f64
             / selected.len() as f64
+    };
+    let noise_token_share = if token_estimate == 0 {
+        0.0
+    } else {
+        fixture
+            .noise
+            .iter()
+            .filter_map(|unit_id| graph.units.iter().find(|unit| unit.id == *unit_id))
+            .filter(|unit| selected_set.contains(&unit.id))
+            .map(|unit| unit.token_estimate)
+            .sum::<usize>() as f64
+            / token_estimate as f64
     };
     let quality_score = crop_pack
         .as_ref()
@@ -818,6 +850,9 @@ fn eval_case(
         gold_recall,
         bridge_recall,
         noise_rate,
+        source_coverage,
+        budget_efficiency,
+        noise_token_share,
         quality_score,
     })
 }
@@ -870,6 +905,24 @@ fn recall(selected: &BTreeSet<String>, gold: &[&str]) -> f64 {
         .filter(|unit_id| selected.contains(**unit_id))
         .count() as f64
         / gold.len() as f64
+}
+
+fn source_coverage(graph: &EvidenceGraph, selected: &BTreeSet<String>, gold: &[&str]) -> f64 {
+    let gold_sources = gold
+        .iter()
+        .filter_map(|unit_id| graph.units.iter().find(|unit| unit.id == *unit_id))
+        .map(|unit| unit.source_id.as_str())
+        .collect::<BTreeSet<_>>();
+    if gold_sources.is_empty() {
+        return 1.0;
+    }
+    let selected_gold_sources = gold
+        .iter()
+        .filter(|unit_id| selected.contains(**unit_id))
+        .filter_map(|unit_id| graph.units.iter().find(|unit| unit.id == *unit_id))
+        .map(|unit| unit.source_id.as_str())
+        .collect::<BTreeSet<_>>();
+    selected_gold_sources.len() as f64 / gold_sources.len() as f64
 }
 
 fn supported_files(root: &Path) -> Result<Vec<PathBuf>, CropError> {
@@ -1180,9 +1233,14 @@ mod tests {
         assert_eq!(crop.gold_recall, 1.0);
         assert_eq!(crop.bridge_recall, 1.0);
         assert_eq!(crop.noise_rate, 0.0);
+        assert_eq!(crop.source_coverage, 1.0);
+        assert!((crop.budget_efficiency - (3.0 / 160.0)).abs() < 1e-12);
+        assert_eq!(crop.noise_token_share, 0.0);
         assert!(top_k.gold_recall < crop.gold_recall);
         assert_eq!(top_k.bridge_recall, 0.0);
         assert!(top_k.noise_rate > 0.0);
+        assert!(top_k.source_coverage < crop.source_coverage);
+        assert!(top_k.noise_token_share > crop.noise_token_share);
     }
 
     #[test]
@@ -1198,6 +1256,8 @@ mod tests {
 
             assert_eq!(crop.gold_recall, 1.0, "{case:?}");
             assert_eq!(crop.noise_rate, 0.0, "{case:?}");
+            assert_eq!(crop.source_coverage, 1.0, "{case:?}");
+            assert_eq!(crop.noise_token_share, 0.0, "{case:?}");
             assert!(
                 top_k.gold_recall < crop.gold_recall || top_k.noise_rate > crop.noise_rate,
                 "{case:?}"
@@ -1270,6 +1330,13 @@ mod tests {
         assert_eq!(suite.aggregates[0].case_count, suite.cases.len());
         assert!(suite.aggregates[0].mean_gold_recall > suite.aggregates[1].mean_gold_recall);
         assert!(suite.aggregates[0].mean_noise_rate < suite.aggregates[1].mean_noise_rate);
+        assert!(
+            suite.aggregates[0].mean_source_coverage > suite.aggregates[1].mean_source_coverage
+        );
+        assert!(
+            suite.aggregates[0].mean_noise_token_share < suite.aggregates[1].mean_noise_token_share
+        );
+        assert!(suite.aggregates[0].mean_budget_efficiency > 0.0);
     }
 
     #[test]

@@ -66,12 +66,26 @@ cargo run -p crop-cli -- eval --all --budget 160
 ```
 
 The fixture suite uses the same units, relevance scores, token budget, and gold
-labels for each method. Metrics include gold recall, bridge recall, noise rate,
-token use, and quality score. Current cases cover missing bridges, noisy
-periphery, stale duplicates, budget packing, and cross-link chains. Current
-methods are `crop`, `score-top-k`, `lexical-top-k`, and `hybrid-top-k`. The
-`--all` command emits deterministic JSON with ordered cases, methods, per-run
-rows, and per-method aggregate means.
+labels for each method. Current cases cover missing bridges, noisy periphery,
+stale duplicates, budget packing, and cross-link chains. Current methods are
+`crop`, `score-top-k`, `lexical-top-k`, and `hybrid-top-k`. The `--all` command
+emits deterministic JSON with ordered cases, methods, per-run rows, and
+per-method aggregate means.
+
+Evaluation metrics:
+
+| Metric | Meaning |
+|--------|---------|
+| `gold_recall` | Gold evidence units selected divided by total gold units. |
+| `bridge_recall` | Required bridge units selected divided by total bridge units. |
+| `noise_rate` | Selected noise units divided by selected units. |
+| `source_coverage` | Distinct selected gold source IDs divided by distinct gold source IDs. |
+| `budget_efficiency` | Gold units recovered per selected token. |
+| `noise_token_share` | Selected noise tokens divided by selected tokens. |
+| `quality_score` | Method-specific scalar quality summary for quick comparison. |
+
+Latency is intentionally not part of fixture metrics yet; it should be measured
+on real corpora where filesystem and process noise can be handled separately.
 
 ## Rust API
 

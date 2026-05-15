@@ -44,7 +44,7 @@ not define a separate benchmark.
 | 01 | Fixture expansion | done | Added noisy-periphery, stale-duplicate, budget-packing, and cross-link-chain cases. |
 | 02 | Baseline methods | done | Added lexical and hybrid top-k baselines beside score top-k. |
 | 03 | Eval aggregate command | done | Added `crop eval --all` and suite-level JSON aggregate summaries. |
-| 04 | Metrics contract | todo | Add source coverage, budget efficiency, deterministic latency, and metric docs. |
+| 04 | Metrics contract | done | Added source coverage, budget efficiency, noise-token share, and metric docs. |
 | 05 | Competitor adapter spec | todo | Define external vector/search adapter contract without adding hosted dependencies. |
 
 ## Success criteria
