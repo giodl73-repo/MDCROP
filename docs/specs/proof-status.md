@@ -17,4 +17,6 @@ one generated page containing:
 
 Use the individual commands when PROOF needs stable machine-readable JSON
 contracts. Use `crop proof-status` when PROOF needs a generated README/status
-page.
+page. The documentation side can come from `--docs-root` or from a named
+`crop.view.v1` recipe via `--view`; view mode preserves `frontmatter_query`
+filters for tag/status-specific pages.

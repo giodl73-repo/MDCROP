@@ -102,7 +102,7 @@ provenance paths; exclude stale duplicates and noisy periphery.
 19. **PROOF status page composition**: one command for generated health pages.
     **First slice; `crop proof-status` composes catalog, link, backlink,
     frontmatter, heading, and artifact health tables into a single Markdown
-    status page.**
+    status page, and can source documentation side-info from a named view.**
 
 ## Upstream kernel asks
 

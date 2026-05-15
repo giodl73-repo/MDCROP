@@ -77,13 +77,15 @@ Generate a combined PROOF Markdown status page:
 
 ```powershell
 cargo run -p crop-cli -- proof-status --root C:\src\proof --docs-root C:\src\proof\docs --output PROOF_STATUS.md
+cargo run -p crop-cli -- proof-status --root C:\src\proof --view .crop\views\proof-ready.json --output PROOF_STATUS.md
 cargo run -p crop-cli -- proof-status --root examples\proof-fixture --docs-root examples\proof-fixture\src
 ```
 
 `crop proof-status` composes the catalog, link audit, backlinks, frontmatter,
 headings, and artifact health reports into one Markdown page. JSON remains
 available from the individual side-info commands; this command is for generated
-README/status surfaces.
+README/status surfaces. Use `--view` to generate the page from a named
+`crop.view.v1` recipe, including frontmatter/tag filters.
 
 Stable PROOF-facing schema notes live in [`docs\specs`](docs/specs), with a
 deterministic local contract fixture under `examples\proof-fixture`.

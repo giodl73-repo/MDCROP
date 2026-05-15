@@ -34,6 +34,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
 | 16 | Artifact status tables | done | Added Markdown output for artifact health reports. |
 | 17 | Side-info status tables | done | Added Markdown output for links, backlinks, frontmatter, and heading reports. |
 | 18 | PROOF status page | done | Added `crop proof-status` to compose catalog, side-info, and artifact health tables. |
+| 19 | View-backed status page | done | Added `crop proof-status --view` for tag/frontmatter-filtered status pages. |
 
 ## Success criteria
 
@@ -77,5 +78,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
   tables for generated README/status pages while preserving JSON defaults.
 - PROOF can generate one Markdown status page that composes catalog,
   side-info, and artifact-health sections.
+- PROOF status pages can use named views, including `frontmatter_query` filters,
+  to generate tag/status-specific pages.
 - `cargo fmt`, `cargo test --workspace`, inspect smoke runs, and `git diff
   --check` pass.

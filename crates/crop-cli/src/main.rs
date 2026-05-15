@@ -119,6 +119,9 @@ enum Commands {
         /// Documentation/source root to scan. Defaults to --root.
         #[arg(long)]
         docs_root: Option<PathBuf>,
+        /// crop.view.v1 recipe to scan for documentation side-info.
+        #[arg(long)]
+        view: Option<PathBuf>,
         /// Status page title.
         #[arg(long, default_value = "PROOF Status")]
         title: String,
@@ -424,6 +427,7 @@ fn main() -> Result<()> {
         Commands::ProofStatus {
             root,
             docs_root,
+            view,
             title,
             extensions,
             exclude_dirs,
@@ -432,6 +436,7 @@ fn main() -> Result<()> {
         } => proof_status::run(
             root,
             docs_root,
+            view,
             title,
             extensions,
             exclude_dirs,
