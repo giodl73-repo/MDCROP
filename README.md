@@ -33,6 +33,18 @@ cargo run -p crop-cli -- pack --root C:\src\CROP --task "explain graph context b
 
 Add `--output context.crop.json` to write the pack to disk instead of stdout.
 
+Generate a Markdown README/TOC-style source index:
+
+```powershell
+cargo run -p crop-cli -- index --root C:\src\proof -e md -e html --exclude-dir target
+cargo run -p crop-cli -- index --view examples\views\whole-repo-view.json --output INDEX.md
+```
+
+`crop index` emits Markdown tables with an extension profile and one row per
+source path, title, directory, extension, and outbound Markdown-link count. It is
+designed as a reusable `crop-core` surface for tools such as PROOF, which can own
+its compile/render pipeline while depending on CROP for corpus index primitives.
+
 Run a persisted named view recipe:
 
 ```powershell
@@ -290,6 +302,9 @@ caveats.
   and returns a benchmark summary with stage timings.
 - `bench_manifest_json(json, base_dir)` runs repeatable named benchmark/view
   cases from `crop.bench-manifest.v1` JSON.
+- `markdown_index(root, title, options)` and
+  `markdown_index_for_view_json(json, base_dir)` generate README/TOC-style
+  Markdown source indexes for documentation tools such as PROOF.
 - `run_view_json(json, base_dir)` runs a persisted `crop.view.v1` recipe and
   returns `crop.view-run.v1` with the produced context pack.
 - `run_view_prefix_cached_json(json, base_dir, profile)` runs a view and returns

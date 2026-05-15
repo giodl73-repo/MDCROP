@@ -21,6 +21,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
 | 03 | Strict inspect gate | done | Added `--strict` so store inspection prints JSON and exits non-zero on failed recipes. |
 | 04 | Store inspect aggregates | done | Added total and max supported source counts to store inspection reports. |
 | 05 | Extension profiles | done | Added per-view and aggregate extension counts for choosing large-corpus filters. |
+| 06 | Markdown index API | done | Added reusable README/TOC-style Markdown index generation for PROOF integration. |
 
 ## Success criteria
 
@@ -36,5 +37,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
   comparison.
 - Inspection includes extension-count profiles for choosing Markdown, TeX, Bib,
   and source-code filters.
+- CROP exposes reusable Markdown index primitives that downstream generators can
+  depend on without adopting CROP's CLI.
 - `cargo fmt`, `cargo test --workspace`, inspect smoke runs, and `git diff
   --check` pass.

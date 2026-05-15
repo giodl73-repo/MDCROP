@@ -59,6 +59,9 @@ provenance paths; exclude stale duplicates and noisy periphery.
    inspection reports per-view status plus aggregate source-count and extension
    profiles for local view directories, and `--strict` turns failed recipes into
    CI-friendly non-zero exits.**
+9. **Docs indexes for generators**: Markdown README/TOC index primitives.
+   **First slice; `crop index` and `crop-core` index APIs generate source tables
+   that PROOF can consume while keeping rendering and compile targets in PROOF.**
 
 ## Upstream kernel asks
 

@@ -352,6 +352,24 @@ pub struct CropViewStoreInspect {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MarkdownIndexEntry {
+    pub path: String,
+    pub title: String,
+    pub extension: String,
+    pub directory: String,
+    pub outbound_link_count: usize,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MarkdownIndex {
+    pub title: String,
+    pub root: String,
+    pub source_count: usize,
+    pub extension_counts: BTreeMap<String, usize>,
+    pub entries: Vec<MarkdownIndexEntry>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CropViewSummary {
     pub file: String,
     pub name: String,
@@ -895,6 +913,88 @@ pub fn inspect_view_store(store: impl AsRef<Path>) -> Result<CropViewStoreInspec
         max_supported_source_count,
         aggregate_extension_counts,
         views,
+    })
+}
+
+pub fn markdown_index_for_view_json(
+    json: &str,
+    base_dir: impl AsRef<Path>,
+) -> Result<String, CropError> {
+    let view: CropView =
+        serde_json::from_str(json).map_err(|source| CropError::ViewImport(source))?;
+    validate_view(&view)?;
+    let root = manifest_root(base_dir.as_ref(), &view.root);
+    markdown_index(root, &view.name, &view_ingest_options(&view))
+}
+
+pub fn markdown_index(
+    root: impl AsRef<Path>,
+    title: &str,
+    options: &IngestOptions,
+) -> Result<String, CropError> {
+    let index = markdown_index_report(root, title, options)?;
+    Ok(render_markdown_index(&index))
+}
+
+pub fn markdown_index_report(
+    root: impl AsRef<Path>,
+    title: &str,
+    options: &IngestOptions,
+) -> Result<MarkdownIndex, CropError> {
+    let root = root.as_ref();
+    if !root.exists() {
+        return Err(CropError::RootDoesNotExist {
+            path: root.display().to_string(),
+        });
+    }
+    let resolved_root = fs::canonicalize(root).map_err(|source| CropError::InspectPath {
+        path: root.display().to_string(),
+        source,
+    })?;
+    let files = supported_files(&resolved_root, options)?;
+    if files.is_empty() {
+        return Err(CropError::NoSupportedFiles {
+            path: resolved_root.display().to_string(),
+        });
+    }
+    let mut entries = Vec::new();
+    for file in &files {
+        let bytes = fs::read(file).map_err(|source| CropError::ReadFile {
+            path: file.display().to_string(),
+            source,
+        })?;
+        let text = String::from_utf8(bytes).map_err(|_| CropError::NonUtf8File {
+            path: file.display().to_string(),
+        })?;
+        let path = source_id(&resolved_root, file);
+        let extension = file_extension_label(file);
+        let directory = path
+            .rsplit_once('/')
+            .map(|(directory, _)| directory.to_string())
+            .unwrap_or_else(|| ".".to_string());
+        let title = first_markdown_heading(&text)
+            .or_else(|| {
+                file.file_stem()
+                    .and_then(|stem| stem.to_str())
+                    .map(|stem| stem.replace(['-', '_'], " "))
+            })
+            .unwrap_or_else(|| path.clone());
+        let outbound_link_count = markdown_links(&resolved_root, file, &text).len();
+        entries.push(MarkdownIndexEntry {
+            path,
+            title,
+            extension,
+            directory,
+            outbound_link_count,
+        });
+    }
+
+    Ok(MarkdownIndex {
+        title: title.to_string(),
+        root: display_path(&resolved_root),
+        source_count: entries.len(),
+        extension_counts: extension_counts(&files),
+        entries,
     })
 }
 
@@ -1830,6 +1930,57 @@ fn extension_counts(files: &[PathBuf]) -> BTreeMap<String, usize> {
         *counts.entry(extension).or_insert(0) += 1;
     }
     counts
+}
+
+fn file_extension_label(file: &Path) -> String {
+    file.extension()
+        .and_then(|extension| extension.to_str())
+        .map(str::to_ascii_lowercase)
+        .unwrap_or_else(|| "(none)".to_string())
+}
+
+fn first_markdown_heading(text: &str) -> Option<String> {
+    text.lines()
+        .map(str::trim)
+        .find_map(|line| line.strip_prefix("# "))
+        .map(str::trim)
+        .filter(|heading| !heading.is_empty())
+        .map(ToString::to_string)
+}
+
+fn render_markdown_index(index: &MarkdownIndex) -> String {
+    let mut markdown = String::new();
+    markdown.push_str(&format!("# {}\n\n", index.title));
+    markdown.push_str(&format!("Root: `{}`\n\n", index.root));
+    markdown.push_str(&format!("Sources: **{}**\n\n", index.source_count));
+    markdown.push_str("## Extension profile\n\n");
+    markdown.push_str("| Extension | Sources |\n");
+    markdown.push_str("|-----------|--------:|\n");
+    for (extension, count) in &index.extension_counts {
+        markdown.push_str(&format!(
+            "| `{}` | {} |\n",
+            escape_markdown_cell(extension),
+            count
+        ));
+    }
+    markdown.push_str("\n## Source index\n\n");
+    markdown.push_str("| Path | Title | Type | Directory | Links |\n");
+    markdown.push_str("|------|-------|------|-----------|------:|\n");
+    for entry in &index.entries {
+        markdown.push_str(&format!(
+            "| [`{path}`]({path}) | {title} | `{extension}` | `{directory}` | {links} |\n",
+            path = escape_markdown_cell(&entry.path),
+            title = escape_markdown_cell(&entry.title),
+            extension = escape_markdown_cell(&entry.extension),
+            directory = escape_markdown_cell(&entry.directory),
+            links = entry.outbound_link_count,
+        ));
+    }
+    markdown
+}
+
+fn escape_markdown_cell(value: &str) -> String {
+    value.replace('|', "\\|")
 }
 
 fn display_path(path: &Path) -> String {
@@ -2793,6 +2944,75 @@ mod tests {
             .as_ref()
             .unwrap()
             .contains("root path does not exist"));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn markdown_index_renders_titles_links_and_extension_profile() {
+        let root = unique_temp_dir("crop-markdown-index");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(
+            root.join("docs").join("intro.md"),
+            "# Intro Guide\n\nSee [API](api.md).",
+        )
+        .unwrap();
+        fs::write(
+            root.join("docs").join("api.md"),
+            "# API Reference\n\nDetails.",
+        )
+        .unwrap();
+        fs::write(root.join("docs").join("diagram.html"), "<h1>Diagram</h1>").unwrap();
+
+        let markdown = markdown_index(
+            &root,
+            "PROOF generated docs",
+            &IngestOptions {
+                include_extensions: vec!["md".to_string(), "html".to_string()],
+                exclude_dirs: Vec::new(),
+            },
+        )
+        .unwrap();
+
+        assert!(markdown.contains("# PROOF generated docs"));
+        assert!(markdown.contains("| `html` | 1 |"));
+        assert!(markdown.contains("| `md` | 2 |"));
+        assert!(markdown.contains("[`docs/intro.md`](docs/intro.md)"));
+        assert!(markdown.contains("| Intro Guide | `md` | `docs` | 1 |"));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn markdown_index_for_view_json_uses_view_filters_and_relative_root() {
+        let root = unique_temp_dir("crop-markdown-index-view");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(
+            root.join("docs").join("readme.md"),
+            "# View README\n\nDocs.",
+        )
+        .unwrap();
+        fs::write(
+            root.join("docs").join("skip.txt"),
+            "Plain text should be filtered.",
+        )
+        .unwrap();
+
+        let view = r#"{
+          "schema_version": "crop.view.v1",
+          "name": "proof-view",
+          "root": "docs",
+          "task": "index proof docs",
+          "token_budget": 160,
+          "seed": 0,
+          "include_extensions": ["md"]
+        }"#;
+
+        let markdown = markdown_index_for_view_json(view, &root).unwrap();
+
+        assert!(markdown.contains("# proof-view"));
+        assert!(markdown.contains("[`readme.md`](readme.md)"));
+        assert!(!markdown.contains("skip.txt"));
 
         fs::remove_dir_all(root).unwrap();
     }
