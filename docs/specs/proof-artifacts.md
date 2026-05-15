@@ -4,6 +4,10 @@ Command: `crop artifacts`
 
 Schema version: `crop.proof-artifacts.v1`
 
+Default output is JSON. `crop artifacts --format markdown` renders the same
+report as a README/status-page table with source, output, target, status,
+existence, stale, cache, directive, and diagnostic columns.
+
 ## Required fields
 
 | Field | Type | Meaning |

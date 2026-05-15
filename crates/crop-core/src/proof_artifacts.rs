@@ -75,6 +75,37 @@ pub fn proof_artifacts(manifest: impl AsRef<Path>) -> Result<ProofArtifactReport
     proof_artifacts_json(&json, manifest)
 }
 
+pub fn render_proof_artifact_markdown(report: &ProofArtifactReport) -> String {
+    let mut markdown = String::new();
+    markdown.push_str("# PROOF Artifact Health\n\n");
+    markdown.push_str(&format!("Manifest: `{}`\n\n", report.manifest));
+    markdown.push_str(&format!(
+        "Artifacts: **{}** | OK: **{}** | Missing: **{}** | Stale: **{}** | Diagnostics: **{}**\n\n",
+        report.artifact_count,
+        report.ok_count,
+        report.missing_output_count,
+        report.stale_count,
+        report.diagnostic_count,
+    ));
+    markdown.push_str("| Source | Output | Target | Status | Exists | Stale | Cache | Directives | Diagnostics |\n");
+    markdown.push_str("|--------|--------|--------|--------|--------|-------|-------|-----------:|------------:|\n");
+    for artifact in &report.artifacts {
+        markdown.push_str(&format!(
+            "| `{}` | `{}` | `{}` | `{}` | {} | {} | {} | {} | {} |\n",
+            escape_markdown_cell(&artifact.source),
+            escape_markdown_cell(&artifact.output),
+            escape_markdown_cell(&artifact.target),
+            escape_markdown_cell(&artifact.status),
+            yes_no(artifact.output_exists),
+            yes_no(artifact.stale),
+            yes_no(artifact.from_cache),
+            artifact.directives_resolved,
+            artifact.diagnostic_count,
+        ));
+    }
+    markdown
+}
+
 pub fn proof_artifacts_json(
     json: &str,
     manifest_path: impl AsRef<Path>,
@@ -166,4 +197,16 @@ fn display_path(path: &Path) -> String {
         .strip_prefix(r"\\?\")
         .unwrap_or(&rendered)
         .to_string()
+}
+
+fn yes_no(value: bool) -> &'static str {
+    if value {
+        "yes"
+    } else {
+        "no"
+    }
+}
+
+fn escape_markdown_cell(value: &str) -> String {
+    value.replace('|', "\\|")
 }

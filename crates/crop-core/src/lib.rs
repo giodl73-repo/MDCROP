@@ -15,8 +15,9 @@ use thiserror::Error;
 
 mod proof_artifacts;
 pub use proof_artifacts::{
-    proof_artifacts, proof_artifacts_for_root, proof_artifacts_json, ProofArtifactDiagnostic,
-    ProofArtifactManifest, ProofArtifactRecord, ProofArtifactReport, ProofArtifactReportEntry,
+    proof_artifacts, proof_artifacts_for_root, proof_artifacts_json,
+    render_proof_artifact_markdown, ProofArtifactDiagnostic, ProofArtifactManifest,
+    ProofArtifactRecord, ProofArtifactReport, ProofArtifactReportEntry,
 };
 
 pub const COMPETITOR_RESULTS_SCHEMA: &str = "crop.competitor-results.v1";
@@ -4034,6 +4035,10 @@ mod tests {
         assert!(report.artifacts[0].output_exists);
         assert!(!report.artifacts[1].output_exists);
         assert_eq!(report.artifacts[1].diagnostic_count, 1);
+        let markdown = render_proof_artifact_markdown(&report);
+        assert!(markdown.contains("# PROOF Artifact Health"));
+        assert!(markdown.contains("| Source | Output | Target | Status | Exists | Stale | Cache | Directives | Diagnostics |"));
+        assert!(markdown.contains("| `src/guide.source.md` | `out/guide.md` | `markdown` | `written` | yes | yes | no | 2 | 0 |"));
 
         fs::remove_dir_all(root).unwrap();
     }

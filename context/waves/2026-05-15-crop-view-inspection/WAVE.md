@@ -31,6 +31,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
 | 13 | Frontmatter query views | done | Added OData-style `frontmatter_query` view filters over tags and arbitrary metadata fields. |
 | 14 | PROOF artifact manifests | done | Added artifact manifest reports for generated output existence, staleness, and diagnostics. |
 | 15 | PROOF contracts | done | Added deterministic PROOF fixtures, schema docs/goldens, and a focused artifact module split. |
+| 16 | Artifact status tables | done | Added Markdown output for artifact health reports. |
 
 ## Success criteria
 
@@ -68,5 +69,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
   golden examples for integration tests.
 - The PROOF artifact surface has focused core and CLI modules while preserving
   existing public API and CLI behavior.
+- Artifact health can render as a Markdown table for generated README/status
+  pages.
 - `cargo fmt`, `cargo test --workspace`, inspect smoke runs, and `git diff
   --check` pass.

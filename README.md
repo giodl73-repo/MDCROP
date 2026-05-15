@@ -63,13 +63,15 @@ Report PROOF generated artifact health:
 ```powershell
 cargo run -p crop-cli -- artifacts --root C:\src\proof
 cargo run -p crop-cli -- artifacts --manifest C:\src\proof\.proof\artifacts.json
+cargo run -p crop-cli -- artifacts --root C:\src\proof --format markdown --output ARTIFACTS.md
 ```
 
 `crop artifacts` emits `crop.proof-artifacts.v1` JSON from PROOF's
 `.proof\artifacts.json` contract. It maps source files to generated outputs and
 reports missing outputs, stale outputs, cache status, directive counts, and
 diagnostic counts so PROOF can keep generated Markdown, ASCII, and HTML
-surfaces aligned with source.
+surfaces aligned with source. Use `--format markdown` for a ready-to-embed
+artifact health table.
 
 Stable PROOF-facing schema notes live in [`docs\specs`](docs/specs), with a
 deterministic local contract fixture under `examples\proof-fixture`.

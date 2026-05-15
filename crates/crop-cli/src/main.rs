@@ -101,6 +101,9 @@ enum Commands {
         /// Explicit PROOF artifact manifest path.
         #[arg(long)]
         manifest: Option<PathBuf>,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = artifacts::ArtifactFormatArg::Json)]
+        format: artifacts::ArtifactFormatArg,
         /// Optional JSON output path. Defaults to stdout.
         #[arg(long)]
         output: Option<PathBuf>,
@@ -370,8 +373,9 @@ fn main() -> Result<()> {
         Commands::Artifacts {
             root,
             manifest,
+            format,
             output,
-        } => artifacts::run(root, manifest, output)?,
+        } => artifacts::run(root, manifest, format, output)?,
         Commands::Index {
             root,
             view,

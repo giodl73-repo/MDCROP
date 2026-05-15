@@ -89,7 +89,8 @@ provenance paths; exclude stale duplicates and noisy periphery.
 16. **PROOF artifact manifests**: generated-output health for docs pipelines.
     **First slice; `crop artifacts` reads PROOF `.proof/artifacts.json` records
     and reports source/output mappings, missing outputs, stale outputs, cache
-    status, directive counts, and diagnostics.**
+    status, directive counts, and diagnostics. Markdown status-table output is
+    available with `--format markdown`.**
 17. **PROOF contract hardening**: fixtures, schema docs, and module boundaries.
     **First slice; deterministic `examples/proof-fixture` goldens and
     `docs/specs` contracts cover PROOF side-info outputs, with the artifact
