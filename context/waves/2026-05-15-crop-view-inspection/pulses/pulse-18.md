@@ -1,23 +1,23 @@
-# Pulse 18: PROOF status page
+# Pulse 18: Corpus status page
 
 ## Goal
 
-Give PROOF a single CROP command that can generate a combined Markdown status
-page from the side-info and artifact health surfaces.
+Give any Markdown corpus a single CROP command that can generate a combined
+Markdown status page from the side-info surfaces.
 
 ## Changes
 
-- Added `crop proof-status`.
+- Added `crop status`.
 - Composed document catalog, link audit, backlinks, frontmatter, headings, and
-  artifact health into one Markdown page.
+  health summary into one Markdown page.
 - Kept JSON machine-readable contracts on the individual commands.
-- Added CLI crate coverage using the deterministic PROOF fixture.
+- Added CLI crate coverage using the deterministic fixture.
 
 ## Validation
 
 - `cargo fmt`
 - `cargo test --workspace`
-- PROOF fixture smoke for `crop proof-status`
+- fixture smoke for `crop status`
 - `git diff --check`
 
 ## Status

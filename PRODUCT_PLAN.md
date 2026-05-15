@@ -95,14 +95,14 @@ provenance paths; exclude stale duplicates and noisy periphery.
     **First slice; deterministic `examples/proof-fixture` goldens and
     `docs/specs` contracts cover PROOF side-info outputs, with the artifact
     surface split into focused core/CLI modules.**
-18. **PROOF Markdown status surfaces**: embeddable tables for side-info reports.
+18. **Markdown status surfaces**: embeddable tables for side-info reports.
     **First slice; `crop links`, `crop backlinks`, `crop frontmatter`, and
     `crop headings` support `--format markdown` while keeping JSON as the stable
     machine-readable default.**
-19. **PROOF status page composition**: one command for generated health pages.
-    **First slice; `crop proof-status` composes catalog, link, backlink,
-    frontmatter, heading, and artifact health tables into a single Markdown
-    status page, and can source documentation side-info from a named view.**
+19. **Corpus status page composition**: one command for generated health pages.
+    **First slice; `crop status` composes catalog, link, backlink, frontmatter,
+    and heading tables into a single Markdown status page, and can source
+    documentation side-info from a named view.**
 
 ## Upstream kernel asks
 

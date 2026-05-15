@@ -18,7 +18,7 @@ use std::path::Path;
 use std::path::PathBuf;
 
 mod artifacts;
-mod proof_status;
+mod status;
 
 #[derive(Debug, Parser)]
 #[command(name = "crop")]
@@ -111,19 +111,16 @@ enum Commands {
         #[arg(long)]
         output: Option<PathBuf>,
     },
-    /// Generate a combined PROOF Markdown status page.
-    ProofStatus {
-        /// PROOF repository root used for artifact health.
+    /// Generate a combined Markdown corpus status page.
+    Status {
+        /// Documentation/source root to scan.
         #[arg(long)]
-        root: PathBuf,
-        /// Documentation/source root to scan. Defaults to --root.
-        #[arg(long)]
-        docs_root: Option<PathBuf>,
+        root: Option<PathBuf>,
         /// crop.view.v1 recipe to scan for documentation side-info.
         #[arg(long)]
         view: Option<PathBuf>,
         /// Status page title.
-        #[arg(long, default_value = "PROOF Status")]
+        #[arg(long, default_value = "Corpus Status")]
         title: String,
         /// Restrict scanned files to one or more extensions, e.g. -e md.
         #[arg(short = 'e', long = "extension")]
@@ -131,9 +128,6 @@ enum Commands {
         /// Exclude directories by basename while scanning docs.
         #[arg(long = "exclude-dir")]
         exclude_dirs: Vec<String>,
-        /// Skip PROOF artifact health and only render documentation side-info.
-        #[arg(long)]
-        no_artifacts: bool,
         /// Optional Markdown output path. Defaults to stdout.
         #[arg(long)]
         output: Option<PathBuf>,
@@ -424,25 +418,14 @@ fn main() -> Result<()> {
             format,
             output,
         } => artifacts::run(root, manifest, format, output)?,
-        Commands::ProofStatus {
+        Commands::Status {
             root,
-            docs_root,
             view,
             title,
             extensions,
             exclude_dirs,
-            no_artifacts,
             output,
-        } => proof_status::run(
-            root,
-            docs_root,
-            view,
-            title,
-            extensions,
-            exclude_dirs,
-            no_artifacts,
-            output,
-        )?,
+        } => status::run(root, view, title, extensions, exclude_dirs, output)?,
         Commands::Index {
             root,
             view,

@@ -73,17 +73,16 @@ diagnostic counts so PROOF can keep generated Markdown, ASCII, and HTML
 surfaces aligned with source. Use `--format markdown` for a ready-to-embed
 artifact health table.
 
-Generate a combined PROOF Markdown status page:
+Generate a combined Markdown corpus status page:
 
 ```powershell
-cargo run -p crop-cli -- proof-status --root C:\src\proof --docs-root C:\src\proof\docs --output PROOF_STATUS.md
-cargo run -p crop-cli -- proof-status --root C:\src\proof --view .crop\views\proof-ready.json --output PROOF_STATUS.md
-cargo run -p crop-cli -- proof-status --root examples\proof-fixture --docs-root examples\proof-fixture\src
+cargo run -p crop-cli -- status --root C:\src\maxim --output STATUS.md
+cargo run -p crop-cli -- status --view examples\proof-fixture\proof-ready-view.json --output STATUS.md
 ```
 
-`crop proof-status` composes the catalog, link audit, backlinks, frontmatter,
-headings, and artifact health reports into one Markdown page. JSON remains
-available from the individual side-info commands; this command is for generated
+`crop status` composes the catalog, link audit, backlinks, frontmatter, and
+headings into one Markdown page for any Markdown corpus. JSON remains available
+from the individual side-info commands; this command is for generated
 README/status surfaces. Use `--view` to generate the page from a named
 `crop.view.v1` recipe, including frontmatter/tag filters.
 
