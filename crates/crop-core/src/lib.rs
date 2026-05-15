@@ -344,6 +344,8 @@ pub struct CropViewStoreInspect {
     pub view_count: usize,
     pub ok_count: usize,
     pub failed_count: usize,
+    pub total_supported_source_count: usize,
+    pub max_supported_source_count: usize,
     pub views: Vec<CropViewStoreInspectEntry>,
 }
 
@@ -864,12 +866,21 @@ pub fn inspect_view_store(store: impl AsRef<Path>) -> Result<CropViewStoreInspec
 
     let ok_count = views.iter().filter(|view| view.status == "ok").count();
     let failed_count = views.len().saturating_sub(ok_count);
+    let source_counts = views
+        .iter()
+        .filter_map(|view| view.inspect.as_ref())
+        .map(|inspect| inspect.supported_source_count)
+        .collect::<Vec<_>>();
+    let total_supported_source_count = source_counts.iter().sum::<usize>();
+    let max_supported_source_count = source_counts.into_iter().max().unwrap_or(0);
     Ok(CropViewStoreInspect {
         schema_version: "crop.view-store-inspect.v1".to_string(),
         store: store.display().to_string(),
         view_count: views.len(),
         ok_count,
         failed_count,
+        total_supported_source_count,
+        max_supported_source_count,
         views,
     })
 }
@@ -2735,6 +2746,8 @@ mod tests {
         assert_eq!(inspect.view_count, 2);
         assert_eq!(inspect.ok_count, 1);
         assert_eq!(inspect.failed_count, 1);
+        assert_eq!(inspect.total_supported_source_count, 1);
+        assert_eq!(inspect.max_supported_source_count, 1);
         assert_eq!(inspect.views[0].file, "a-ok.json");
         assert_eq!(inspect.views[0].status, "ok");
         assert_eq!(
