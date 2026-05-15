@@ -1,6 +1,7 @@
 use rctx_core::RCTX_VERSION;
 use rgraph_core::{shortest_connector_path, undirected_boundary_metrics};
 use ropt_core::SeedPart;
+use rstat_core::scoring::{weighted_component_score, ScoringError};
 use rstat_core::summary::{summary_stats, SummaryError};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -32,6 +33,8 @@ pub enum CropError {
     EdgeCut(String),
     #[error("[KERNEL] summary failed: {0}")]
     Summary(#[from] SummaryError),
+    #[error("[KERNEL] scoring failed: {0}")]
+    Scoring(#[from] ScoringError),
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -78,6 +81,7 @@ pub struct CropPack {
     pub boundary_cut_edges: usize,
     pub boundary_conductance: f64,
     pub relevance_mean: f64,
+    pub quality_score: f64,
 }
 
 pub fn shared_kernel_probe(seed: usize) -> (&'static str, SeedPart) {
@@ -164,12 +168,17 @@ pub fn crop_context(graph: &EvidenceGraph, options: CropOptions) -> Result<CropP
     }
 
     let relevance_mean = summary_stats(&relevance)?.mean;
+    let quality_score = weighted_component_score(
+        &[relevance_mean, 1.0 - boundary_metrics.conductance],
+        &[0.8, 0.2],
+    )?;
     Ok(CropPack {
         units,
         token_estimate,
         boundary_cut_edges: boundary_metrics.boundary_edges,
         boundary_conductance: boundary_metrics.conductance,
         relevance_mean,
+        quality_score,
     })
 }
 
@@ -245,6 +254,7 @@ mod tests {
         assert_eq!(pack.token_estimate, 160);
         assert_eq!(pack.boundary_cut_edges, 1);
         assert_eq!(pack.boundary_conductance, 1.0);
+        assert!((pack.quality_score - 0.573_333_333_333_333_4).abs() < 1e-12);
         assert_eq!(
             pack.units
                 .iter()
