@@ -40,4 +40,3 @@ cargo run -p crop-cli -- eval --case budget-packing --method crop --budget 160
 cargo run -p crop-cli -- eval --case cross-link-chain --method crop --budget 160
 git diff --check
 ```
-

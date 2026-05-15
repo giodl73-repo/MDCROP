@@ -74,4 +74,3 @@ cargo test --workspace
 cargo run -p crop-cli -- eval --all --budget 160
 git diff --check
 ```
-
