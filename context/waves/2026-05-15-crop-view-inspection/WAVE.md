@@ -27,6 +27,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
 | 09 | Heading inventory | done | Added root/view heading inventories with anchors, `md://` section URIs, and duplicate groups. |
 | 10 | Backlink side-info | done | Added root/view backlink reports with inbound links, outbound counts, and orphan-page flags. |
 | 11 | Frontmatter inventory | done | Added root/view frontmatter inventories with field maps and aggregate key counts. |
+| 12 | Markdown catalog | done | Added root/view catalog tables carrying frontmatter tags/status plus link side-info. |
 
 ## Success criteria
 
@@ -54,5 +55,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
   README and TOC workflows.
 - Frontmatter inventories expose metadata primitives for generated README tables,
   HTML sidebars, and status/tag summaries.
+- Markdown catalogs combine source titles, frontmatter metadata, and link
+  side-info into ready-to-embed README/TOC tables.
 - `cargo fmt`, `cargo test --workspace`, inspect smoke runs, and `git diff
   --check` pass.

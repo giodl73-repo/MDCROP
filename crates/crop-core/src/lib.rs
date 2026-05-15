@@ -370,6 +370,25 @@ pub struct MarkdownIndex {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MarkdownCatalogEntry {
+    pub path: String,
+    pub title: String,
+    pub inbound_link_count: usize,
+    pub outbound_link_count: usize,
+    pub orphan: bool,
+    pub metadata: BTreeMap<String, String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MarkdownCatalog {
+    pub title: String,
+    pub root: String,
+    pub source_count: usize,
+    pub metadata_keys: Vec<String>,
+    pub entries: Vec<MarkdownCatalogEntry>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MarkdownLinkEntry {
     pub source: String,
     pub target: String,
@@ -1026,6 +1045,81 @@ pub fn markdown_index(
 ) -> Result<String, CropError> {
     let index = markdown_index_report(root, title, options)?;
     Ok(render_markdown_index(&index))
+}
+
+pub fn markdown_catalog_for_view_json(
+    json: &str,
+    base_dir: impl AsRef<Path>,
+) -> Result<String, CropError> {
+    let view: CropView =
+        serde_json::from_str(json).map_err(|source| CropError::ViewImport(source))?;
+    validate_view(&view)?;
+    let root = manifest_root(base_dir.as_ref(), &view.root);
+    markdown_catalog(root, &view.name, &view_ingest_options(&view))
+}
+
+pub fn markdown_catalog(
+    root: impl AsRef<Path>,
+    title: &str,
+    options: &IngestOptions,
+) -> Result<String, CropError> {
+    let catalog = markdown_catalog_report(root, title, options)?;
+    Ok(render_markdown_catalog(&catalog))
+}
+
+pub fn markdown_catalog_report(
+    root: impl AsRef<Path>,
+    title: &str,
+    options: &IngestOptions,
+) -> Result<MarkdownCatalog, CropError> {
+    let index = markdown_index_report(root.as_ref(), title, options)?;
+    let backlinks = markdown_backlinks(root.as_ref(), options)?;
+    let frontmatter = markdown_frontmatter_inventory(root.as_ref(), options)?;
+
+    let backlink_by_source: BTreeMap<_, _> = backlinks
+        .pages
+        .into_iter()
+        .map(|page| (page.source.clone(), page))
+        .collect();
+    let metadata_by_source: BTreeMap<_, _> = frontmatter
+        .pages
+        .into_iter()
+        .map(|page| (page.source.clone(), page.fields))
+        .collect();
+    let mut metadata_keys = BTreeSet::new();
+    let mut entries = Vec::new();
+    for entry in index
+        .entries
+        .into_iter()
+        .filter(|entry| entry.extension == "md")
+    {
+        let metadata = metadata_by_source
+            .get(&entry.path)
+            .cloned()
+            .unwrap_or_default();
+        metadata_keys.extend(metadata.keys().cloned());
+        let backlink = backlink_by_source.get(&entry.path);
+        entries.push(MarkdownCatalogEntry {
+            path: entry.path,
+            title: metadata
+                .get("title")
+                .cloned()
+                .unwrap_or_else(|| entry.title.clone()),
+            inbound_link_count: backlink.map_or(0, |page| page.inbound_link_count),
+            outbound_link_count: backlink
+                .map_or(entry.outbound_link_count, |page| page.outbound_link_count),
+            orphan: backlink.is_none_or(|page| page.orphan),
+            metadata,
+        });
+    }
+
+    Ok(MarkdownCatalog {
+        title: title.to_string(),
+        root: index.root,
+        source_count: entries.len(),
+        metadata_keys: metadata_keys.into_iter().collect(),
+        entries,
+    })
 }
 
 pub fn markdown_index_report(
@@ -2432,6 +2526,58 @@ fn render_markdown_index(index: &MarkdownIndex) -> String {
     markdown
 }
 
+fn render_markdown_catalog(catalog: &MarkdownCatalog) -> String {
+    let preferred_keys = ["status", "tags", "title", "wave", "version"];
+    let metadata_columns: Vec<_> = preferred_keys
+        .into_iter()
+        .filter(|key| catalog.metadata_keys.iter().any(|known| known == key))
+        .collect();
+
+    let mut markdown = String::new();
+    markdown.push_str(&format!("# {}\n\n", catalog.title));
+    markdown.push_str(&format!("Root: `{}`\n\n", catalog.root));
+    markdown.push_str(&format!(
+        "Markdown sources: **{}**\n\n",
+        catalog.source_count
+    ));
+    markdown.push_str("| Path | Title | In | Out | Orphan |");
+    for key in &metadata_columns {
+        markdown.push_str(&format!(" {} |", title_case(key)));
+    }
+    markdown.push('\n');
+    markdown.push_str("|------|-------|---:|----:|--------|");
+    for _ in &metadata_columns {
+        markdown.push_str("------|");
+    }
+    markdown.push('\n');
+    for entry in &catalog.entries {
+        markdown.push_str(&format!(
+            "| [`{path}`]({path}) | {title} | {inbound} | {outbound} | {orphan} |",
+            path = escape_markdown_cell(&entry.path),
+            title = escape_markdown_cell(&entry.title),
+            inbound = entry.inbound_link_count,
+            outbound = entry.outbound_link_count,
+            orphan = if entry.orphan { "yes" } else { "no" },
+        ));
+        for key in &metadata_columns {
+            markdown.push_str(&format!(
+                " {} |",
+                escape_markdown_cell(entry.metadata.get(*key).map_or("", String::as_str))
+            ));
+        }
+        markdown.push('\n');
+    }
+    markdown
+}
+
+fn title_case(value: &str) -> String {
+    let mut chars = value.chars();
+    let Some(first) = chars.next() else {
+        return String::new();
+    };
+    first.to_ascii_uppercase().to_string() + chars.as_str()
+}
+
 fn escape_markdown_cell(value: &str) -> String {
     value.replace('|', "\\|")
 }
@@ -3573,6 +3719,74 @@ mod tests {
         assert!(markdown.contains("# proof-view"));
         assert!(markdown.contains("[`readme.md`](readme.md)"));
         assert!(!markdown.contains("skip.txt"));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn markdown_catalog_carries_frontmatter_and_link_side_info() {
+        let root = unique_temp_dir("crop-markdown-catalog");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(
+            root.join("docs").join("intro.md"),
+            "---\ntitle: Intro Metadata\ntags: [proof, crop]\nstatus: draft\n---\n# Intro\n\n[API](api.md)",
+        )
+        .unwrap();
+        fs::write(
+            root.join("docs").join("api.md"),
+            "---\ntitle: API Metadata\nstatus: ready\n---\n# API\n",
+        )
+        .unwrap();
+
+        let markdown = markdown_catalog(
+            &root,
+            "PROOF catalog",
+            &IngestOptions {
+                include_extensions: vec!["md".to_string()],
+                exclude_dirs: Vec::new(),
+            },
+        )
+        .unwrap();
+
+        assert!(markdown.contains("# PROOF catalog"));
+        assert!(markdown.contains("| Path | Title | In | Out | Orphan | Status | Tags | Title |"));
+        assert!(markdown.contains("| [`docs/intro.md`](docs/intro.md) | Intro Metadata | 0 | 1 | yes | draft | [proof, crop] | Intro Metadata |"));
+        assert!(markdown.contains("| [`docs/api.md`](docs/api.md) | API Metadata | 1 | 0 | no | ready |  | API Metadata |"));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn markdown_catalog_for_view_json_uses_view_filters() {
+        let root = unique_temp_dir("crop-markdown-catalog-view");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(
+            root.join("docs").join("one.md"),
+            "---\ntags: [included]\n---\n# One\n",
+        )
+        .unwrap();
+        fs::write(
+            root.join("docs").join("ignored.txt"),
+            "---\ntags: [ignored]\n---\n# Ignored\n",
+        )
+        .unwrap();
+
+        let view = r#"{
+          "schema_version": "crop.view.v1",
+          "name": "catalog-view",
+          "root": "docs",
+          "task": "catalog",
+          "token_budget": 160,
+          "seed": 0,
+          "include_extensions": ["md"]
+        }"#;
+
+        let markdown = markdown_catalog_for_view_json(view, &root).unwrap();
+
+        assert!(markdown.contains("# catalog-view"));
+        assert!(markdown.contains("[`one.md`](one.md)"));
+        assert!(markdown.contains("[included]"));
+        assert!(!markdown.contains("ignored"));
 
         fs::remove_dir_all(root).unwrap();
     }

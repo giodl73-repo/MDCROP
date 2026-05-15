@@ -78,6 +78,10 @@ provenance paths; exclude stale duplicates and noisy periphery.
     **First slice; `crop frontmatter` and `crop-core` frontmatter APIs expose
     top-level Markdown metadata fields and aggregate key counts for PROOF README
     tables and HTML sidebars.**
+14. **Markdown catalogs**: ready-to-embed README/TOC tables for generators.
+    **First slice; `crop catalog` combines source titles, frontmatter metadata
+    such as `tags` and `status`, backlink counts, outbound counts, and orphan
+    flags into a Markdown table.**
 
 ## Upstream kernel asks
 

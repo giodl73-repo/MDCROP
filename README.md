@@ -45,6 +45,19 @@ source path, title, directory, extension, and outbound Markdown-link count. It i
 designed as a reusable `crop-core` surface for tools such as PROOF, which can own
 its compile/render pipeline while depending on CROP for corpus index primitives.
 
+Generate a richer Markdown catalog table for README/TOC pages:
+
+```powershell
+cargo run -p crop-cli -- catalog --root C:\src\proof -e md --exclude-dir target --output CATALOG.md
+cargo run -p crop-cli -- catalog --view examples\views\whole-repo-view.json
+```
+
+`crop catalog` emits Markdown that combines source titles, inbound/outbound link
+counts, orphan flags, and selected frontmatter fields such as `status`, `tags`,
+`title`, `wave`, and `version`. It is a ready-to-embed table surface for PROOF
+while the structured JSON side-info remains available through `links`,
+`backlinks`, `frontmatter`, and `headings`.
+
 Audit local Markdown links as structured side-info:
 
 ```powershell

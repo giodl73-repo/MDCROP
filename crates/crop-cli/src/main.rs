@@ -3,7 +3,8 @@ use clap::{Parser, Subcommand, ValueEnum};
 use crop_core::{
     bench_manifest_json, bench_pack, crop_context, eval_competitor_json, eval_fixture, eval_suite,
     fixture_graph, ingest_path, inspect_view_json, inspect_view_store, list_views,
-    markdown_backlinks, markdown_backlinks_for_view_json, markdown_frontmatter_inventory,
+    markdown_backlinks, markdown_backlinks_for_view_json, markdown_catalog,
+    markdown_catalog_for_view_json, markdown_frontmatter_inventory,
     markdown_frontmatter_inventory_for_view_json, markdown_heading_inventory,
     markdown_heading_inventory_for_view_json, markdown_index, markdown_index_for_view_json,
     markdown_link_audit, markdown_link_audit_for_view_json, prefix_cached_pack, run_view_json,
@@ -105,6 +106,27 @@ enum Commands {
         #[arg(short = 'e', long = "extension")]
         extensions: Vec<String>,
         /// Exclude directories by basename while indexing.
+        #[arg(long = "exclude-dir")]
+        exclude_dirs: Vec<String>,
+        /// Optional Markdown output path. Defaults to stdout.
+        #[arg(long)]
+        output: Option<PathBuf>,
+    },
+    /// Generate a Markdown catalog table with metadata and link side-info.
+    Catalog {
+        /// Root directory or file to catalog.
+        #[arg(long)]
+        root: Option<PathBuf>,
+        /// crop.view.v1 recipe to catalog.
+        #[arg(long)]
+        view: Option<PathBuf>,
+        /// Catalog title. Defaults to the root or view name.
+        #[arg(long)]
+        title: Option<String>,
+        /// Restrict cataloged files to one or more extensions, e.g. -e md.
+        #[arg(short = 'e', long = "extension")]
+        extensions: Vec<String>,
+        /// Exclude directories by basename while cataloging.
         #[arg(long = "exclude-dir")]
         exclude_dirs: Vec<String>,
         /// Optional Markdown output path. Defaults to stdout.
@@ -361,6 +383,50 @@ fn main() -> Result<()> {
                 };
                 let title = title.unwrap_or_else(|| root.display().to_string());
                 markdown_index(
+                    root,
+                    &title,
+                    &IngestOptions {
+                        include_extensions: extensions,
+                        exclude_dirs,
+                    },
+                )?
+            };
+            if let Some(output) = output {
+                fs::write(output, markdown)?;
+            } else {
+                println!("{markdown}");
+            }
+        }
+        Commands::Catalog {
+            root,
+            view,
+            title,
+            extensions,
+            exclude_dirs,
+            output,
+        } => {
+            if root.is_some() && view.is_some() {
+                bail!("--root and --view cannot be combined");
+            }
+            let markdown = if let Some(view) = view {
+                let input = fs::read_to_string(&view)?;
+                let base_dir = view.parent().unwrap_or_else(|| Path::new("."));
+                let mut recipe: CropView = serde_json::from_str(&input)?;
+                if let Some(title) = title {
+                    recipe.name = title;
+                }
+                if !extensions.is_empty() {
+                    recipe.include_extensions = extensions;
+                }
+                recipe.exclude_dirs.extend(exclude_dirs);
+                let view_json = serde_json::to_string(&recipe)?;
+                markdown_catalog_for_view_json(&view_json, base_dir)?
+            } else {
+                let Some(root) = root else {
+                    bail!("--root or --view is required");
+                };
+                let title = title.unwrap_or_else(|| root.display().to_string());
+                markdown_catalog(
                     root,
                     &title,
                     &IngestOptions {
