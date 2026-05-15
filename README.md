@@ -57,6 +57,18 @@ status, resolved source, error details, and aggregate ok/broken counts. It uses
 MDPATH-compatible resolution for `md://` URIs and heading fragments, while
 ignoring external links so PROOF can focus this report on local corpus health.
 
+Report backlinks and orphan pages:
+
+```powershell
+cargo run -p crop-cli -- backlinks --root C:\src\proof -e md --exclude-dir target
+cargo run -p crop-cli -- backlinks --view examples\views\whole-repo-view.json
+```
+
+`crop backlinks` emits `crop.markdown-backlinks.v1` JSON with one page row per
+Markdown source, title, inbound link list, outbound link count, and orphan flag.
+It reuses CROP's MDPATH-compatible link resolution so PROOF can build indexes
+and README tables with "referenced by" side-info.
+
 Inventory headings and MDPATH anchors:
 
 ```powershell

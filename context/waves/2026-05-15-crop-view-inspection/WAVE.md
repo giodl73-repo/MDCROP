@@ -25,6 +25,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
 | 07 | Markdown link audit | done | Added root/view local Markdown link audit JSON for PROOF and docs curation. |
 | 08 | MDPATH link resolution | done | Upgraded link audits to validate heading fragments and `md://` targets using MDPATH. |
 | 09 | Heading inventory | done | Added root/view heading inventories with anchors, `md://` section URIs, and duplicate groups. |
+| 10 | Backlink side-info | done | Added root/view backlink reports with inbound links, outbound counts, and orphan-page flags. |
 
 ## Success criteria
 
@@ -48,5 +49,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
   workflows.
 - Heading inventories expose TOC/anchor primitives for PROOF and other generated
   documentation workflows.
+- Backlink reports expose referenced-by and orphan-page primitives for generated
+  README and TOC workflows.
 - `cargo fmt`, `cargo test --workspace`, inspect smoke runs, and `git diff
   --check` pass.

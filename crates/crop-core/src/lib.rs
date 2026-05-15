@@ -392,6 +392,32 @@ pub struct MarkdownLinkAudit {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MarkdownBacklinkEntry {
+    pub source: String,
+    pub target: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MarkdownBacklinkPage {
+    pub source: String,
+    pub title: String,
+    pub inbound_link_count: usize,
+    pub outbound_link_count: usize,
+    pub orphan: bool,
+    pub inbound_links: Vec<MarkdownBacklinkEntry>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MarkdownBacklinkReport {
+    pub schema_version: String,
+    pub root: String,
+    pub source_count: usize,
+    pub ok_link_count: usize,
+    pub orphan_count: usize,
+    pub pages: Vec<MarkdownBacklinkPage>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MarkdownHeadingEntry {
     pub source: String,
     pub level: usize,
@@ -1115,6 +1141,98 @@ pub fn markdown_link_audit(
         ok_count,
         broken_count,
         links,
+    })
+}
+
+pub fn markdown_backlinks_for_view_json(
+    json: &str,
+    base_dir: impl AsRef<Path>,
+) -> Result<MarkdownBacklinkReport, CropError> {
+    let view: CropView =
+        serde_json::from_str(json).map_err(|source| CropError::ViewImport(source))?;
+    validate_view(&view)?;
+    let root = manifest_root(base_dir.as_ref(), &view.root);
+    markdown_backlinks(root, &view_ingest_options(&view))
+}
+
+pub fn markdown_backlinks(
+    root: impl AsRef<Path>,
+    options: &IngestOptions,
+) -> Result<MarkdownBacklinkReport, CropError> {
+    let root = root.as_ref();
+    if !root.exists() {
+        return Err(CropError::RootDoesNotExist {
+            path: root.display().to_string(),
+        });
+    }
+    let resolved_root = fs::canonicalize(root).map_err(|source| CropError::InspectPath {
+        path: root.display().to_string(),
+        source,
+    })?;
+    let files = supported_files(&resolved_root, options)?;
+    if files.is_empty() {
+        return Err(CropError::NoSupportedFiles {
+            path: resolved_root.display().to_string(),
+        });
+    }
+
+    let audit = markdown_link_audit(&resolved_root, options)?;
+    let ok_links: Vec<_> = audit
+        .links
+        .iter()
+        .filter(|link| link.status == "ok")
+        .collect();
+    let mut inbound: BTreeMap<String, Vec<MarkdownBacklinkEntry>> = BTreeMap::new();
+    let mut outbound_counts: BTreeMap<String, usize> = BTreeMap::new();
+    for link in ok_links.iter() {
+        *outbound_counts.entry(link.source.clone()).or_default() += 1;
+        if let Some(target_source) = &link.resolved_source {
+            if target_source != &link.source {
+                inbound
+                    .entry(target_source.clone())
+                    .or_default()
+                    .push(MarkdownBacklinkEntry {
+                        source: link.source.clone(),
+                        target: link.target.clone(),
+                    });
+            }
+        }
+    }
+
+    let mut pages = Vec::new();
+    for file in files.iter().filter(|file| is_markdown_file(file)) {
+        let text = fs::read_to_string(file).map_err(|source| CropError::ReadFile {
+            path: file.display().to_string(),
+            source,
+        })?;
+        let source = source_id(&resolved_root, file);
+        let title = first_markdown_heading(&text)
+            .or_else(|| {
+                file.file_stem()
+                    .and_then(|stem| stem.to_str())
+                    .map(|stem| stem.replace(['-', '_'], " "))
+            })
+            .unwrap_or_else(|| source.clone());
+        let inbound_links = inbound.remove(&source).unwrap_or_default();
+        let inbound_link_count = inbound_links.len();
+        pages.push(MarkdownBacklinkPage {
+            source: source.clone(),
+            title,
+            inbound_link_count,
+            outbound_link_count: outbound_counts.remove(&source).unwrap_or_default(),
+            orphan: inbound_link_count == 0,
+            inbound_links,
+        });
+    }
+
+    let orphan_count = pages.iter().filter(|page| page.orphan).count();
+    Ok(MarkdownBacklinkReport {
+        schema_version: "crop.markdown-backlinks.v1".to_string(),
+        root: display_path(&resolved_root),
+        source_count: pages.len(),
+        ok_link_count: ok_links.len(),
+        orphan_count,
+        pages,
     })
 }
 
@@ -3448,6 +3566,96 @@ mod tests {
         assert_eq!(audit.source_count, 2);
         assert_eq!(audit.link_count, 1);
         assert_eq!(audit.broken_count, 0);
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn markdown_backlinks_reports_inbound_links_and_orphans() {
+        let root = unique_temp_dir("crop-markdown-backlinks");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(
+            root.join("docs").join("intro.md"),
+            "# Intro\n\n[API](api.md)\n[API reference](api.md#Reference)\n[Missing](missing.md)",
+        )
+        .unwrap();
+        fs::write(
+            root.join("docs").join("api.md"),
+            "# API\n\n## Reference\n\nDetails.",
+        )
+        .unwrap();
+        fs::write(
+            root.join("docs").join("orphan.md"),
+            "# Orphan\n\nNo inbound links.",
+        )
+        .unwrap();
+
+        let report = markdown_backlinks(
+            &root,
+            &IngestOptions {
+                include_extensions: vec!["md".to_string()],
+                exclude_dirs: Vec::new(),
+            },
+        )
+        .unwrap();
+
+        assert_eq!(report.schema_version, "crop.markdown-backlinks.v1");
+        assert_eq!(report.source_count, 3);
+        assert_eq!(report.ok_link_count, 2);
+        assert_eq!(report.orphan_count, 2);
+        let api = report
+            .pages
+            .iter()
+            .find(|page| page.source == "docs/api.md")
+            .unwrap();
+        assert_eq!(api.title, "API");
+        assert_eq!(api.inbound_link_count, 2);
+        assert_eq!(api.outbound_link_count, 0);
+        assert!(!api.orphan);
+        assert_eq!(api.inbound_links[0].source, "docs/intro.md");
+        assert_eq!(api.inbound_links[0].target, "api.md");
+        let intro = report
+            .pages
+            .iter()
+            .find(|page| page.source == "docs/intro.md")
+            .unwrap();
+        assert!(intro.orphan);
+        assert_eq!(intro.outbound_link_count, 2);
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn markdown_backlinks_for_view_json_uses_view_filters() {
+        let root = unique_temp_dir("crop-markdown-backlinks-view");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(root.join("docs").join("one.md"), "# One\n\n[Two](two.md)").unwrap();
+        fs::write(root.join("docs").join("two.md"), "# Two\n\nDone.").unwrap();
+        fs::write(
+            root.join("docs").join("ignored.txt"),
+            "# Ignored\n\n[Missing](missing.md)",
+        )
+        .unwrap();
+
+        let view = r#"{
+          "schema_version": "crop.view.v1",
+          "name": "backlinks-view",
+          "root": "docs",
+          "task": "backlinks",
+          "token_budget": 160,
+          "seed": 0,
+          "include_extensions": ["md"]
+        }"#;
+
+        let report = markdown_backlinks_for_view_json(view, &root).unwrap();
+
+        assert_eq!(report.source_count, 2);
+        assert_eq!(report.ok_link_count, 1);
+        assert_eq!(report.orphan_count, 1);
+        assert!(!report
+            .pages
+            .iter()
+            .any(|page| page.source.ends_with("ignored.txt")));
 
         fs::remove_dir_all(root).unwrap();
     }

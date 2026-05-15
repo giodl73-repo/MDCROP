@@ -67,9 +67,13 @@ provenance paths; exclude stale duplicates and noisy periphery.
     ok/broken local links, heading fragments, and `md://` targets for roots or
     views using MDPATH-compatible resolution.**
 11. **Heading inventories**: TOC and anchor primitives for documentation tools.
-    **First slice; `crop headings` and `crop-core` heading inventory APIs expose
-    normalized anchors, line numbers, canonical `md://` section URIs, and
-    duplicate-anchor groups.**
+     **First slice; `crop headings` and `crop-core` heading inventory APIs expose
+     normalized anchors, line numbers, canonical `md://` section URIs, and
+     duplicate-anchor groups.**
+12. **Backlink side-info**: inbound reference and orphan-page primitives for
+    generated docs. **First slice; `crop backlinks` and `crop-core` backlink APIs
+    expose per-page inbound links, outbound link counts, and orphan flags using
+    MDPATH-compatible local link resolution.**
 
 ## Upstream kernel asks
 
