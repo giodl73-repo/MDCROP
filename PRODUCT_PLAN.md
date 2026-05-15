@@ -46,7 +46,8 @@ provenance paths; exclude stale duplicates and noisy periphery.
 6. **Real-corpus benchmarks**: local root timing, benchmark manifests,
    competitor export examples, and aggregate reports. **Active wave; `crop bench`
    supports one-off roots and named manifest views with aggregate summaries, and
-   checked competitor export examples live under `examples/competitors/`.**
+   checked competitor export examples live under `examples/competitors/`.
+   Fair-comparison guidance is documented in `docs/BENCHMARKS.md`. Done.**
 
 ## Upstream kernel asks
 

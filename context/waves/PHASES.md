@@ -2,11 +2,13 @@
 
 ## Active wave
 
-`2026-05-15-crop-real-corpus-benchmarks` — move from deterministic fixtures to
-local-corpus benchmark commands, manifests, competitor exports, and aggregate
-reports.
+None.
 
 ## Completed waves
+
+`2026-05-15-crop-real-corpus-benchmarks` — moved from deterministic fixtures to
+local-corpus benchmark commands, manifests, competitor exports, aggregate
+reports, and fair benchmark documentation.
 
 `2026-05-15-crop-evaluation-suite` — built the apple-to-apple fixture and
 baseline suite, metrics contract, and offline competitor import contract that

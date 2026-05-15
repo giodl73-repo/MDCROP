@@ -20,7 +20,7 @@ dependencies.
 | 02 | Benchmark manifest inputs | done | Added repeatable named benchmark/view manifests for multiple benchmark cases. |
 | 03 | Competitor export examples | done | Added checked offline JSON examples for vector, lexical, hybrid, RAG, and graph systems. |
 | 04 | Aggregate benchmark report | done | Added suite-level aggregate totals, means, and max runtime to manifest benchmark reports. |
-| 05 | Real-corpus benchmark docs | todo | Document fair apples-to-apples benchmark setup and interpretation. |
+| 05 | Real-corpus benchmark docs | done | Added benchmark guide covering fair setup, views, aggregates, and interpretation. |
 
 ## Success criteria
 

@@ -190,6 +190,10 @@ total selected tokens, mean selected size, mean quality score, mean ingest/score
 /crop/total milliseconds, and max total milliseconds. Use the aggregate for
 quick run-to-run comparison and the case rows for debugging individual views.
 
+See [`docs\BENCHMARKS.md`](docs/BENCHMARKS.md) for fair comparison rules,
+manifest view guidance, competitor export scoring, and benchmark interpretation
+caveats.
+
 ## Rust API
 
 `crop-core` exposes the first local engine surface:
