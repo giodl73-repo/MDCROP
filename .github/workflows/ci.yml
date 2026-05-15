@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  rust:
+    name: Rust
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out CROP
+        uses: actions/checkout@v4
+        with:
+          path: CROP
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Check formatting
+        working-directory: CROP
+        run: cargo fmt -- --check
+
+      - name: Test workspace
+        working-directory: CROP
+        run: cargo test --workspace
+
+      - name: Smoke CLI
+        working-directory: CROP
+        run: cargo run -p crop-cli -- fixture --budget 170
+

@@ -18,12 +18,12 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.10"
 thiserror = "2"
-mdpath = { path = "../mdpath" }
+mdpath = { git = "https://github.com/giodl73-repo/MDPATH.git", branch = "master" }
 
 # Canonical upstream dependencies. Local development can override these with
 # .cargo/config.toml copied from .cargo/config.local.example.toml.
-rctx-core = { git = "https://github.com/giodl73-repo/BISECT.git", package = "rctx-core", branch = "main" }
-rgraph-core = { git = "https://github.com/giodl73-repo/BISECT.git", package = "rgraph-core", branch = "main" }
-rstat-core = { git = "https://github.com/giodl73-repo/BISECT.git", package = "rstat-core", branch = "main" }
-ropt-core = { git = "https://github.com/giodl73-repo/BISECT.git", package = "ropt-core", branch = "main" }
+rctx-core = { git = "https://github.com/giodl73-repo/RLINE.git", package = "rctx-core", branch = "master" }
+rgraph-core = { git = "https://github.com/giodl73-repo/RLINE.git", package = "rgraph-core", branch = "master" }
+rstat-core = { git = "https://github.com/giodl73-repo/RLINE.git", package = "rstat-core", branch = "master" }
+ropt-core = { git = "https://github.com/giodl73-repo/RLINE.git", package = "ropt-core", branch = "master" }
 

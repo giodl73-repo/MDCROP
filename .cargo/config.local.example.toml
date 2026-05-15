@@ -1,10 +1,14 @@
-# Copy this file to .cargo/config.toml when developing CROP beside the BISECT
-# checkout at C:\src\apportionment. The checked-in Cargo.toml remains wired to
-# GitHub so CI and clean clones use the canonical upstream packages.
+# Copy this file to .cargo/config.toml when developing CROP beside the MDPATH
+# and RLINE checkouts at C:\src\MDPATH and C:\src\RLINE. The checked-in
+# Cargo.toml remains wired to GitHub so CI and clean clones use canonical
+# upstream packages.
 
-[patch."https://github.com/giodl73-repo/BISECT.git"]
-rctx-core = { path = "../apportionment/crates/rctx-core" }
-rgraph-core = { path = "../apportionment/crates/rgraph-core" }
-rstat-core = { path = "../apportionment/crates/rstat-core" }
-ropt-core = { path = "../apportionment/crates/ropt-core" }
+[patch."https://github.com/giodl73-repo/MDPATH.git"]
+mdpath = { path = "../MDPATH" }
+
+[patch."https://github.com/giodl73-repo/RLINE.git"]
+rctx-core = { path = "../RLINE/crates/rctx-core" }
+rgraph-core = { path = "../RLINE/crates/rgraph-core" }
+rstat-core = { path = "../RLINE/crates/rstat-core" }
+ropt-core = { path = "../RLINE/crates/ropt-core" }
 
