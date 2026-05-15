@@ -1,0 +1,10 @@
+# Copy this file to .cargo/config.toml when developing CROP beside the BISECT
+# checkout at C:\src\apportionment. The checked-in Cargo.toml remains wired to
+# GitHub so CI and clean clones use the canonical upstream packages.
+
+[patch."https://github.com/giodl73-repo/BISECT.git"]
+rctx-core = { path = "../apportionment/crates/rctx-core" }
+rgraph-core = { path = "../apportionment/crates/rgraph-core" }
+rstat-core = { path = "../apportionment/crates/rstat-core" }
+ropt-core = { path = "../apportionment/crates/ropt-core" }
+

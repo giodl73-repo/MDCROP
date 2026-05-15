@@ -1,0 +1,27 @@
+[workspace]
+members = [
+    "crates/crop-core",
+    "crates/crop-cli",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Gio Della-Libera"]
+license = "MIT"
+
+[workspace.dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+
+# Canonical upstream dependencies. Local development can override these with
+# .cargo/config.toml copied from .cargo/config.local.example.toml.
+rctx-core = { git = "https://github.com/giodl73-repo/BISECT.git", package = "rctx-core", branch = "main" }
+rgraph-core = { git = "https://github.com/giodl73-repo/BISECT.git", package = "rgraph-core", branch = "main" }
+rstat-core = { git = "https://github.com/giodl73-repo/BISECT.git", package = "rstat-core", branch = "main" }
+ropt-core = { git = "https://github.com/giodl73-repo/BISECT.git", package = "ropt-core", branch = "main" }
+

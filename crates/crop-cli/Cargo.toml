@@ -1,0 +1,17 @@
+[package]
+name = "crop-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "crop"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+crop-core = { path = "../crop-core" }
+serde_json.workspace = true
+
