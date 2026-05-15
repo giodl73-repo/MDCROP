@@ -66,6 +66,10 @@ provenance paths; exclude stale duplicates and noisy periphery.
     curators. **First slice; `crop links` and `crop-core` link audit APIs report
     ok/broken local links, heading fragments, and `md://` targets for roots or
     views using MDPATH-compatible resolution.**
+11. **Heading inventories**: TOC and anchor primitives for documentation tools.
+    **First slice; `crop headings` and `crop-core` heading inventory APIs expose
+    normalized anchors, line numbers, canonical `md://` section URIs, and
+    duplicate-anchor groups.**
 
 ## Upstream kernel asks
 

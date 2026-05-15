@@ -392,6 +392,33 @@ pub struct MarkdownLinkAudit {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MarkdownHeadingEntry {
+    pub source: String,
+    pub level: usize,
+    pub text: String,
+    pub anchor: String,
+    pub line: usize,
+    pub md_uri: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MarkdownDuplicateHeading {
+    pub anchor: String,
+    pub occurrences: Vec<MarkdownHeadingEntry>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MarkdownHeadingInventory {
+    pub schema_version: String,
+    pub root: String,
+    pub source_count: usize,
+    pub heading_count: usize,
+    pub duplicate_anchor_count: usize,
+    pub headings: Vec<MarkdownHeadingEntry>,
+    pub duplicate_anchors: Vec<MarkdownDuplicateHeading>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CropViewSummary {
     pub file: String,
     pub name: String,
@@ -1088,6 +1115,76 @@ pub fn markdown_link_audit(
         ok_count,
         broken_count,
         links,
+    })
+}
+
+pub fn markdown_heading_inventory_for_view_json(
+    json: &str,
+    base_dir: impl AsRef<Path>,
+) -> Result<MarkdownHeadingInventory, CropError> {
+    let view: CropView =
+        serde_json::from_str(json).map_err(|source| CropError::ViewImport(source))?;
+    validate_view(&view)?;
+    let root = manifest_root(base_dir.as_ref(), &view.root);
+    markdown_heading_inventory(root, &view_ingest_options(&view))
+}
+
+pub fn markdown_heading_inventory(
+    root: impl AsRef<Path>,
+    options: &IngestOptions,
+) -> Result<MarkdownHeadingInventory, CropError> {
+    let root = root.as_ref();
+    if !root.exists() {
+        return Err(CropError::RootDoesNotExist {
+            path: root.display().to_string(),
+        });
+    }
+    let resolved_root = fs::canonicalize(root).map_err(|source| CropError::InspectPath {
+        path: root.display().to_string(),
+        source,
+    })?;
+    let files = supported_files(&resolved_root, options)?;
+    if files.is_empty() {
+        return Err(CropError::NoSupportedFiles {
+            path: resolved_root.display().to_string(),
+        });
+    }
+
+    let mut headings = Vec::new();
+    for file in &files {
+        if !is_markdown_file(file) {
+            continue;
+        }
+        let text = fs::read_to_string(file).map_err(|source| CropError::ReadFile {
+            path: file.display().to_string(),
+            source,
+        })?;
+        let source = source_id(&resolved_root, file);
+        let doc = mdpath::parser::parse_document(&text);
+        for heading in doc.headings {
+            if heading.level == 0 {
+                continue;
+            }
+            headings.push(MarkdownHeadingEntry {
+                md_uri: format!("md://{}#{}", source, heading.anchor),
+                source: source.clone(),
+                level: heading.level,
+                text: heading.text,
+                anchor: heading.anchor,
+                line: heading.line,
+            });
+        }
+    }
+
+    let duplicate_anchors = duplicate_heading_anchors(&headings);
+    Ok(MarkdownHeadingInventory {
+        schema_version: "crop.markdown-heading-inventory.v1".to_string(),
+        root: display_path(&resolved_root),
+        source_count: files.len(),
+        heading_count: headings.len(),
+        duplicate_anchor_count: duplicate_anchors.len(),
+        headings,
+        duplicate_anchors,
     })
 }
 
@@ -2033,6 +2130,25 @@ fn extension_counts(files: &[PathBuf]) -> BTreeMap<String, usize> {
         *counts.entry(extension).or_insert(0) += 1;
     }
     counts
+}
+
+fn duplicate_heading_anchors(headings: &[MarkdownHeadingEntry]) -> Vec<MarkdownDuplicateHeading> {
+    let mut by_anchor = BTreeMap::<String, Vec<MarkdownHeadingEntry>>::new();
+    for heading in headings {
+        by_anchor
+            .entry(heading.anchor.clone())
+            .or_default()
+            .push(heading.clone());
+    }
+    by_anchor
+        .into_iter()
+        .filter_map(|(anchor, occurrences)| {
+            (occurrences.len() > 1).then_some(MarkdownDuplicateHeading {
+                anchor,
+                occurrences,
+            })
+        })
+        .collect()
 }
 
 fn file_extension_label(file: &Path) -> String {
@@ -3332,6 +3448,73 @@ mod tests {
         assert_eq!(audit.source_count, 2);
         assert_eq!(audit.link_count, 1);
         assert_eq!(audit.broken_count, 0);
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn markdown_heading_inventory_reports_mdpath_uris_and_duplicates() {
+        let root = unique_temp_dir("crop-markdown-headings");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(
+            root.join("docs").join("one.md"),
+            "# Intro\n\n## Shared\n\nText.",
+        )
+        .unwrap();
+        fs::write(
+            root.join("docs").join("two.md"),
+            "# Other\n\n## Shared\n\nMore.",
+        )
+        .unwrap();
+
+        let inventory = markdown_heading_inventory(
+            &root,
+            &IngestOptions {
+                include_extensions: vec!["md".to_string()],
+                exclude_dirs: Vec::new(),
+            },
+        )
+        .unwrap();
+
+        assert_eq!(
+            inventory.schema_version,
+            "crop.markdown-heading-inventory.v1"
+        );
+        assert_eq!(inventory.source_count, 2);
+        assert_eq!(inventory.heading_count, 4);
+        assert_eq!(inventory.duplicate_anchor_count, 1);
+        assert_eq!(inventory.duplicate_anchors[0].anchor, "shared");
+        assert_eq!(inventory.headings[0].source, "docs/one.md");
+        assert_eq!(inventory.headings[0].text, "Intro");
+        assert_eq!(inventory.headings[0].anchor, "intro");
+        assert_eq!(inventory.headings[0].line, 1);
+        assert_eq!(inventory.headings[0].md_uri, "md://docs/one.md#intro");
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn markdown_heading_inventory_for_view_json_uses_view_filters() {
+        let root = unique_temp_dir("crop-markdown-headings-view");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(root.join("docs").join("one.md"), "# Included").unwrap();
+        fs::write(root.join("docs").join("ignored.txt"), "# Ignored").unwrap();
+
+        let view = r#"{
+          "schema_version": "crop.view.v1",
+          "name": "heading-view",
+          "root": "docs",
+          "task": "headings",
+          "token_budget": 160,
+          "seed": 0,
+          "include_extensions": ["md"]
+        }"#;
+
+        let inventory = markdown_heading_inventory_for_view_json(view, &root).unwrap();
+
+        assert_eq!(inventory.source_count, 1);
+        assert_eq!(inventory.heading_count, 1);
+        assert_eq!(inventory.headings[0].text, "Included");
 
         fs::remove_dir_all(root).unwrap();
     }

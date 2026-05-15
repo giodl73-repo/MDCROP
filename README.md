@@ -57,6 +57,18 @@ status, resolved source, error details, and aggregate ok/broken counts. It uses
 MDPATH-compatible resolution for `md://` URIs and heading fragments, while
 ignoring external links so PROOF can focus this report on local corpus health.
 
+Inventory headings and MDPATH anchors:
+
+```powershell
+cargo run -p crop-cli -- headings --root C:\src\proof -e md --exclude-dir target
+cargo run -p crop-cli -- headings --view examples\views\whole-repo-view.json
+```
+
+`crop headings` emits `crop.markdown-heading-inventory.v1` JSON with source,
+level, text, normalized MDPATH/GitHub anchor, line number, canonical `md://`
+section URI, and duplicate-anchor groups. This is the raw TOC and anchor
+inventory surface for PROOF.
+
 Run a persisted named view recipe:
 
 ```powershell
@@ -320,6 +332,9 @@ caveats.
 - `markdown_link_audit(root, options)` and
   `markdown_link_audit_for_view_json(json, base_dir)` report local Markdown link
   and MDPATH heading health as structured side-info.
+- `markdown_heading_inventory(root, options)` and
+  `markdown_heading_inventory_for_view_json(json, base_dir)` report heading,
+  anchor, duplicate-anchor, and `md://` section URI inventories.
 - `run_view_json(json, base_dir)` runs a persisted `crop.view.v1` recipe and
   returns `crop.view-run.v1` with the produced context pack.
 - `run_view_prefix_cached_json(json, base_dir, profile)` runs a view and returns
