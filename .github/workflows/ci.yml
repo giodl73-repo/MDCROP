@@ -12,6 +12,9 @@ jobs:
     runs-on: windows-latest
 
     steps:
+      - name: Use canonical line endings
+        run: git config --global core.autocrlf false
+
       - name: Check out CROP
         uses: actions/checkout@v4
         with:
