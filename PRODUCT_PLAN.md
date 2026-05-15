@@ -45,7 +45,8 @@ provenance paths; exclude stale duplicates and noisy periphery.
     offline external competitor exports can be scored with `crop eval-import`.**
 6. **Real-corpus benchmarks**: local root timing, benchmark manifests,
    competitor export examples, and aggregate reports. **Active wave; `crop bench`
-   supports one-off roots and named manifest views.**
+   supports one-off roots and named manifest views, and checked competitor
+   export examples live under `examples/competitors/`.**
 
 ## Upstream kernel asks
 

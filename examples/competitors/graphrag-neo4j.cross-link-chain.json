@@ -1,0 +1,18 @@
+{
+  "schema_version": "crop.competitor-results.v1",
+  "case": "cross-link-chain",
+  "token_budget": 160,
+  "method": {
+    "method_id": "graphrag-neo4j-example",
+    "competitor_class": "graph",
+    "implementation": "graphrag-neo4j",
+    "version": null,
+    "notes": "Offline export template for graph retrieval systems."
+  },
+  "selected_units": [
+    { "unit_id": "seed", "score": 1.0, "token_estimate": 40 },
+    { "unit_id": "link-a", "score": 0.82, "token_estimate": 40 },
+    { "unit_id": "link-b", "score": 0.8, "token_estimate": 40 },
+    { "unit_id": "target", "score": 0.98, "token_estimate": 40 }
+  ]
+}

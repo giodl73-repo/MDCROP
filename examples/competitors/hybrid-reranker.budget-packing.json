@@ -1,0 +1,16 @@
+{
+  "schema_version": "crop.competitor-results.v1",
+  "case": "budget-packing",
+  "token_budget": 160,
+  "method": {
+    "method_id": "hybrid-reranker-example",
+    "competitor_class": "hybrid",
+    "implementation": "vector-plus-lexical-reranker",
+    "version": null,
+    "notes": "Offline export template for hybrid vector/keyword reranking systems."
+  },
+  "selected_units": [
+    { "unit_id": "seed", "score": 0.92, "token_estimate": 20 },
+    { "unit_id": "large-distractor", "score": 0.9, "token_estimate": 120 }
+  ]
+}

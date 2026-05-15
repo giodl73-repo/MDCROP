@@ -1,0 +1,17 @@
+{
+  "schema_version": "crop.competitor-results.v1",
+  "case": "noisy-periphery",
+  "token_budget": 160,
+  "method": {
+    "method_id": "llamaindex-rag-example",
+    "competitor_class": "rag-orchestration",
+    "implementation": "llamaindex",
+    "version": null,
+    "notes": "Offline export template for RAG orchestrators after retrieval/reranking."
+  },
+  "selected_units": [
+    { "unit_id": "seed", "score": 0.99, "token_estimate": 80 },
+    { "unit_id": "target", "score": 0.96, "token_estimate": 40 },
+    { "unit_id": "periphery-noise", "score": 0.94, "token_estimate": 40 }
+  ]
+}

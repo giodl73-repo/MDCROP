@@ -1,0 +1,16 @@
+{
+  "schema_version": "crop.competitor-results.v1",
+  "case": "stale-duplicate",
+  "token_budget": 110,
+  "method": {
+    "method_id": "tantivy-lexical-example",
+    "competitor_class": "lexical",
+    "implementation": "tantivy",
+    "version": null,
+    "notes": "Offline export template for BM25/Lucene-style lexical systems."
+  },
+  "selected_units": [
+    { "unit_id": "seed", "score": 4.2, "token_estimate": 60 },
+    { "unit_id": "current-canonical", "score": 3.8, "token_estimate": 50 }
+  ]
+}

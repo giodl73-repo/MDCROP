@@ -121,6 +121,22 @@ GraphRAG or Neo4j-backed retrieval. Their exported unit IDs are scored against
 the same fixture labels, canonical token counts, and metrics as CROP and the
 local baselines.
 
+Checked export examples live under `examples\competitors\`:
+
+| File | Competitor class | Fixture case |
+|------|------------------|--------------|
+| `qdrant-vector.missing-bridge.json` | Vector | `missing-bridge` |
+| `tantivy-lexical.stale-duplicate.json` | Lexical | `stale-duplicate` |
+| `hybrid-reranker.budget-packing.json` | Hybrid | `budget-packing` |
+| `llamaindex-rag.noisy-periphery.json` | RAG orchestration | `noisy-periphery` |
+| `graphrag-neo4j.cross-link-chain.json` | Graph | `cross-link-chain` |
+
+Run any example with:
+
+```powershell
+cargo run -p crop-cli -- eval-import --input examples\competitors\qdrant-vector.missing-bridge.json
+```
+
 Benchmark CROP on a local repository or document tree:
 
 ```powershell

@@ -1748,6 +1748,27 @@ mod tests {
     }
 
     #[test]
+    fn checked_competitor_examples_are_scoreable() {
+        let examples = [
+            include_str!("../../../examples/competitors/qdrant-vector.missing-bridge.json"),
+            include_str!("../../../examples/competitors/tantivy-lexical.stale-duplicate.json"),
+            include_str!("../../../examples/competitors/hybrid-reranker.budget-packing.json"),
+            include_str!("../../../examples/competitors/llamaindex-rag.noisy-periphery.json"),
+            include_str!("../../../examples/competitors/graphrag-neo4j.cross-link-chain.json"),
+        ];
+
+        for example in examples {
+            let report = eval_competitor_json(example).unwrap();
+
+            assert_eq!(report.schema_version, COMPETITOR_RESULTS_SCHEMA);
+            assert!(!report.method.method_id.is_empty());
+            assert!(!report.selected_unit_ids.is_empty());
+            assert!(report.token_estimate <= report.token_budget);
+            assert!(report.quality_score.is_finite());
+        }
+    }
+
+    #[test]
     fn ingests_markdown_links_and_scores_task_terms() {
         let root = unique_temp_dir("crop-ingest");
         fs::create_dir_all(root.join("docs")).unwrap();

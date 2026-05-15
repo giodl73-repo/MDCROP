@@ -1,0 +1,17 @@
+{
+  "schema_version": "crop.competitor-results.v1",
+  "case": "missing-bridge",
+  "token_budget": 160,
+  "method": {
+    "method_id": "qdrant-vector-example",
+    "competitor_class": "vector",
+    "implementation": "qdrant",
+    "version": null,
+    "notes": "Offline export template for vector top-k systems."
+  },
+  "selected_units": [
+    { "unit_id": "task-seed", "score": 0.99, "token_estimate": 80 },
+    { "unit_id": "target-note", "score": 0.97, "token_estimate": 40 },
+    { "unit_id": "stale-noise", "score": 0.95, "token_estimate": 40 }
+  ]
+}
