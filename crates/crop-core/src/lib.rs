@@ -10,6 +10,7 @@ use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::time::Instant;
 use thiserror::Error;
 
 pub const COMPETITOR_RESULTS_SCHEMA: &str = "crop.competitor-results.v1";
@@ -183,6 +184,33 @@ pub struct PrefixCachedPack {
     pub prefix: PrefixBlock,
     pub body: CropPack,
     pub task_tail: TaskTail,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BenchTimings {
+    pub ingest_ms: u64,
+    pub score_ms: u64,
+    pub crop_ms: u64,
+    pub total_ms: u64,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct BenchReport {
+    pub schema_version: String,
+    pub root: String,
+    pub task: String,
+    pub token_budget: usize,
+    pub seed: usize,
+    pub source_count: usize,
+    pub unit_count: usize,
+    pub edge_count: usize,
+    pub selected_unit_count: usize,
+    pub selected_token_estimate: usize,
+    pub boundary_cut_edges: usize,
+    pub boundary_conductance: f64,
+    pub relevance_mean: f64,
+    pub quality_score: f64,
+    pub timings: BenchTimings,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -464,6 +492,54 @@ pub fn prefix_cached_pack(
             task: task.into(),
             seed: options.seed,
             token_budget: options.token_budget,
+        },
+    })
+}
+
+pub fn bench_pack(
+    root: impl AsRef<Path>,
+    task: &str,
+    options: CropOptions,
+) -> Result<BenchReport, CropError> {
+    if options.token_budget == 0 {
+        return Err(CropError::NonPositiveBudget);
+    }
+
+    let total_start = Instant::now();
+
+    let ingest_start = Instant::now();
+    let mut ingested = ingest_path(root)?;
+    let ingest_ms = elapsed_ms(ingest_start);
+
+    let score_start = Instant::now();
+    score_graph_for_task(&mut ingested.graph, task);
+    let score_ms = elapsed_ms(score_start);
+
+    let crop_start = Instant::now();
+    let pack = crop_context(&ingested.graph, options.clone())?;
+    let crop_ms = elapsed_ms(crop_start);
+    let total_ms = elapsed_ms(total_start);
+
+    Ok(BenchReport {
+        schema_version: "crop.bench.v1".to_string(),
+        root: ingested.report.root,
+        task: task.to_string(),
+        token_budget: options.token_budget,
+        seed: options.seed,
+        source_count: ingested.report.source_count,
+        unit_count: ingested.report.unit_count,
+        edge_count: ingested.report.edge_count,
+        selected_unit_count: pack.units.len(),
+        selected_token_estimate: pack.token_estimate,
+        boundary_cut_edges: pack.boundary_cut_edges,
+        boundary_conductance: pack.boundary_conductance,
+        relevance_mean: pack.relevance_mean,
+        quality_score: pack.quality_score,
+        timings: BenchTimings {
+            ingest_ms,
+            score_ms,
+            crop_ms,
+            total_ms,
         },
     })
 }
@@ -1229,6 +1305,10 @@ fn sha256_hex(bytes: &[u8]) -> String {
     format!("sha256:{digest:x}")
 }
 
+fn elapsed_ms(start: Instant) -> u64 {
+    start.elapsed().as_millis().try_into().unwrap_or(u64::MAX)
+}
+
 fn estimate_tokens(text: &str) -> usize {
     text.split_whitespace().count().max(1)
 }
@@ -1659,6 +1739,43 @@ mod tests {
 
         assert_eq!(ingested.report.source_count, 1);
         assert_eq!(ingested.graph.units[0].source_id, "README.md");
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn bench_pack_reports_stage_timings_and_pack_summary() {
+        let root = unique_temp_dir("crop-bench");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(
+            root.join("docs").join("index.md"),
+            "Benchmark overview links to [target](target.md).\n\nTask seed context.",
+        )
+        .unwrap();
+        fs::write(
+            root.join("docs").join("target.md"),
+            "Target benchmark evidence explains graph crops.",
+        )
+        .unwrap();
+
+        let report = bench_pack(
+            &root,
+            "benchmark graph crops",
+            CropOptions {
+                seed: 0,
+                token_budget: 160,
+            },
+        )
+        .unwrap();
+
+        assert_eq!(report.schema_version, "crop.bench.v1");
+        assert_eq!(report.source_count, 2);
+        assert_eq!(report.unit_count, 3);
+        assert!(report.edge_count >= 2);
+        assert!(report.selected_unit_count > 0);
+        assert!(report.selected_token_estimate <= 160);
+        assert!(report.quality_score.is_finite());
+        assert!(report.timings.total_ms >= report.timings.crop_ms);
+
         fs::remove_dir_all(root).unwrap();
     }
 

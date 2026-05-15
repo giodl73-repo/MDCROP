@@ -1,8 +1,8 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand, ValueEnum};
 use crop_core::{
-    crop_context, eval_competitor_json, eval_fixture, eval_suite, fixture_graph, ingest_path,
-    prefix_cached_pack, score_graph_for_task, CropOptions, EvalCase, EvalMethod,
+    bench_pack, crop_context, eval_competitor_json, eval_fixture, eval_suite, fixture_graph,
+    ingest_path, prefix_cached_pack, score_graph_for_task, CropOptions, EvalCase, EvalMethod,
     PrefixCacheProfile,
 };
 use std::fs;
@@ -65,6 +65,21 @@ enum Commands {
         /// JSON file using the competitor result contract.
         #[arg(long)]
         input: PathBuf,
+    },
+    /// Benchmark ingest, scoring, and crop stages on a local root.
+    Bench {
+        /// Root directory or file to benchmark.
+        #[arg(long)]
+        root: PathBuf,
+        /// Task prompt used to score evidence units.
+        #[arg(long)]
+        task: String,
+        /// Token budget for the context crop.
+        #[arg(long, default_value_t = 12000)]
+        budget: usize,
+        /// Seed unit index for crop expansion.
+        #[arg(long, default_value_t = 0)]
+        seed: usize,
     },
 }
 
@@ -154,6 +169,22 @@ fn main() -> Result<()> {
                 "{}",
                 serde_json::to_string_pretty(&eval_competitor_json(&json)?)?
             );
+        }
+        Commands::Bench {
+            root,
+            task,
+            budget,
+            seed,
+        } => {
+            let report = bench_pack(
+                root,
+                &task,
+                CropOptions {
+                    seed,
+                    token_budget: budget,
+                },
+            )?;
+            println!("{}", serde_json::to_string_pretty(&report)?);
         }
     }
     Ok(())

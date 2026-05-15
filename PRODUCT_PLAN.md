@@ -43,6 +43,8 @@ provenance paths; exclude stale duplicates and noisy periphery.
     measuring noise, missing bridges, source coverage, and later real-corpus
     latency. **Five apple-to-apple fixture cases are available via `crop eval`;
     offline external competitor exports can be scored with `crop eval-import`.**
+6. **Real-corpus benchmarks**: local root timing, benchmark manifests,
+   competitor export examples, and aggregate reports. **Active wave.**
 
 ## Upstream kernel asks
 

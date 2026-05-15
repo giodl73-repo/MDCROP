@@ -121,6 +121,19 @@ GraphRAG or Neo4j-backed retrieval. Their exported unit IDs are scored against
 the same fixture labels, canonical token counts, and metrics as CROP and the
 local baselines.
 
+Benchmark CROP on a local repository or document tree:
+
+```powershell
+cargo run -p crop-cli -- bench --root C:\src\CROP --task "explain graph context boundary" --budget 12000
+```
+
+`crop bench` runs the same local ingest, scoring, and crop stages as `crop pack`
+but emits summary JSON instead of the full context body. The report includes
+source/unit/edge counts, selected token counts, boundary and quality metrics,
+and elapsed milliseconds for ingest, scoring, crop, and total runtime. Timing is
+machine- and root-dependent; use fixture metrics for deterministic quality
+comparisons and benchmark metrics for local performance tracking.
+
 ## Rust API
 
 `crop-core` exposes the first local engine surface:
@@ -132,6 +145,8 @@ local baselines.
 - `crop_context(graph, CropOptions)` emits a provenance-aware `CropPack`.
 - `prefix_cached_pack(ingested, pack, task, options, profile)` wraps a crop in a
   cache-aware prefix/body/task-tail manifest.
+- `bench_pack(root, task, options)` runs local ingest, scoring, and crop stages
+  and returns a benchmark summary with stage timings.
 - `eval_fixture(case, method, budget)` runs deterministic apple-to-apple
    retrieval comparisons.
 - `eval_suite(budget)` runs every case against every local method and returns

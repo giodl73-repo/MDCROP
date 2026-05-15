@@ -2,7 +2,9 @@
 
 ## Active wave
 
-None.
+`2026-05-15-crop-real-corpus-benchmarks` — move from deterministic fixtures to
+local-corpus benchmark commands, manifests, competitor exports, and aggregate
+reports.
 
 ## Completed waves
 
