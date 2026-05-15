@@ -2,7 +2,8 @@
 
 ## Active wave
 
-None.
+`2026-05-15-crop-view-inspection` — add safe preflight inspection for named
+views so large or optional corpora can be validated before running a full crop.
 
 ## Completed waves
 

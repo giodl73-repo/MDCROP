@@ -47,6 +47,18 @@ cargo run -p crop-cli -- view --file examples\views\whole-repo-view.json --query
 cargo run -p crop-cli -- view --file examples\views\maxim-computing-view.json -e md
 ```
 
+Inspect first when a view points at a large or optional corpus:
+
+```powershell
+cargo run -p crop-cli -- view --inspect --file examples\views\whole-repo-view.json -e md
+cargo run -p crop-cli -- view --inspect --file examples\views\resonance-theory-view.json -e md -e tex
+```
+
+Inspection emits `crop.view-inspect.v1` with the resolved root, active task and
+filters, supported source count, and up to ten sample source IDs. It fails on bad
+schemas, zero budgets, missing roots, and filters that match no supported files,
+without building a full context crop.
+
 Use the whole-repo and troubleshooting views as templates for `.crop\views` in
 other repositories. Use the Maxim and Resonance examples as local large-corpus
 recipes; they require those sibling checkouts to exist at `C:\src`.

@@ -53,6 +53,9 @@ provenance paths; exclude stale duplicates and noisy periphery.
    discovers local view stores; views can emit prefix-cache-aware packs with
    `--prefix-cache generic`, and checked examples cover docs-only, whole-repo,
    troubleshooting, Maxim, and Resonance slices.**
+8. **View inspection**: safe preflight for named views. **Active wave;
+   `crop view --inspect` validates recipes, resolves roots, applies filters, and
+   reports matched source counts before running a full crop.**
 
 ## Upstream kernel asks
 

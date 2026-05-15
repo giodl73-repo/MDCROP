@@ -2,7 +2,7 @@ use anyhow::{bail, Result};
 use clap::{Parser, Subcommand, ValueEnum};
 use crop_core::{
     bench_manifest_json, bench_pack, crop_context, eval_competitor_json, eval_fixture, eval_suite,
-    fixture_graph, ingest_path, list_views, prefix_cached_pack, run_view_json,
+    fixture_graph, ingest_path, inspect_view_json, list_views, prefix_cached_pack, run_view_json,
     run_view_prefix_cached_json, score_graph_for_task, CropOptions, CropView, EvalCase, EvalMethod,
     PrefixCacheProfile,
 };
@@ -91,6 +91,9 @@ enum Commands {
         /// List view recipes in a store directory.
         #[arg(long)]
         list: bool,
+        /// Validate a view recipe and report resolved root/filter metadata without cropping.
+        #[arg(long)]
+        inspect: bool,
         /// JSON file using the crop.view.v1 recipe schema.
         #[arg(long)]
         file: Option<PathBuf>,
@@ -230,6 +233,7 @@ fn main() -> Result<()> {
         }
         Commands::View {
             list,
+            inspect,
             file,
             dir,
             prefix_cache,
@@ -254,7 +258,12 @@ fn main() -> Result<()> {
                 }
                 view.exclude_dirs.extend(exclude_dirs);
                 let view_json = serde_json::to_string(&view)?;
-                if let Some(prefix_cache) = prefix_cache {
+                if inspect {
+                    if prefix_cache.is_some() {
+                        bail!("--prefix-cache cannot be combined with --inspect");
+                    }
+                    serde_json::to_string_pretty(&inspect_view_json(&view_json, base_dir)?)?
+                } else if let Some(prefix_cache) = prefix_cache {
                     serde_json::to_string_pretty(&run_view_prefix_cached_json(
                         &view_json,
                         base_dir,

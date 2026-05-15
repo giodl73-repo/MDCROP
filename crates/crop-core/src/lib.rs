@@ -313,6 +313,21 @@ pub struct CropViewPrefixCachedRun {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CropViewInspect {
+    pub schema_version: String,
+    pub name: String,
+    pub root: String,
+    pub resolved_root: String,
+    pub task: String,
+    pub token_budget: usize,
+    pub seed: usize,
+    pub include_extensions: Vec<String>,
+    pub exclude_dirs: Vec<String>,
+    pub supported_source_count: usize,
+    pub sample_sources: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CropViewSummary {
     pub file: String,
     pub name: String,
@@ -320,6 +335,8 @@ pub struct CropViewSummary {
     pub task: String,
     pub token_budget: usize,
     pub seed: usize,
+    pub include_extensions: Vec<String>,
+    pub exclude_dirs: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -724,6 +741,57 @@ pub fn run_view_prefix_cached_json(
     run_view_prefix_cached(view, base_dir, profile)
 }
 
+pub fn inspect_view_json(
+    json: &str,
+    base_dir: impl AsRef<Path>,
+) -> Result<CropViewInspect, CropError> {
+    let view = serde_json::from_str(json).map_err(|source| CropError::ViewImport(source))?;
+    inspect_view(view, base_dir)
+}
+
+pub fn inspect_view(
+    view: CropView,
+    base_dir: impl AsRef<Path>,
+) -> Result<CropViewInspect, CropError> {
+    validate_view(&view)?;
+    let root = manifest_root(base_dir.as_ref(), &view.root);
+    if !root.exists() {
+        return Err(CropError::RootDoesNotExist {
+            path: root.display().to_string(),
+        });
+    }
+    let resolved_root = fs::canonicalize(&root).map_err(|source| CropError::InspectPath {
+        path: root.display().to_string(),
+        source,
+    })?;
+    let ingest_options = view_ingest_options(&view);
+    let files = supported_files(&resolved_root, &ingest_options)?;
+    if files.is_empty() {
+        return Err(CropError::NoSupportedFiles {
+            path: resolved_root.display().to_string(),
+        });
+    }
+    let sample_sources = files
+        .iter()
+        .take(10)
+        .map(|file| source_id(&resolved_root, file))
+        .collect::<Vec<_>>();
+
+    Ok(CropViewInspect {
+        schema_version: "crop.view-inspect.v1".to_string(),
+        name: view.name,
+        root: view.root,
+        resolved_root: display_path(&resolved_root),
+        task: view.task,
+        token_budget: view.token_budget,
+        seed: view.seed,
+        include_extensions: view.include_extensions,
+        exclude_dirs: view.exclude_dirs,
+        supported_source_count: files.len(),
+        sample_sources,
+    })
+}
+
 pub fn run_view(view: CropView, base_dir: impl AsRef<Path>) -> Result<CropViewRun, CropError> {
     validate_view(&view)?;
     let root_label = view.root.clone();
@@ -767,10 +835,7 @@ fn run_view_pack(
     base_dir: impl AsRef<Path>,
 ) -> Result<(IngestedEvidence, CropPack), CropError> {
     let root = manifest_root(base_dir.as_ref(), &view.root);
-    let ingest_options = IngestOptions {
-        include_extensions: view.include_extensions.clone(),
-        exclude_dirs: view.exclude_dirs.clone(),
-    };
+    let ingest_options = view_ingest_options(view);
     let mut ingested = ingest_path_with_options(root, &ingest_options)?;
     score_graph_for_task(&mut ingested.graph, &view.task);
     let pack = crop_context(
@@ -782,6 +847,13 @@ fn run_view_pack(
     )?;
 
     Ok((ingested, pack))
+}
+
+fn view_ingest_options(view: &CropView) -> IngestOptions {
+    IngestOptions {
+        include_extensions: view.include_extensions.clone(),
+        exclude_dirs: view.exclude_dirs.clone(),
+    }
 }
 
 fn validate_view(view: &CropView) -> Result<(), CropError> {
@@ -843,6 +915,8 @@ pub fn list_views(store: impl AsRef<Path>) -> Result<CropViewList, CropError> {
             task: view.task,
             token_budget: view.token_budget,
             seed: view.seed,
+            include_extensions: view.include_extensions,
+            exclude_dirs: view.exclude_dirs,
         });
     }
 
@@ -1632,6 +1706,14 @@ fn source_id(root: &Path, file: &Path) -> String {
         .map(|component| component.as_os_str().to_string_lossy())
         .collect::<Vec<_>>()
         .join("/")
+}
+
+fn display_path(path: &Path) -> String {
+    let rendered = path.display().to_string();
+    rendered
+        .strip_prefix(r"\\?\")
+        .unwrap_or(&rendered)
+        .to_string()
 }
 
 fn text_chunks(text: &str) -> Vec<&str> {
@@ -2454,6 +2536,80 @@ mod tests {
     }
 
     #[test]
+    fn inspect_view_reports_resolved_filters_and_samples_without_cropping() {
+        let root = unique_temp_dir("crop-view-inspect");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::create_dir_all(root.join("archive")).unwrap();
+        fs::write(root.join("docs").join("alpha.md"), "Alpha view evidence.").unwrap();
+        fs::write(root.join("docs").join("beta.tex"), "Beta TeX evidence.").unwrap();
+        fs::write(
+            root.join("archive").join("old.md"),
+            "Old archived evidence.",
+        )
+        .unwrap();
+
+        let view = r#"{
+          "schema_version": "crop.view.v1",
+          "name": "inspect-docs",
+          "root": "docs",
+          "task": "inspect view filters",
+          "token_budget": 160,
+          "seed": 0,
+          "include_extensions": ["md"],
+          "exclude_dirs": ["archive"]
+        }"#;
+
+        let inspect = inspect_view_json(view, &root).unwrap();
+
+        assert_eq!(inspect.schema_version, "crop.view-inspect.v1");
+        assert_eq!(inspect.name, "inspect-docs");
+        assert_eq!(inspect.root, "docs");
+        assert!(inspect.resolved_root.ends_with("docs"));
+        assert_eq!(inspect.include_extensions, vec!["md"]);
+        assert_eq!(inspect.exclude_dirs, vec!["archive"]);
+        assert_eq!(inspect.supported_source_count, 1);
+        assert_eq!(inspect.sample_sources, vec!["alpha.md"]);
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn inspect_view_rejects_missing_or_empty_filtered_roots() {
+        let root = unique_temp_dir("crop-view-inspect-empty");
+        fs::create_dir_all(&root).unwrap();
+        fs::write(root.join("notes.md"), "Only markdown evidence.").unwrap();
+
+        let missing = r#"{
+          "schema_version": "crop.view.v1",
+          "name": "missing",
+          "root": "missing",
+          "task": "missing",
+          "token_budget": 160,
+          "seed": 0
+        }"#;
+        assert!(matches!(
+            inspect_view_json(missing, &root),
+            Err(CropError::RootDoesNotExist { .. })
+        ));
+
+        let filtered_empty = r#"{
+          "schema_version": "crop.view.v1",
+          "name": "empty",
+          "root": ".",
+          "task": "empty",
+          "token_budget": 160,
+          "seed": 0,
+          "include_extensions": ["tex"]
+        }"#;
+        assert!(matches!(
+            inspect_view_json(filtered_empty, &root),
+            Err(CropError::NoSupportedFiles { .. })
+        ));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
     fn run_view_rejects_bad_schema_and_zero_budget() {
         let root = unique_temp_dir("crop-view-bad");
         fs::create_dir_all(&root).unwrap();
@@ -2529,6 +2685,8 @@ mod tests {
         assert_eq!(list.views[0].name, "alpha");
         assert_eq!(list.views[1].file, "b-view.json");
         assert_eq!(list.views[1].token_budget, 200);
+        assert!(list.views[0].include_extensions.is_empty());
+        assert!(list.views[0].exclude_dirs.is_empty());
 
         fs::remove_dir_all(root).unwrap();
     }
