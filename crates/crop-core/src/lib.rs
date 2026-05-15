@@ -88,6 +88,8 @@ pub enum CropError {
     ViewImport(serde_json::Error),
     #[error("[VIEW] unsupported crop view schema: {schema_version}")]
     UnsupportedViewSchema { schema_version: String },
+    #[error("[VIEW] invalid frontmatter query: {query}")]
+    InvalidFrontmatterQuery { query: String },
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -141,6 +143,7 @@ pub struct IngestedEvidence {
 pub struct IngestOptions {
     pub include_extensions: Vec<String>,
     pub exclude_dirs: Vec<String>,
+    pub frontmatter_query: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -292,6 +295,8 @@ pub struct CropView {
     pub include_extensions: Vec<String>,
     #[serde(default)]
     pub exclude_dirs: Vec<String>,
+    #[serde(default)]
+    pub frontmatter_query: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -323,6 +328,8 @@ pub struct CropViewInspect {
     pub seed: usize,
     pub include_extensions: Vec<String>,
     pub exclude_dirs: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub frontmatter_query: Option<String>,
     pub supported_source_count: usize,
     pub extension_counts: BTreeMap<String, usize>,
     pub sample_sources: Vec<String>,
@@ -490,6 +497,8 @@ pub struct CropViewSummary {
     pub seed: usize,
     pub include_extensions: Vec<String>,
     pub exclude_dirs: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub frontmatter_query: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -941,6 +950,7 @@ pub fn inspect_view(
         seed: view.seed,
         include_extensions: view.include_extensions,
         exclude_dirs: view.exclude_dirs,
+        frontmatter_query: view.frontmatter_query,
         supported_source_count: files.len(),
         extension_counts,
         sample_sources,
@@ -1544,6 +1554,7 @@ fn view_ingest_options(view: &CropView) -> IngestOptions {
     IngestOptions {
         include_extensions: view.include_extensions.clone(),
         exclude_dirs: view.exclude_dirs.clone(),
+        frontmatter_query: view.frontmatter_query.clone(),
     }
 }
 
@@ -1594,6 +1605,7 @@ pub fn list_views(store: impl AsRef<Path>) -> Result<CropViewList, CropError> {
             seed: view.seed,
             include_extensions: view.include_extensions,
             exclude_dirs: view.exclude_dirs,
+            frontmatter_query: view.frontmatter_query,
         });
     }
 
@@ -2317,7 +2329,7 @@ fn collect_supported_files(
         source,
     })?;
     if metadata.is_file() {
-        if is_supported_file(path, options) {
+        if is_supported_file(path, options)? {
             files.push(path.to_path_buf());
         }
         return Ok(());
@@ -2352,18 +2364,20 @@ fn is_ignored_dir(path: &Path, options: &IngestOptions) -> bool {
         || options.exclude_dirs.iter().any(|excluded| excluded == name)
 }
 
-fn is_supported_file(path: &Path, options: &IngestOptions) -> bool {
+fn is_supported_file(path: &Path, options: &IngestOptions) -> Result<bool, CropError> {
     let extension = path
         .extension()
         .and_then(|extension| extension.to_str())
         .map(str::to_ascii_lowercase);
     if !options.include_extensions.is_empty() {
         let allowed = normalized_extensions(&options.include_extensions);
-        return extension
+        if !extension
             .as_deref()
-            .is_some_and(|extension| allowed.contains(extension));
-    }
-    matches!(
+            .is_some_and(|extension| allowed.contains(extension))
+        {
+            return Ok(false);
+        }
+    } else if !matches!(
         extension.as_deref(),
         Some(
             "md" | "markdown"
@@ -2378,7 +2392,13 @@ fn is_supported_file(path: &Path, options: &IngestOptions) -> bool {
                 | "py"
                 | "html"
         )
-    )
+    ) {
+        return Ok(false);
+    }
+    if options.frontmatter_query.is_some() {
+        return markdown_file_matches_frontmatter_query(path, options);
+    }
+    Ok(true)
 }
 
 fn is_markdown_file(path: &Path) -> bool {
@@ -2493,6 +2513,90 @@ fn parse_markdown_frontmatter(text: &str) -> Option<BTreeMap<String, String>> {
         fields.insert(key.to_string(), value);
     }
     None
+}
+
+fn markdown_file_matches_frontmatter_query(
+    path: &Path,
+    options: &IngestOptions,
+) -> Result<bool, CropError> {
+    let Some(query) = &options.frontmatter_query else {
+        return Ok(true);
+    };
+    if !is_markdown_file(path) {
+        return Ok(false);
+    }
+    let text = fs::read_to_string(path).map_err(|source| CropError::ReadFile {
+        path: path.display().to_string(),
+        source,
+    })?;
+    let fields = parse_markdown_frontmatter(&text).unwrap_or_default();
+    frontmatter_query_matches(&fields, query)
+}
+
+fn frontmatter_query_matches(
+    fields: &BTreeMap<String, String>,
+    query: &str,
+) -> Result<bool, CropError> {
+    let clauses = query
+        .split(" and ")
+        .map(str::trim)
+        .filter(|clause| !clause.is_empty())
+        .collect::<Vec<_>>();
+    if clauses.is_empty() {
+        return Err(CropError::InvalidFrontmatterQuery {
+            query: query.to_string(),
+        });
+    }
+    for clause in clauses {
+        if !frontmatter_clause_matches(fields, clause)? {
+            return Ok(false);
+        }
+    }
+    Ok(true)
+}
+
+fn frontmatter_clause_matches(
+    fields: &BTreeMap<String, String>,
+    clause: &str,
+) -> Result<bool, CropError> {
+    let parts = clause.split_whitespace().collect::<Vec<_>>();
+    if parts.len() < 3 {
+        return Err(CropError::InvalidFrontmatterQuery {
+            query: clause.to_string(),
+        });
+    }
+    let field = parts[0];
+    let operator = parts[1];
+    let value = unquote_query_value(&parts[2..].join(" "));
+    let Some(actual) = fields.get(field) else {
+        return Ok(matches!(operator, "ne"));
+    };
+    match operator {
+        "eq" => Ok(actual == &value),
+        "ne" => Ok(actual != &value),
+        "has" => Ok(frontmatter_field_has(actual, &value)),
+        _ => Err(CropError::InvalidFrontmatterQuery {
+            query: clause.to_string(),
+        }),
+    }
+}
+
+fn unquote_query_value(value: &str) -> String {
+    value
+        .trim()
+        .trim_matches('"')
+        .trim_matches('\'')
+        .trim()
+        .to_string()
+}
+
+fn frontmatter_field_has(actual: &str, needle: &str) -> bool {
+    actual
+        .trim_matches(['[', ']'])
+        .split(',')
+        .map(|part| part.trim().trim_matches('"').trim_matches('\'').trim())
+        .any(|part| part == needle)
+        || actual.split_whitespace().any(|part| part == needle)
 }
 
 fn render_markdown_index(index: &MarkdownIndex) -> String {
@@ -2737,7 +2841,9 @@ fn markdown_links(root: &Path, file: &Path, text: &str) -> Vec<String> {
             continue;
         };
         let candidate = parent.join(target);
-        if candidate.exists() && is_supported_file(&candidate, &IngestOptions::default()) {
+        if candidate.exists()
+            && is_supported_file(&candidate, &IngestOptions::default()).unwrap_or(false)
+        {
             links.insert(source_id(root, &candidate));
         }
     }
@@ -3556,6 +3662,78 @@ mod tests {
     }
 
     #[test]
+    fn inspect_view_filters_by_frontmatter_query() {
+        let root = unique_temp_dir("crop-view-frontmatter-query");
+        fs::create_dir_all(root.join("maxim")).unwrap();
+        fs::write(
+            root.join("maxim").join("systems.md"),
+            "---\ntags: [computing, systems]\nstatus: ready\nversion: 1.0\n---\n# Systems\n",
+        )
+        .unwrap();
+        fs::write(
+            root.join("maxim").join("draft.md"),
+            "---\ntags: [computing]\nstatus: draft\n---\n# Draft\n",
+        )
+        .unwrap();
+        fs::write(
+            root.join("maxim").join("math.md"),
+            "---\ntags: [math]\nstatus: ready\n---\n# Math\n",
+        )
+        .unwrap();
+
+        let view = r#"{
+          "schema_version": "crop.view.v1",
+          "name": "maxim-computing-ready",
+          "root": "maxim",
+          "task": "computing systems",
+          "token_budget": 160,
+          "seed": 0,
+          "include_extensions": ["md"],
+          "frontmatter_query": "tags has 'computing' and status eq 'ready' and version eq '1.0'"
+        }"#;
+
+        let inspect = inspect_view_json(view, &root).unwrap();
+
+        assert_eq!(inspect.supported_source_count, 1);
+        assert_eq!(
+            inspect.frontmatter_query.as_deref(),
+            Some("tags has 'computing' and status eq 'ready' and version eq '1.0'")
+        );
+        assert_eq!(inspect.sample_sources, vec!["systems.md"]);
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn view_frontmatter_query_rejects_invalid_predicates() {
+        let root = unique_temp_dir("crop-view-frontmatter-query-bad");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(
+            root.join("docs").join("one.md"),
+            "---\ntags: [computing]\n---\n# One\n",
+        )
+        .unwrap();
+
+        let view = r#"{
+          "schema_version": "crop.view.v1",
+          "name": "bad-query",
+          "root": "docs",
+          "task": "bad",
+          "token_budget": 160,
+          "seed": 0,
+          "include_extensions": ["md"],
+          "frontmatter_query": "tags approx 'computing'"
+        }"#;
+
+        assert!(matches!(
+            inspect_view_json(view, &root),
+            Err(CropError::InvalidFrontmatterQuery { .. })
+        ));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
     fn inspect_view_rejects_missing_or_empty_filtered_roots() {
         let root = unique_temp_dir("crop-view-inspect-empty");
         fs::create_dir_all(&root).unwrap();
@@ -3676,6 +3854,7 @@ mod tests {
             &IngestOptions {
                 include_extensions: vec!["md".to_string(), "html".to_string()],
                 exclude_dirs: Vec::new(),
+                frontmatter_query: None,
             },
         )
         .unwrap();
@@ -3744,6 +3923,7 @@ mod tests {
             &IngestOptions {
                 include_extensions: vec!["md".to_string()],
                 exclude_dirs: Vec::new(),
+                frontmatter_query: None,
             },
         )
         .unwrap();
@@ -3807,6 +3987,7 @@ mod tests {
             &IngestOptions {
                 include_extensions: vec!["md".to_string()],
                 exclude_dirs: Vec::new(),
+                frontmatter_query: None,
             },
         )
         .unwrap();
@@ -3849,6 +4030,7 @@ mod tests {
             &IngestOptions {
                 include_extensions: vec!["md".to_string()],
                 exclude_dirs: Vec::new(),
+                frontmatter_query: None,
             },
         )
         .unwrap();
@@ -3925,6 +4107,7 @@ mod tests {
             &IngestOptions {
                 include_extensions: vec!["md".to_string()],
                 exclude_dirs: Vec::new(),
+                frontmatter_query: None,
             },
         )
         .unwrap();
@@ -4015,6 +4198,7 @@ mod tests {
             &IngestOptions {
                 include_extensions: vec!["md".to_string()],
                 exclude_dirs: Vec::new(),
+                frontmatter_query: None,
             },
         )
         .unwrap();
@@ -4089,6 +4273,7 @@ mod tests {
             &IngestOptions {
                 include_extensions: vec!["md".to_string()],
                 exclude_dirs: Vec::new(),
+                frontmatter_query: None,
             },
         )
         .unwrap();
@@ -4150,6 +4335,7 @@ mod tests {
             seed: 0,
             include_extensions: Vec::new(),
             exclude_dirs: Vec::new(),
+            frontmatter_query: None,
         };
         assert!(matches!(
             run_view(bad_schema, &root),
@@ -4165,6 +4351,7 @@ mod tests {
             seed: 0,
             include_extensions: Vec::new(),
             exclude_dirs: Vec::new(),
+            frontmatter_query: None,
         };
         assert!(matches!(
             run_view(zero_budget, &root),

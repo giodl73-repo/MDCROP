@@ -82,6 +82,10 @@ provenance paths; exclude stale duplicates and noisy periphery.
     **First slice; `crop catalog` combines source titles, frontmatter metadata
     such as `tags` and `status`, backlink counts, outbound counts, and orphan
     flags into a Markdown table.**
+15. **Frontmatter query views**: tag and metadata slices for large corpora.
+    **First slice; `crop.view.v1` supports `frontmatter_query` predicates like
+    `tags has 'computing' and status ne 'draft'` over arbitrary top-level
+    frontmatter fields for Maxim/PROOF-style reusable views.**
 
 ## Upstream kernel asks
 

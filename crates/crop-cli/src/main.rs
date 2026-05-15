@@ -388,6 +388,7 @@ fn main() -> Result<()> {
                     &IngestOptions {
                         include_extensions: extensions,
                         exclude_dirs,
+                        frontmatter_query: None,
                     },
                 )?
             };
@@ -432,6 +433,7 @@ fn main() -> Result<()> {
                     &IngestOptions {
                         include_extensions: extensions,
                         exclude_dirs,
+                        frontmatter_query: None,
                     },
                 )?
             };
@@ -472,6 +474,7 @@ fn main() -> Result<()> {
                     &IngestOptions {
                         include_extensions: extensions,
                         exclude_dirs,
+                        frontmatter_query: None,
                     },
                 )?)?
             };
@@ -512,6 +515,7 @@ fn main() -> Result<()> {
                     &IngestOptions {
                         include_extensions: extensions,
                         exclude_dirs,
+                        frontmatter_query: None,
                     },
                 )?)?
             };
@@ -552,6 +556,7 @@ fn main() -> Result<()> {
                     &IngestOptions {
                         include_extensions: extensions,
                         exclude_dirs,
+                        frontmatter_query: None,
                     },
                 )?)?
             };
@@ -592,6 +597,7 @@ fn main() -> Result<()> {
                     &IngestOptions {
                         include_extensions: extensions,
                         exclude_dirs,
+                        frontmatter_query: None,
                     },
                 )?)?
             };

@@ -123,12 +123,18 @@ View files use `crop.view.v1` JSON:
   "token_budget": 12000,
   "seed": 0,
   "include_extensions": ["md"],
-  "exclude_dirs": []
+  "exclude_dirs": [],
+  "frontmatter_query": "tags has 'computing' and status ne 'draft'"
 }
 ```
 
 Relative roots resolve from the view file location. The output is
 `crop.view-run.v1` JSON containing the view metadata and produced context pack.
+`frontmatter_query` is optional and filters Markdown sources using simple
+SQL/OData-style predicates over any top-level frontmatter field: `field eq
+'value'`, `field ne 'value'`, and `field has 'value'`, joined with `and`. This
+supports Maxim-style tag views such as `tags has 'computing' and status eq
+'ready'` while also working for fields like `wave`, `version`, or `source`.
 
 List persisted views in a store:
 
@@ -148,6 +154,7 @@ Checked example views live under `examples\views\`:
 | `whole-repo-view.json` | Full CROP repository architecture context. |
 | `troubleshooting-view.json` | Local debugging context for view, benchmark, and import failures. |
 | `maxim-computing-view.json` | Local `C:\src\maxim\computing` topic view. |
+| `maxim-tagged-computing-view.json` | Local `C:\src\maxim` frontmatter query view for tagged computing files. |
 | `resonance-theory-view.json` | Local `C:\src\resonance\guides\theory` research view. |
 
 Inspect a recipe before running a full crop:

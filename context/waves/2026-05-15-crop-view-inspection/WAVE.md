@@ -28,6 +28,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
 | 10 | Backlink side-info | done | Added root/view backlink reports with inbound links, outbound counts, and orphan-page flags. |
 | 11 | Frontmatter inventory | done | Added root/view frontmatter inventories with field maps and aggregate key counts. |
 | 12 | Markdown catalog | done | Added root/view catalog tables carrying frontmatter tags/status plus link side-info. |
+| 13 | Frontmatter query views | done | Added OData-style `frontmatter_query` view filters over tags and arbitrary metadata fields. |
 
 ## Success criteria
 
@@ -57,5 +58,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
   HTML sidebars, and status/tag summaries.
 - Markdown catalogs combine source titles, frontmatter metadata, and link
   side-info into ready-to-embed README/TOC tables.
+- Views can filter Markdown sources by frontmatter predicates such as tag
+  membership, status, wave, version, or other top-level metadata fields.
 - `cargo fmt`, `cargo test --workspace`, inspect smoke runs, and `git diff
   --check` pass.
