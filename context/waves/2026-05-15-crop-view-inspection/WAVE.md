@@ -18,6 +18,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
 |------:|-------|--------|---------|
 | 01 | View inspect preflight | done | Added `crop view --inspect --file` and list metadata for active filters. |
 | 02 | Store inspect preflight | done | Added `crop view --inspect --dir` with per-view ok/failed status rows. |
+| 03 | Strict inspect gate | done | Added `--strict` so store inspection prints JSON and exits non-zero on failed recipes. |
 
 ## Success criteria
 
@@ -27,5 +28,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
   source IDs without producing a context pack.
 - Store inspection reports every JSON recipe in a directory with sorted per-file
   status rows.
+- Strict store inspection exits non-zero when any recipe failed while still
+  printing the inspection artifact.
 - `cargo fmt`, `cargo test --workspace`, inspect smoke runs, and `git diff
   --check` pass.

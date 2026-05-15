@@ -94,6 +94,9 @@ enum Commands {
         /// Validate a view recipe and report resolved root/filter metadata without cropping.
         #[arg(long)]
         inspect: bool,
+        /// Exit non-zero when store inspection finds any failed view recipe.
+        #[arg(long)]
+        strict: bool,
         /// JSON file using the crop.view.v1 recipe schema.
         #[arg(long)]
         file: Option<PathBuf>,
@@ -234,6 +237,7 @@ fn main() -> Result<()> {
         Commands::View {
             list,
             inspect,
+            strict,
             file,
             dir,
             prefix_cache,
@@ -241,6 +245,9 @@ fn main() -> Result<()> {
             extensions,
             exclude_dirs,
         } => {
+            if strict && !inspect {
+                bail!("--strict requires --inspect");
+            }
             let json = if list {
                 if inspect {
                     bail!("--list cannot be combined with --inspect");
@@ -253,7 +260,14 @@ fn main() -> Result<()> {
                 if query.is_some() || !extensions.is_empty() || !exclude_dirs.is_empty() {
                     bail!("--query, --extension, and --exclude-dir require --file when inspecting");
                 }
-                serde_json::to_string_pretty(&inspect_view_store(dir)?)?
+                let report = inspect_view_store(dir)?;
+                let failed_count = report.failed_count;
+                let json = serde_json::to_string_pretty(&report)?;
+                if strict && failed_count > 0 {
+                    println!("{json}");
+                    bail!("view store inspection failed for {failed_count} recipe(s)");
+                }
+                json
             } else {
                 let Some(file) = file else {
                     bail!("--file is required unless --list or --inspect --dir is provided");

@@ -56,7 +56,8 @@ provenance paths; exclude stale duplicates and noisy periphery.
 8. **View inspection**: safe preflight for named views. **Active wave;
    `crop view --inspect` validates recipes, resolves roots, applies filters, and
    reports matched source counts before running a full crop. Store-wide
-   inspection reports per-view status for local view directories.**
+   inspection reports per-view status for local view directories, and `--strict`
+   turns failed recipes into CI-friendly non-zero exits.**
 
 ## Upstream kernel asks
 

@@ -82,13 +82,15 @@ Inspect a recipe before running a full crop:
 ```powershell
 cargo run -p crop-cli -- view --inspect --file examples\views\whole-repo-view.json -e md
 cargo run -p crop-cli -- view --inspect --dir examples\views
+cargo run -p crop-cli -- view --inspect --dir examples\views --strict
 ```
 
 This returns `crop.view-inspect.v1` JSON with the resolved root, active filters,
 supported source count, and a small source sample. It validates schemas, budgets,
 roots, and empty filters without scoring or selecting context units.
 Directory inspection returns `crop.view-store-inspect.v1` with one status row per
-JSON view recipe.
+JSON view recipe. Add `--strict` to make CI or agent workflows exit non-zero if
+any store recipe reports `failed`; the JSON report is still printed first.
 
 Emit a prefix-cache-aware named view:
 
