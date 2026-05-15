@@ -28,6 +28,29 @@ cargo run -p crop-cli -- view --file examples\views\docs-view.json --query "theo
 Use `--prefix-cache generic` with the same view to split stable corpus prefix
 metadata from the volatile task tail.
 
+## Checked example recipes
+
+Reusable examples live under `examples\views\`:
+
+| File | Root | Purpose |
+|------|------|---------|
+| `docs-view.json` | `..\..\docs` | CROP documentation search and benchmark/view workflow context. |
+| `whole-repo-view.json` | `..\..` | Full repository context filtered to source, docs, manifests, and JSON examples. |
+| `troubleshooting-view.json` | `..\..` | Debugging failures across views, benchmarks, and competitor imports. |
+| `maxim-computing-view.json` | `C:\src\maxim\computing` | Local Maxim computing topic slice. |
+| `resonance-theory-view.json` | `C:\src\resonance\guides\theory` | Local Resonance theory slice. |
+
+Run any recipe directly:
+
+```powershell
+cargo run -p crop-cli -- view --file examples\views\whole-repo-view.json --query "prefix cache"
+cargo run -p crop-cli -- view --file examples\views\maxim-computing-view.json -e md
+```
+
+Use the whole-repo and troubleshooting views as templates for `.crop\views` in
+other repositories. Use the Maxim and Resonance examples as local large-corpus
+recipes; they require those sibling checkouts to exist at `C:\src`.
+
 ## Maxim view candidates
 
 `C:\src\maxim` is a broad Markdown encyclopedia. Scouting showed thousands of

@@ -1,0 +1,10 @@
+{
+  "schema_version": "crop.view.v1",
+  "name": "crop-whole-repo-view",
+  "root": "..\\..",
+  "task": "explain CROP architecture and command surfaces",
+  "token_budget": 16000,
+  "seed": 0,
+  "include_extensions": ["md", "rs", "toml", "json"],
+  "exclude_dirs": ["target", ".git"]
+}

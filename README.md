@@ -45,10 +45,12 @@ View files use `crop.view.v1` JSON:
 {
   "schema_version": "crop.view.v1",
   "name": "crop-benchmark-docs-view",
-  "root": "../../docs",
+  "root": "..\\..\\docs",
   "task": "explain CROP benchmark and view workflows",
   "token_budget": 12000,
-  "seed": 0
+  "seed": 0,
+  "include_extensions": ["md"],
+  "exclude_dirs": []
 }
 ```
 
@@ -64,6 +66,16 @@ cargo run -p crop-cli -- view --list --dir examples\views
 By convention, local user views live in `.crop\views`; `--dir` can point at any
 directory of `crop.view.v1` JSON files. Non-JSON files are ignored and output is
 sorted by file name.
+
+Checked example views live under `examples\views\`:
+
+| File | Use |
+|------|-----|
+| `docs-view.json` | CROP docs-only context. |
+| `whole-repo-view.json` | Full CROP repository architecture context. |
+| `troubleshooting-view.json` | Local debugging context for view, benchmark, and import failures. |
+| `maxim-computing-view.json` | Local `C:\src\maxim\computing` topic view. |
+| `resonance-theory-view.json` | Local `C:\src\resonance\guides\theory` research view. |
 
 Emit a prefix-cache-aware named view:
 

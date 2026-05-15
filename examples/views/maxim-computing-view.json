@@ -1,0 +1,10 @@
+{
+  "schema_version": "crop.view.v1",
+  "name": "maxim-computing-view",
+  "root": "C:\\src\\maxim\\computing",
+  "task": "computing systems context",
+  "token_budget": 12000,
+  "seed": 0,
+  "include_extensions": ["md"],
+  "exclude_dirs": ["_archive", ".git"]
+}

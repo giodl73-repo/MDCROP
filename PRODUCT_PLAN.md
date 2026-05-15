@@ -49,10 +49,10 @@ provenance paths; exclude stale duplicates and noisy periphery.
    checked competitor export examples live under `examples/competitors/`.
    Fair-comparison guidance is documented in `docs/BENCHMARKS.md`. Done.**
 7. **Named views**: persisted task/root/budget recipes that produce reusable
-   context packs. **Active wave; `crop view --file` runs recipes and
-   `crop view --list` discovers local view stores; views can emit
-   prefix-cache-aware packs with `--prefix-cache generic`, and runtime query /
-   extension filters support large corpora.**
+   context packs. **Done; `crop view --file` runs recipes and `crop view --list`
+   discovers local view stores; views can emit prefix-cache-aware packs with
+   `--prefix-cache generic`, and checked examples cover docs-only, whole-repo,
+   troubleshooting, Maxim, and Resonance slices.**
 
 ## Upstream kernel asks
 

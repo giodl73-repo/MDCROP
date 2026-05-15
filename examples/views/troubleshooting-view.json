@@ -1,0 +1,10 @@
+{
+  "schema_version": "crop.view.v1",
+  "name": "crop-troubleshooting-view",
+  "root": "..\\..",
+  "task": "diagnose failing view, benchmark, or competitor import workflows",
+  "token_budget": 12000,
+  "seed": 0,
+  "include_extensions": ["md", "rs", "json", "toml"],
+  "exclude_dirs": ["target", ".git"]
+}

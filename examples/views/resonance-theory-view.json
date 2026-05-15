@@ -1,0 +1,10 @@
+{
+  "schema_version": "crop.view.v1",
+  "name": "resonance-theory-view",
+  "root": "C:\\src\\resonance\\guides\\theory",
+  "task": "theory context",
+  "token_budget": 12000,
+  "seed": 0,
+  "include_extensions": ["md", "tex"],
+  "exclude_dirs": ["site", ".git"]
+}

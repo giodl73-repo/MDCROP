@@ -20,7 +20,7 @@ constant.
 | 02 | View listing and store | done | Added `crop view --list --dir` with `.crop\views` as the conventional local store. |
 | 03 | View prefix cache | done | Added `crop view --file ... --prefix-cache generic` for cache-aware named views. |
 | 04 | Filtered searchable views | done | Added query, extension, and exclude-dir parameters for large-corpus views. |
-| 05 | View docs and examples | todo | Add reusable examples for docs-only, whole-repo, and troubleshooting views. |
+| 05 | View docs and examples | done | Added checked recipes for docs-only, whole-repo, troubleshooting, Maxim, and Resonance views. |
 
 ## Success criteria
 

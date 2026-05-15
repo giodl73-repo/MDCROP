@@ -2,10 +2,13 @@
 
 ## Active wave
 
-`2026-05-15-crop-named-views` — turn ad hoc crop recipes into persisted named
-views for reusable context packs, benchmarks, and prefix-cache workflows.
+None.
 
 ## Completed waves
+
+`2026-05-15-crop-named-views` — turned ad hoc crop recipes into persisted named
+views for reusable context packs, benchmarks, prefix-cache workflows, and
+large-corpus filtered/searchable views.
 
 `2026-05-15-crop-real-corpus-benchmarks` — moved from deterministic fixtures to
 local-corpus benchmark commands, manifests, competitor exports, aggregate
