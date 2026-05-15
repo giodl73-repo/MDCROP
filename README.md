@@ -73,6 +73,18 @@ diagnostic counts so PROOF can keep generated Markdown, ASCII, and HTML
 surfaces aligned with source. Use `--format markdown` for a ready-to-embed
 artifact health table.
 
+Generate a combined PROOF Markdown status page:
+
+```powershell
+cargo run -p crop-cli -- proof-status --root C:\src\proof --docs-root C:\src\proof\docs --output PROOF_STATUS.md
+cargo run -p crop-cli -- proof-status --root examples\proof-fixture --docs-root examples\proof-fixture\src
+```
+
+`crop proof-status` composes the catalog, link audit, backlinks, frontmatter,
+headings, and artifact health reports into one Markdown page. JSON remains
+available from the individual side-info commands; this command is for generated
+README/status surfaces.
+
 Stable PROOF-facing schema notes live in [`docs\specs`](docs/specs), with a
 deterministic local contract fixture under `examples\proof-fixture`.
 

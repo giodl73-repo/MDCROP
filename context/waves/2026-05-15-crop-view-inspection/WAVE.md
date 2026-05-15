@@ -33,6 +33,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
 | 15 | PROOF contracts | done | Added deterministic PROOF fixtures, schema docs/goldens, and a focused artifact module split. |
 | 16 | Artifact status tables | done | Added Markdown output for artifact health reports. |
 | 17 | Side-info status tables | done | Added Markdown output for links, backlinks, frontmatter, and heading reports. |
+| 18 | PROOF status page | done | Added `crop proof-status` to compose catalog, side-info, and artifact health tables. |
 
 ## Success criteria
 
@@ -74,5 +75,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
   pages.
 - Link, backlink, frontmatter, and heading side-info can render as Markdown
   tables for generated README/status pages while preserving JSON defaults.
+- PROOF can generate one Markdown status page that composes catalog,
+  side-info, and artifact-health sections.
 - `cargo fmt`, `cargo test --workspace`, inspect smoke runs, and `git diff
   --check` pass.

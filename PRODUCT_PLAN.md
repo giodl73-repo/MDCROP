@@ -99,6 +99,10 @@ provenance paths; exclude stale duplicates and noisy periphery.
     **First slice; `crop links`, `crop backlinks`, `crop frontmatter`, and
     `crop headings` support `--format markdown` while keeping JSON as the stable
     machine-readable default.**
+19. **PROOF status page composition**: one command for generated health pages.
+    **First slice; `crop proof-status` composes catalog, link, backlink,
+    frontmatter, heading, and artifact health tables into a single Markdown
+    status page.**
 
 ## Upstream kernel asks
 

@@ -18,6 +18,7 @@ use std::path::Path;
 use std::path::PathBuf;
 
 mod artifacts;
+mod proof_status;
 
 #[derive(Debug, Parser)]
 #[command(name = "crop")]
@@ -107,6 +108,30 @@ enum Commands {
         #[arg(long, value_enum, default_value_t = artifacts::ArtifactFormatArg::Json)]
         format: artifacts::ArtifactFormatArg,
         /// Optional JSON output path. Defaults to stdout.
+        #[arg(long)]
+        output: Option<PathBuf>,
+    },
+    /// Generate a combined PROOF Markdown status page.
+    ProofStatus {
+        /// PROOF repository root used for artifact health.
+        #[arg(long)]
+        root: PathBuf,
+        /// Documentation/source root to scan. Defaults to --root.
+        #[arg(long)]
+        docs_root: Option<PathBuf>,
+        /// Status page title.
+        #[arg(long, default_value = "PROOF Status")]
+        title: String,
+        /// Restrict scanned files to one or more extensions, e.g. -e md.
+        #[arg(short = 'e', long = "extension")]
+        extensions: Vec<String>,
+        /// Exclude directories by basename while scanning docs.
+        #[arg(long = "exclude-dir")]
+        exclude_dirs: Vec<String>,
+        /// Skip PROOF artifact health and only render documentation side-info.
+        #[arg(long)]
+        no_artifacts: bool,
+        /// Optional Markdown output path. Defaults to stdout.
         #[arg(long)]
         output: Option<PathBuf>,
     },
@@ -396,6 +421,23 @@ fn main() -> Result<()> {
             format,
             output,
         } => artifacts::run(root, manifest, format, output)?,
+        Commands::ProofStatus {
+            root,
+            docs_root,
+            title,
+            extensions,
+            exclude_dirs,
+            no_artifacts,
+            output,
+        } => proof_status::run(
+            root,
+            docs_root,
+            title,
+            extensions,
+            exclude_dirs,
+            no_artifacts,
+            output,
+        )?,
         Commands::Index {
             root,
             view,
