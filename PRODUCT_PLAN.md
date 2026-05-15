@@ -50,7 +50,8 @@ provenance paths; exclude stale duplicates and noisy periphery.
    Fair-comparison guidance is documented in `docs/BENCHMARKS.md`. Done.**
 7. **Named views**: persisted task/root/budget recipes that produce reusable
    context packs. **Active wave; `crop view --file` runs recipes and
-   `crop view --list` discovers local view stores.**
+   `crop view --list` discovers local view stores; views can emit
+   prefix-cache-aware packs with `--prefix-cache generic`.**
 
 ## Upstream kernel asks
 

@@ -18,7 +18,7 @@ constant.
 |------:|-------|--------|---------|
 | 01 | Minimal view runner | done | Added `crop view --file` for `crop.view.v1` recipes. |
 | 02 | View listing and store | done | Added `crop view --list --dir` with `.crop\views` as the conventional local store. |
-| 03 | View prefix cache | todo | Allow named views to emit prefix-cache-aware packs. |
+| 03 | View prefix cache | done | Added `crop view --file ... --prefix-cache generic` for cache-aware named views. |
 | 04 | View benchmarks | todo | Run named views through benchmark manifests. |
 | 05 | View docs and examples | todo | Add reusable examples for docs-only, whole-repo, and troubleshooting views. |
 

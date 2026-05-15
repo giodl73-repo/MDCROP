@@ -3,7 +3,8 @@ use clap::{Parser, Subcommand, ValueEnum};
 use crop_core::{
     bench_manifest_json, bench_pack, crop_context, eval_competitor_json, eval_fixture, eval_suite,
     fixture_graph, ingest_path, list_views, prefix_cached_pack, run_view_json,
-    score_graph_for_task, CropOptions, EvalCase, EvalMethod, PrefixCacheProfile,
+    run_view_prefix_cached_json, score_graph_for_task, CropOptions, EvalCase, EvalMethod,
+    PrefixCacheProfile,
 };
 use std::fs;
 use std::path::Path;
@@ -96,6 +97,9 @@ enum Commands {
         /// View store directory for --list. Defaults to .crop\views.
         #[arg(long, default_value = ".crop\\views")]
         dir: PathBuf,
+        /// Emit prefix-cache-aware JSON for the view pack.
+        #[arg(long, value_enum)]
+        prefix_cache: Option<PrefixCacheArg>,
     },
 }
 
@@ -215,7 +219,12 @@ fn main() -> Result<()> {
             };
             println!("{json}");
         }
-        Commands::View { list, file, dir } => {
+        Commands::View {
+            list,
+            file,
+            dir,
+            prefix_cache,
+        } => {
             let json = if list {
                 serde_json::to_string_pretty(&list_views(dir)?)?
             } else {
@@ -224,7 +233,15 @@ fn main() -> Result<()> {
                 };
                 let input = fs::read_to_string(&file)?;
                 let base_dir = file.parent().unwrap_or_else(|| Path::new("."));
-                serde_json::to_string_pretty(&run_view_json(&input, base_dir)?)?
+                if let Some(prefix_cache) = prefix_cache {
+                    serde_json::to_string_pretty(&run_view_prefix_cached_json(
+                        &input,
+                        base_dir,
+                        prefix_cache.into(),
+                    )?)?
+                } else {
+                    serde_json::to_string_pretty(&run_view_json(&input, base_dir)?)?
+                }
             };
             println!("{json}");
         }

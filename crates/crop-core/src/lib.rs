@@ -295,6 +295,13 @@ pub struct CropViewRun {
     pub pack: CropPack,
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct CropViewPrefixCachedRun {
+    pub schema_version: String,
+    pub name: String,
+    pub cache: PrefixCachedPack,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CropViewSummary {
     pub file: String,
@@ -698,16 +705,57 @@ pub fn run_view_json(json: &str, base_dir: impl AsRef<Path>) -> Result<CropViewR
     run_view(view, base_dir)
 }
 
-pub fn run_view(view: CropView, base_dir: impl AsRef<Path>) -> Result<CropViewRun, CropError> {
-    if view.schema_version != CROP_VIEW_SCHEMA {
-        return Err(CropError::UnsupportedViewSchema {
-            schema_version: view.schema_version,
-        });
-    }
-    if view.token_budget == 0 {
-        return Err(CropError::NonPositiveBudget);
-    }
+pub fn run_view_prefix_cached_json(
+    json: &str,
+    base_dir: impl AsRef<Path>,
+    profile: PrefixCacheProfile,
+) -> Result<CropViewPrefixCachedRun, CropError> {
+    let view = serde_json::from_str(json).map_err(|source| CropError::ViewImport(source))?;
+    run_view_prefix_cached(view, base_dir, profile)
+}
 
+pub fn run_view(view: CropView, base_dir: impl AsRef<Path>) -> Result<CropViewRun, CropError> {
+    validate_view(&view)?;
+    let root_label = view.root.clone();
+    let (_, pack) = run_view_pack(&view, base_dir)?;
+
+    Ok(CropViewRun {
+        schema_version: "crop.view-run.v1".to_string(),
+        name: view.name,
+        root: root_label,
+        task: view.task,
+        token_budget: view.token_budget,
+        seed: view.seed,
+        pack,
+    })
+}
+
+pub fn run_view_prefix_cached(
+    view: CropView,
+    base_dir: impl AsRef<Path>,
+    profile: PrefixCacheProfile,
+) -> Result<CropViewPrefixCachedRun, CropError> {
+    validate_view(&view)?;
+    let name = view.name.clone();
+    let task = view.task.clone();
+    let options = CropOptions {
+        seed: view.seed,
+        token_budget: view.token_budget,
+    };
+    let (ingested, pack) = run_view_pack(&view, base_dir)?;
+    let cache = prefix_cached_pack(&ingested, pack, task, options, profile)?;
+
+    Ok(CropViewPrefixCachedRun {
+        schema_version: "crop.view-prefix-cache.v1".to_string(),
+        name,
+        cache,
+    })
+}
+
+fn run_view_pack(
+    view: &CropView,
+    base_dir: impl AsRef<Path>,
+) -> Result<(IngestedEvidence, CropPack), CropError> {
     let root = manifest_root(base_dir.as_ref(), &view.root);
     let mut ingested = ingest_path(root)?;
     score_graph_for_task(&mut ingested.graph, &view.task);
@@ -719,15 +767,19 @@ pub fn run_view(view: CropView, base_dir: impl AsRef<Path>) -> Result<CropViewRu
         },
     )?;
 
-    Ok(CropViewRun {
-        schema_version: "crop.view-run.v1".to_string(),
-        name: view.name,
-        root: view.root,
-        task: view.task,
-        token_budget: view.token_budget,
-        seed: view.seed,
-        pack,
-    })
+    Ok((ingested, pack))
+}
+
+fn validate_view(view: &CropView) -> Result<(), CropError> {
+    if view.schema_version != CROP_VIEW_SCHEMA {
+        return Err(CropError::UnsupportedViewSchema {
+            schema_version: view.schema_version.clone(),
+        });
+    }
+    if view.token_budget == 0 {
+        return Err(CropError::NonPositiveBudget);
+    }
+    Ok(())
 }
 
 pub fn list_views(store: impl AsRef<Path>) -> Result<CropViewList, CropError> {
@@ -2256,6 +2308,53 @@ mod tests {
         assert_eq!(run.token_budget, 160);
         assert!(!run.pack.units.is_empty());
         assert!(run.pack.token_estimate <= 160);
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn run_view_prefix_cached_json_splits_stable_prefix_from_task_tail() {
+        let root = unique_temp_dir("crop-view-prefix");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(
+            root.join("docs").join("index.md"),
+            "View prefix cache links to [target](target.md).\n\nStable body.",
+        )
+        .unwrap();
+        fs::write(
+            root.join("docs").join("target.md"),
+            "Target view evidence explains cacheable prefixes.",
+        )
+        .unwrap();
+
+        let first = r#"{
+          "schema_version": "crop.view.v1",
+          "name": "docs-view",
+          "root": "docs",
+          "task": "prefix cache views",
+          "token_budget": 160,
+          "seed": 0
+        }"#;
+        let second = r#"{
+          "schema_version": "crop.view.v1",
+          "name": "docs-view",
+          "root": "docs",
+          "task": "different task same view",
+          "token_budget": 160,
+          "seed": 0
+        }"#;
+
+        let first = run_view_prefix_cached_json(first, &root, PrefixCacheProfile::Generic).unwrap();
+        let second =
+            run_view_prefix_cached_json(second, &root, PrefixCacheProfile::Generic).unwrap();
+
+        assert_eq!(first.schema_version, "crop.view-prefix-cache.v1");
+        assert_eq!(first.name, "docs-view");
+        assert_eq!(first.cache.prefix_hash, second.cache.prefix_hash);
+        assert_eq!(first.cache.cache_key, second.cache.cache_key);
+        assert_ne!(first.cache.task_tail.task, second.cache.task_tail.task);
+        assert_eq!(first.cache.prefix.source_count, 2);
+        assert!(!first.cache.body.units.is_empty());
 
         fs::remove_dir_all(root).unwrap();
     }
