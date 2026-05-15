@@ -69,6 +69,18 @@ Markdown source, title, inbound link list, outbound link count, and orphan flag.
 It reuses CROP's MDPATH-compatible link resolution so PROOF can build indexes
 and README tables with "referenced by" side-info.
 
+Inventory Markdown frontmatter:
+
+```powershell
+cargo run -p crop-cli -- frontmatter --root C:\src\proof -e md --exclude-dir target
+cargo run -p crop-cli -- frontmatter --view examples\views\whole-repo-view.json
+```
+
+`crop frontmatter` emits `crop.markdown-frontmatter.v1` JSON with source paths,
+top-level frontmatter key/value fields, and aggregate key counts. This gives
+PROOF a small metadata feed for generated README tables, HTML sidebars, and
+status/tag summaries without taking over PROOF's renderer.
+
 Inventory headings and MDPATH anchors:
 
 ```powershell

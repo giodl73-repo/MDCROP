@@ -418,6 +418,23 @@ pub struct MarkdownBacklinkReport {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MarkdownFrontmatterEntry {
+    pub source: String,
+    pub keys: Vec<String>,
+    pub fields: BTreeMap<String, String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MarkdownFrontmatterInventory {
+    pub schema_version: String,
+    pub root: String,
+    pub source_count: usize,
+    pub page_count: usize,
+    pub key_counts: BTreeMap<String, usize>,
+    pub pages: Vec<MarkdownFrontmatterEntry>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MarkdownHeadingEntry {
     pub source: String,
     pub level: usize,
@@ -1232,6 +1249,72 @@ pub fn markdown_backlinks(
         source_count: pages.len(),
         ok_link_count: ok_links.len(),
         orphan_count,
+        pages,
+    })
+}
+
+pub fn markdown_frontmatter_inventory_for_view_json(
+    json: &str,
+    base_dir: impl AsRef<Path>,
+) -> Result<MarkdownFrontmatterInventory, CropError> {
+    let view: CropView =
+        serde_json::from_str(json).map_err(|source| CropError::ViewImport(source))?;
+    validate_view(&view)?;
+    let root = manifest_root(base_dir.as_ref(), &view.root);
+    markdown_frontmatter_inventory(root, &view_ingest_options(&view))
+}
+
+pub fn markdown_frontmatter_inventory(
+    root: impl AsRef<Path>,
+    options: &IngestOptions,
+) -> Result<MarkdownFrontmatterInventory, CropError> {
+    let root = root.as_ref();
+    if !root.exists() {
+        return Err(CropError::RootDoesNotExist {
+            path: root.display().to_string(),
+        });
+    }
+    let resolved_root = fs::canonicalize(root).map_err(|source| CropError::InspectPath {
+        path: root.display().to_string(),
+        source,
+    })?;
+    let files = supported_files(&resolved_root, options)?;
+    if files.is_empty() {
+        return Err(CropError::NoSupportedFiles {
+            path: resolved_root.display().to_string(),
+        });
+    }
+
+    let mut pages = Vec::new();
+    let mut key_counts = BTreeMap::new();
+    for file in files.iter().filter(|file| is_markdown_file(file)) {
+        let text = fs::read_to_string(file).map_err(|source| CropError::ReadFile {
+            path: file.display().to_string(),
+            source,
+        })?;
+        let Some(fields) = parse_markdown_frontmatter(&text) else {
+            continue;
+        };
+        if fields.is_empty() {
+            continue;
+        }
+        let keys: Vec<_> = fields.keys().cloned().collect();
+        for key in &keys {
+            *key_counts.entry(key.clone()).or_default() += 1;
+        }
+        pages.push(MarkdownFrontmatterEntry {
+            source: source_id(&resolved_root, file),
+            keys,
+            fields,
+        });
+    }
+
+    Ok(MarkdownFrontmatterInventory {
+        schema_version: "crop.markdown-frontmatter.v1".to_string(),
+        root: display_path(&resolved_root),
+        source_count: files.iter().filter(|file| is_markdown_file(file)).count(),
+        page_count: pages.len(),
+        key_counts,
         pages,
     })
 }
@@ -2283,6 +2366,39 @@ fn first_markdown_heading(text: &str) -> Option<String> {
         .map(str::trim)
         .filter(|heading| !heading.is_empty())
         .map(ToString::to_string)
+}
+
+fn parse_markdown_frontmatter(text: &str) -> Option<BTreeMap<String, String>> {
+    let mut lines = text.lines();
+    if lines.next()? != "---" {
+        return None;
+    }
+
+    let mut fields = BTreeMap::new();
+    for line in lines {
+        let trimmed = line.trim();
+        if trimmed == "---" {
+            return Some(fields);
+        }
+        if trimmed.is_empty() || trimmed.starts_with('#') || trimmed.starts_with('-') {
+            continue;
+        }
+        let Some((key, value)) = trimmed.split_once(':') else {
+            continue;
+        };
+        let key = key.trim();
+        if key.is_empty() || key.contains(char::is_whitespace) {
+            continue;
+        }
+        let value = value
+            .trim()
+            .trim_matches('"')
+            .trim_matches('\'')
+            .trim()
+            .to_string();
+        fields.insert(key.to_string(), value);
+    }
+    None
 }
 
 fn render_markdown_index(index: &MarkdownIndex) -> String {
@@ -3656,6 +3772,85 @@ mod tests {
             .pages
             .iter()
             .any(|page| page.source.ends_with("ignored.txt")));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn markdown_frontmatter_inventory_reports_keys_and_fields() {
+        let root = unique_temp_dir("crop-markdown-frontmatter");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(
+            root.join("docs").join("one.md"),
+            "---\ntitle: One\ntags: [proof, crop]\nstatus: draft\n---\n# One\n",
+        )
+        .unwrap();
+        fs::write(
+            root.join("docs").join("two.md"),
+            "---\ntitle: Two\nstatus: ready\n---\n# Two\n",
+        )
+        .unwrap();
+        fs::write(
+            root.join("docs").join("plain.md"),
+            "# Plain\n\nNo metadata.",
+        )
+        .unwrap();
+
+        let inventory = markdown_frontmatter_inventory(
+            &root,
+            &IngestOptions {
+                include_extensions: vec!["md".to_string()],
+                exclude_dirs: Vec::new(),
+            },
+        )
+        .unwrap();
+
+        assert_eq!(inventory.schema_version, "crop.markdown-frontmatter.v1");
+        assert_eq!(inventory.source_count, 3);
+        assert_eq!(inventory.page_count, 2);
+        assert_eq!(inventory.key_counts.get("title"), Some(&2));
+        assert_eq!(inventory.key_counts.get("tags"), Some(&1));
+        assert_eq!(inventory.pages[0].source, "docs/one.md");
+        assert_eq!(inventory.pages[0].keys, vec!["status", "tags", "title"]);
+        assert_eq!(inventory.pages[0].fields.get("title").unwrap(), "One");
+        assert_eq!(
+            inventory.pages[0].fields.get("tags").unwrap(),
+            "[proof, crop]"
+        );
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn markdown_frontmatter_inventory_for_view_json_uses_view_filters() {
+        let root = unique_temp_dir("crop-markdown-frontmatter-view");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(
+            root.join("docs").join("one.md"),
+            "---\ntitle: Included\n---\n# Included\n",
+        )
+        .unwrap();
+        fs::write(
+            root.join("docs").join("ignored.txt"),
+            "---\ntitle: Ignored\n---\n# Ignored\n",
+        )
+        .unwrap();
+
+        let view = r#"{
+          "schema_version": "crop.view.v1",
+          "name": "frontmatter-view",
+          "root": "docs",
+          "task": "frontmatter",
+          "token_budget": 160,
+          "seed": 0,
+          "include_extensions": ["md"]
+        }"#;
+
+        let inventory = markdown_frontmatter_inventory_for_view_json(view, &root).unwrap();
+
+        assert_eq!(inventory.source_count, 1);
+        assert_eq!(inventory.page_count, 1);
+        assert_eq!(inventory.pages[0].fields.get("title").unwrap(), "Included");
 
         fs::remove_dir_all(root).unwrap();
     }

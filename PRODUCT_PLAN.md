@@ -74,6 +74,10 @@ provenance paths; exclude stale duplicates and noisy periphery.
     generated docs. **First slice; `crop backlinks` and `crop-core` backlink APIs
     expose per-page inbound links, outbound link counts, and orphan flags using
     MDPATH-compatible local link resolution.**
+13. **Frontmatter inventories**: metadata primitives for generated docs.
+    **First slice; `crop frontmatter` and `crop-core` frontmatter APIs expose
+    top-level Markdown metadata fields and aggregate key counts for PROOF README
+    tables and HTML sidebars.**
 
 ## Upstream kernel asks
 

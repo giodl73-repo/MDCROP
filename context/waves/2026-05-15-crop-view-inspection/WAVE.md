@@ -26,6 +26,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
 | 08 | MDPATH link resolution | done | Upgraded link audits to validate heading fragments and `md://` targets using MDPATH. |
 | 09 | Heading inventory | done | Added root/view heading inventories with anchors, `md://` section URIs, and duplicate groups. |
 | 10 | Backlink side-info | done | Added root/view backlink reports with inbound links, outbound counts, and orphan-page flags. |
+| 11 | Frontmatter inventory | done | Added root/view frontmatter inventories with field maps and aggregate key counts. |
 
 ## Success criteria
 
@@ -51,5 +52,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
   documentation workflows.
 - Backlink reports expose referenced-by and orphan-page primitives for generated
   README and TOC workflows.
+- Frontmatter inventories expose metadata primitives for generated README tables,
+  HTML sidebars, and status/tag summaries.
 - `cargo fmt`, `cargo test --workspace`, inspect smoke runs, and `git diff
   --check` pass.
