@@ -17,7 +17,7 @@ dependencies.
 | Pulse | Title | Status | Outcome |
 |------:|-------|--------|---------|
 | 01 | Local bench command | done | Added `crop bench` for local root timing and pack summary JSON. |
-| 02 | Benchmark manifest inputs | todo | Add repeatable task/root manifest support for multiple benchmark cases. |
+| 02 | Benchmark manifest inputs | done | Added repeatable named benchmark/view manifests for multiple benchmark cases. |
 | 03 | Competitor export examples | todo | Add offline JSON examples/templates for vector, lexical, hybrid, RAG, and graph systems. |
 | 04 | Aggregate benchmark report | todo | Summarize benchmark rows across roots, tasks, budgets, and methods. |
 | 05 | Real-corpus benchmark docs | todo | Document fair apples-to-apples benchmark setup and interpretation. |

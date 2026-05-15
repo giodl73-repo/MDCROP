@@ -14,6 +14,7 @@ use std::time::Instant;
 use thiserror::Error;
 
 pub const COMPETITOR_RESULTS_SCHEMA: &str = "crop.competitor-results.v1";
+pub const BENCH_MANIFEST_SCHEMA: &str = "crop.bench-manifest.v1";
 
 #[derive(Debug, Error)]
 pub enum CropError {
@@ -76,6 +77,12 @@ pub enum CropError {
     UnknownCompetitorUnit { unit_id: String },
     #[error("[EVAL] competitor result repeats unit ID: {unit_id}")]
     DuplicateCompetitorUnit { unit_id: String },
+    #[error("[BENCH] failed to parse benchmark manifest: {0}")]
+    BenchManifestImport(serde_json::Error),
+    #[error("[BENCH] unsupported benchmark manifest schema: {schema_version}")]
+    UnsupportedBenchManifestSchema { schema_version: String },
+    #[error("[BENCH] benchmark manifest must contain at least one case")]
+    EmptyBenchManifest,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -211,6 +218,36 @@ pub struct BenchReport {
     pub relevance_mean: f64,
     pub quality_score: f64,
     pub timings: BenchTimings,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BenchManifestCase {
+    pub id: String,
+    pub root: String,
+    pub task: String,
+    pub token_budget: usize,
+    pub seed: usize,
+    pub view: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BenchManifest {
+    pub schema_version: String,
+    pub cases: Vec<BenchManifestCase>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct BenchManifestCaseReport {
+    pub id: String,
+    pub view: Option<String>,
+    pub report: BenchReport,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct BenchManifestReport {
+    pub schema_version: String,
+    pub case_count: usize,
+    pub cases: Vec<BenchManifestCaseReport>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -541,6 +578,54 @@ pub fn bench_pack(
             crop_ms,
             total_ms,
         },
+    })
+}
+
+pub fn bench_manifest_json(
+    json: &str,
+    base_dir: impl AsRef<Path>,
+) -> Result<BenchManifestReport, CropError> {
+    let manifest =
+        serde_json::from_str(json).map_err(|source| CropError::BenchManifestImport(source))?;
+    bench_manifest(manifest, base_dir)
+}
+
+pub fn bench_manifest(
+    manifest: BenchManifest,
+    base_dir: impl AsRef<Path>,
+) -> Result<BenchManifestReport, CropError> {
+    if manifest.schema_version != BENCH_MANIFEST_SCHEMA {
+        return Err(CropError::UnsupportedBenchManifestSchema {
+            schema_version: manifest.schema_version,
+        });
+    }
+    if manifest.cases.is_empty() {
+        return Err(CropError::EmptyBenchManifest);
+    }
+
+    let base_dir = base_dir.as_ref();
+    let mut cases = Vec::new();
+    for case in manifest.cases {
+        let root = manifest_root(base_dir, &case.root);
+        let report = bench_pack(
+            root,
+            &case.task,
+            CropOptions {
+                seed: case.seed,
+                token_budget: case.token_budget,
+            },
+        )?;
+        cases.push(BenchManifestCaseReport {
+            id: case.id,
+            view: case.view,
+            report,
+        });
+    }
+
+    Ok(BenchManifestReport {
+        schema_version: "crop.bench-report.v1".to_string(),
+        case_count: cases.len(),
+        cases,
     })
 }
 
@@ -1161,6 +1246,15 @@ fn supported_files(root: &Path) -> Result<Vec<PathBuf>, CropError> {
     Ok(files)
 }
 
+fn manifest_root(base_dir: &Path, root: &str) -> PathBuf {
+    let root = PathBuf::from(root);
+    if root.is_absolute() {
+        root
+    } else {
+        base_dir.join(root)
+    }
+}
+
 fn collect_supported_files(path: &Path, files: &mut Vec<PathBuf>) -> Result<(), CropError> {
     let metadata = fs::metadata(path).map_err(|source| CropError::InspectPath {
         path: path.display().to_string(),
@@ -1775,6 +1869,92 @@ mod tests {
         assert!(report.selected_token_estimate <= 160);
         assert!(report.quality_score.is_finite());
         assert!(report.timings.total_ms >= report.timings.crop_ms);
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn bench_manifest_runs_named_views_relative_to_manifest_dir() {
+        let root = unique_temp_dir("crop-bench-manifest");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(
+            root.join("docs").join("index.md"),
+            "Benchmark manifest links to [target](target.md).\n\nTask seed context.",
+        )
+        .unwrap();
+        fs::write(
+            root.join("docs").join("target.md"),
+            "Target benchmark evidence explains reusable views.",
+        )
+        .unwrap();
+
+        let manifest = r#"{
+          "schema_version": "crop.bench-manifest.v1",
+          "cases": [
+            {
+              "id": "docs-view",
+              "root": "docs",
+              "task": "benchmark reusable views",
+              "token_budget": 160,
+              "seed": 0,
+              "view": "docs-only"
+            },
+            {
+              "id": "root-view",
+              "root": ".",
+              "task": "benchmark graph crops",
+              "token_budget": 160,
+              "seed": 0,
+              "view": "whole-root"
+            }
+          ]
+        }"#;
+
+        let report = bench_manifest_json(manifest, &root).unwrap();
+
+        assert_eq!(report.schema_version, "crop.bench-report.v1");
+        assert_eq!(report.case_count, 2);
+        assert_eq!(report.cases[0].id, "docs-view");
+        assert_eq!(report.cases[0].view.as_deref(), Some("docs-only"));
+        assert_eq!(report.cases[0].report.source_count, 2);
+        assert!(report.cases[1].report.unit_count >= report.cases[0].report.unit_count);
+        assert!(report
+            .cases
+            .iter()
+            .all(|case| case.report.selected_token_estimate <= 160));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn bench_manifest_rejects_bad_schema_and_empty_cases() {
+        let root = unique_temp_dir("crop-bench-manifest-bad");
+        fs::create_dir_all(&root).unwrap();
+
+        let bad_schema = BenchManifest {
+            schema_version: "crop.bench-manifest.v0".to_string(),
+            cases: vec![BenchManifestCase {
+                id: "bad".to_string(),
+                root: ".".to_string(),
+                task: "bad".to_string(),
+                token_budget: 160,
+                seed: 0,
+                view: None,
+            }],
+        };
+        assert!(matches!(
+            bench_manifest(bad_schema, &root),
+            Err(CropError::UnsupportedBenchManifestSchema { .. })
+        ));
+
+        let empty = BenchManifest {
+            schema_version: BENCH_MANIFEST_SCHEMA.to_string(),
+            cases: Vec::new(),
+        };
+        assert!(matches!(
+            bench_manifest(empty, &root),
+            Err(CropError::EmptyBenchManifest)
+        ));
 
         fs::remove_dir_all(root).unwrap();
     }

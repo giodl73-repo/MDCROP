@@ -1,11 +1,12 @@
-use anyhow::Result;
+use anyhow::{bail, Result};
 use clap::{Parser, Subcommand, ValueEnum};
 use crop_core::{
-    bench_pack, crop_context, eval_competitor_json, eval_fixture, eval_suite, fixture_graph,
-    ingest_path, prefix_cached_pack, score_graph_for_task, CropOptions, EvalCase, EvalMethod,
-    PrefixCacheProfile,
+    bench_manifest_json, bench_pack, crop_context, eval_competitor_json, eval_fixture, eval_suite,
+    fixture_graph, ingest_path, prefix_cached_pack, score_graph_for_task, CropOptions, EvalCase,
+    EvalMethod, PrefixCacheProfile,
 };
 use std::fs;
+use std::path::Path;
 use std::path::PathBuf;
 
 #[derive(Debug, Parser)]
@@ -68,12 +69,15 @@ enum Commands {
     },
     /// Benchmark ingest, scoring, and crop stages on a local root.
     Bench {
+        /// JSON manifest with repeatable benchmark cases.
+        #[arg(long)]
+        manifest: Option<PathBuf>,
         /// Root directory or file to benchmark.
         #[arg(long)]
-        root: PathBuf,
+        root: Option<PathBuf>,
         /// Task prompt used to score evidence units.
         #[arg(long)]
-        task: String,
+        task: Option<String>,
         /// Token budget for the context crop.
         #[arg(long, default_value_t = 12000)]
         budget: usize,
@@ -171,20 +175,33 @@ fn main() -> Result<()> {
             );
         }
         Commands::Bench {
+            manifest,
             root,
             task,
             budget,
             seed,
         } => {
-            let report = bench_pack(
-                root,
-                &task,
-                CropOptions {
-                    seed,
-                    token_budget: budget,
-                },
-            )?;
-            println!("{}", serde_json::to_string_pretty(&report)?);
+            let json = if let Some(manifest) = manifest {
+                let input = fs::read_to_string(&manifest)?;
+                let base_dir = manifest.parent().unwrap_or_else(|| Path::new("."));
+                serde_json::to_string_pretty(&bench_manifest_json(&input, base_dir)?)?
+            } else {
+                let Some(root) = root else {
+                    bail!("--root is required unless --manifest is provided");
+                };
+                let Some(task) = task else {
+                    bail!("--task is required unless --manifest is provided");
+                };
+                serde_json::to_string_pretty(&bench_pack(
+                    root,
+                    &task,
+                    CropOptions {
+                        seed,
+                        token_budget: budget,
+                    },
+                )?)?
+            };
+            println!("{json}");
         }
     }
     Ok(())

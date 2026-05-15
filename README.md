@@ -134,6 +134,40 @@ and elapsed milliseconds for ingest, scoring, crop, and total runtime. Timing is
 machine- and root-dependent; use fixture metrics for deterministic quality
 comparisons and benchmark metrics for local performance tracking.
 
+Use a benchmark manifest for repeatable named views over the same corpus:
+
+```powershell
+cargo run -p crop-cli -- bench --manifest benchmark-manifest.json
+```
+
+```json
+{
+  "schema_version": "crop.bench-manifest.v1",
+  "cases": [
+    {
+      "id": "docs-boundary",
+      "root": "docs",
+      "task": "explain graph context boundary",
+      "token_budget": 12000,
+      "seed": 0,
+      "view": "docs-only"
+    },
+    {
+      "id": "repo-architecture",
+      "root": ".",
+      "task": "explain CROP architecture",
+      "token_budget": 12000,
+      "seed": 0,
+      "view": "whole-repo"
+    }
+  ]
+}
+```
+
+Manifest roots are resolved relative to the manifest file unless they are
+absolute paths. The optional `view` label names the crop recipe being tested
+without changing the underlying local-only benchmark mechanics.
+
 ## Rust API
 
 `crop-core` exposes the first local engine surface:
@@ -147,6 +181,8 @@ comparisons and benchmark metrics for local performance tracking.
   cache-aware prefix/body/task-tail manifest.
 - `bench_pack(root, task, options)` runs local ingest, scoring, and crop stages
   and returns a benchmark summary with stage timings.
+- `bench_manifest_json(json, base_dir)` runs repeatable named benchmark/view
+  cases from `crop.bench-manifest.v1` JSON.
 - `eval_fixture(case, method, budget)` runs deterministic apple-to-apple
    retrieval comparisons.
 - `eval_suite(budget)` runs every case against every local method and returns
