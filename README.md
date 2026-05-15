@@ -81,48 +81,57 @@ Audit local Markdown links as structured side-info:
 ```powershell
 cargo run -p crop-cli -- links --root C:\src\proof -e md --exclude-dir target
 cargo run -p crop-cli -- links --view examples\views\whole-repo-view.json
+cargo run -p crop-cli -- links --root C:\src\proof -e md --format markdown --output LINK_AUDIT.md
 ```
 
 `crop links` emits `crop.markdown-link-audit.v1` JSON with source, target,
 status, resolved source, error details, and aggregate ok/broken counts. It uses
 MDPATH-compatible resolution for `md://` URIs and heading fragments, while
 ignoring external links so PROOF can focus this report on local corpus health.
+Use `--format markdown` for a ready-to-embed local link health table.
 
 Report backlinks and orphan pages:
 
 ```powershell
 cargo run -p crop-cli -- backlinks --root C:\src\proof -e md --exclude-dir target
 cargo run -p crop-cli -- backlinks --view examples\views\whole-repo-view.json
+cargo run -p crop-cli -- backlinks --root C:\src\proof -e md --format markdown --output BACKLINKS.md
 ```
 
 `crop backlinks` emits `crop.markdown-backlinks.v1` JSON with one page row per
 Markdown source, title, inbound link list, outbound link count, and orphan flag.
 It reuses CROP's MDPATH-compatible link resolution so PROOF can build indexes
-and README tables with "referenced by" side-info.
+and README tables with "referenced by" side-info. Use `--format markdown` for a
+page-level inbound/orphan table.
 
 Inventory Markdown frontmatter:
 
 ```powershell
 cargo run -p crop-cli -- frontmatter --root C:\src\proof -e md --exclude-dir target
 cargo run -p crop-cli -- frontmatter --view examples\views\whole-repo-view.json
+cargo run -p crop-cli -- frontmatter --root C:\src\proof -e md --format markdown --output FRONTMATTER.md
 ```
 
 `crop frontmatter` emits `crop.markdown-frontmatter.v1` JSON with source paths,
 top-level frontmatter key/value fields, and aggregate key counts. This gives
 PROOF a small metadata feed for generated README tables, HTML sidebars, and
-status/tag summaries without taking over PROOF's renderer.
+status/tag summaries without taking over PROOF's renderer. Use
+`--format markdown` for a key profile and metadata table across arbitrary
+frontmatter fields.
 
 Inventory headings and MDPATH anchors:
 
 ```powershell
 cargo run -p crop-cli -- headings --root C:\src\proof -e md --exclude-dir target
 cargo run -p crop-cli -- headings --view examples\views\whole-repo-view.json
+cargo run -p crop-cli -- headings --root C:\src\proof -e md --format markdown --output HEADINGS.md
 ```
 
 `crop headings` emits `crop.markdown-heading-inventory.v1` JSON with source,
 level, text, normalized MDPATH/GitHub anchor, line number, canonical `md://`
 section URI, and duplicate-anchor groups. This is the raw TOC and anchor
-inventory surface for PROOF.
+inventory surface for PROOF. Use `--format markdown` for an embeddable heading
+and duplicate-anchor table.
 
 Run a persisted named view recipe:
 

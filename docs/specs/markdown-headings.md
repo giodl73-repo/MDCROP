@@ -4,6 +4,10 @@ Command: `crop headings`
 
 Schema version: `crop.markdown-heading-inventory.v1`
 
+Default output is JSON. `crop headings --format markdown` renders the same
+report as Markdown heading and duplicate-anchor tables for generated status
+pages; it does not change the JSON schema contract.
+
 ## Required fields
 
 | Field | Type | Meaning |

@@ -7,7 +7,9 @@ use crop_core::{
     markdown_catalog_for_view_json, markdown_frontmatter_inventory,
     markdown_frontmatter_inventory_for_view_json, markdown_heading_inventory,
     markdown_heading_inventory_for_view_json, markdown_index, markdown_index_for_view_json,
-    markdown_link_audit, markdown_link_audit_for_view_json, prefix_cached_pack, run_view_json,
+    markdown_link_audit, markdown_link_audit_for_view_json, prefix_cached_pack,
+    render_markdown_backlinks, render_markdown_frontmatter_inventory,
+    render_markdown_heading_inventory, render_markdown_link_audit, run_view_json,
     run_view_prefix_cached_json, score_graph_for_task, CropOptions, CropView, EvalCase, EvalMethod,
     IngestOptions, PrefixCacheProfile,
 };
@@ -164,7 +166,10 @@ enum Commands {
         /// Exclude directories by basename while auditing.
         #[arg(long = "exclude-dir")]
         exclude_dirs: Vec<String>,
-        /// Optional JSON output path. Defaults to stdout.
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = SideInfoFormatArg::Json)]
+        format: SideInfoFormatArg,
+        /// Optional output path. Defaults to stdout.
         #[arg(long)]
         output: Option<PathBuf>,
     },
@@ -182,7 +187,10 @@ enum Commands {
         /// Exclude directories by basename while analyzing.
         #[arg(long = "exclude-dir")]
         exclude_dirs: Vec<String>,
-        /// Optional JSON output path. Defaults to stdout.
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = SideInfoFormatArg::Json)]
+        format: SideInfoFormatArg,
+        /// Optional output path. Defaults to stdout.
         #[arg(long)]
         output: Option<PathBuf>,
     },
@@ -200,7 +208,10 @@ enum Commands {
         /// Exclude directories by basename while inventorying.
         #[arg(long = "exclude-dir")]
         exclude_dirs: Vec<String>,
-        /// Optional JSON output path. Defaults to stdout.
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = SideInfoFormatArg::Json)]
+        format: SideInfoFormatArg,
+        /// Optional output path. Defaults to stdout.
         #[arg(long)]
         output: Option<PathBuf>,
     },
@@ -218,7 +229,10 @@ enum Commands {
         /// Exclude directories by basename while inventorying.
         #[arg(long = "exclude-dir")]
         exclude_dirs: Vec<String>,
-        /// Optional JSON output path. Defaults to stdout.
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = SideInfoFormatArg::Json)]
+        format: SideInfoFormatArg,
+        /// Optional output path. Defaults to stdout.
         #[arg(long)]
         output: Option<PathBuf>,
     },
@@ -274,6 +288,12 @@ enum EvalMethodArg {
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum PrefixCacheArg {
     Generic,
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum SideInfoFormatArg {
+    Json,
+    Markdown,
 }
 
 fn main() -> Result<()> {
@@ -471,12 +491,13 @@ fn main() -> Result<()> {
             view,
             extensions,
             exclude_dirs,
+            format,
             output,
         } => {
             if root.is_some() && view.is_some() {
                 bail!("--root and --view cannot be combined");
             }
-            let json = if let Some(view) = view {
+            let audit = if let Some(view) = view {
                 let input = fs::read_to_string(&view)?;
                 let base_dir = view.parent().unwrap_or_else(|| Path::new("."));
                 let mut recipe: CropView = serde_json::from_str(&input)?;
@@ -485,26 +506,28 @@ fn main() -> Result<()> {
                 }
                 recipe.exclude_dirs.extend(exclude_dirs);
                 let view_json = serde_json::to_string(&recipe)?;
-                serde_json::to_string_pretty(&markdown_link_audit_for_view_json(
-                    &view_json, base_dir,
-                )?)?
+                markdown_link_audit_for_view_json(&view_json, base_dir)?
             } else {
                 let Some(root) = root else {
                     bail!("--root or --view is required");
                 };
-                serde_json::to_string_pretty(&markdown_link_audit(
+                markdown_link_audit(
                     root,
                     &IngestOptions {
                         include_extensions: extensions,
                         exclude_dirs,
                         frontmatter_query: None,
                     },
-                )?)?
+                )?
+            };
+            let rendered = match format {
+                SideInfoFormatArg::Json => serde_json::to_string_pretty(&audit)?,
+                SideInfoFormatArg::Markdown => render_markdown_link_audit(&audit),
             };
             if let Some(output) = output {
-                fs::write(output, json)?;
+                fs::write(output, rendered)?;
             } else {
-                println!("{json}");
+                println!("{rendered}");
             }
         }
         Commands::Backlinks {
@@ -512,12 +535,13 @@ fn main() -> Result<()> {
             view,
             extensions,
             exclude_dirs,
+            format,
             output,
         } => {
             if root.is_some() && view.is_some() {
                 bail!("--root and --view cannot be combined");
             }
-            let json = if let Some(view) = view {
+            let report = if let Some(view) = view {
                 let input = fs::read_to_string(&view)?;
                 let base_dir = view.parent().unwrap_or_else(|| Path::new("."));
                 let mut recipe: CropView = serde_json::from_str(&input)?;
@@ -526,26 +550,28 @@ fn main() -> Result<()> {
                 }
                 recipe.exclude_dirs.extend(exclude_dirs);
                 let view_json = serde_json::to_string(&recipe)?;
-                serde_json::to_string_pretty(&markdown_backlinks_for_view_json(
-                    &view_json, base_dir,
-                )?)?
+                markdown_backlinks_for_view_json(&view_json, base_dir)?
             } else {
                 let Some(root) = root else {
                     bail!("--root or --view is required");
                 };
-                serde_json::to_string_pretty(&markdown_backlinks(
+                markdown_backlinks(
                     root,
                     &IngestOptions {
                         include_extensions: extensions,
                         exclude_dirs,
                         frontmatter_query: None,
                     },
-                )?)?
+                )?
+            };
+            let rendered = match format {
+                SideInfoFormatArg::Json => serde_json::to_string_pretty(&report)?,
+                SideInfoFormatArg::Markdown => render_markdown_backlinks(&report),
             };
             if let Some(output) = output {
-                fs::write(output, json)?;
+                fs::write(output, rendered)?;
             } else {
-                println!("{json}");
+                println!("{rendered}");
             }
         }
         Commands::Frontmatter {
@@ -553,12 +579,13 @@ fn main() -> Result<()> {
             view,
             extensions,
             exclude_dirs,
+            format,
             output,
         } => {
             if root.is_some() && view.is_some() {
                 bail!("--root and --view cannot be combined");
             }
-            let json = if let Some(view) = view {
+            let inventory = if let Some(view) = view {
                 let input = fs::read_to_string(&view)?;
                 let base_dir = view.parent().unwrap_or_else(|| Path::new("."));
                 let mut recipe: CropView = serde_json::from_str(&input)?;
@@ -567,26 +594,28 @@ fn main() -> Result<()> {
                 }
                 recipe.exclude_dirs.extend(exclude_dirs);
                 let view_json = serde_json::to_string(&recipe)?;
-                serde_json::to_string_pretty(&markdown_frontmatter_inventory_for_view_json(
-                    &view_json, base_dir,
-                )?)?
+                markdown_frontmatter_inventory_for_view_json(&view_json, base_dir)?
             } else {
                 let Some(root) = root else {
                     bail!("--root or --view is required");
                 };
-                serde_json::to_string_pretty(&markdown_frontmatter_inventory(
+                markdown_frontmatter_inventory(
                     root,
                     &IngestOptions {
                         include_extensions: extensions,
                         exclude_dirs,
                         frontmatter_query: None,
                     },
-                )?)?
+                )?
+            };
+            let rendered = match format {
+                SideInfoFormatArg::Json => serde_json::to_string_pretty(&inventory)?,
+                SideInfoFormatArg::Markdown => render_markdown_frontmatter_inventory(&inventory),
             };
             if let Some(output) = output {
-                fs::write(output, json)?;
+                fs::write(output, rendered)?;
             } else {
-                println!("{json}");
+                println!("{rendered}");
             }
         }
         Commands::Headings {
@@ -594,12 +623,13 @@ fn main() -> Result<()> {
             view,
             extensions,
             exclude_dirs,
+            format,
             output,
         } => {
             if root.is_some() && view.is_some() {
                 bail!("--root and --view cannot be combined");
             }
-            let json = if let Some(view) = view {
+            let inventory = if let Some(view) = view {
                 let input = fs::read_to_string(&view)?;
                 let base_dir = view.parent().unwrap_or_else(|| Path::new("."));
                 let mut recipe: CropView = serde_json::from_str(&input)?;
@@ -608,26 +638,28 @@ fn main() -> Result<()> {
                 }
                 recipe.exclude_dirs.extend(exclude_dirs);
                 let view_json = serde_json::to_string(&recipe)?;
-                serde_json::to_string_pretty(&markdown_heading_inventory_for_view_json(
-                    &view_json, base_dir,
-                )?)?
+                markdown_heading_inventory_for_view_json(&view_json, base_dir)?
             } else {
                 let Some(root) = root else {
                     bail!("--root or --view is required");
                 };
-                serde_json::to_string_pretty(&markdown_heading_inventory(
+                markdown_heading_inventory(
                     root,
                     &IngestOptions {
                         include_extensions: extensions,
                         exclude_dirs,
                         frontmatter_query: None,
                     },
-                )?)?
+                )?
+            };
+            let rendered = match format {
+                SideInfoFormatArg::Json => serde_json::to_string_pretty(&inventory)?,
+                SideInfoFormatArg::Markdown => render_markdown_heading_inventory(&inventory),
             };
             if let Some(output) = output {
-                fs::write(output, json)?;
+                fs::write(output, rendered)?;
             } else {
-                println!("{json}");
+                println!("{rendered}");
             }
         }
         Commands::View {

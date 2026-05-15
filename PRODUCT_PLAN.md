@@ -95,6 +95,10 @@ provenance paths; exclude stale duplicates and noisy periphery.
     **First slice; deterministic `examples/proof-fixture` goldens and
     `docs/specs` contracts cover PROOF side-info outputs, with the artifact
     surface split into focused core/CLI modules.**
+18. **PROOF Markdown status surfaces**: embeddable tables for side-info reports.
+    **First slice; `crop links`, `crop backlinks`, `crop frontmatter`, and
+    `crop headings` support `--format markdown` while keeping JSON as the stable
+    machine-readable default.**
 
 ## Upstream kernel asks
 

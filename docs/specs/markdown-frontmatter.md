@@ -4,6 +4,10 @@ Command: `crop frontmatter`
 
 Schema version: `crop.markdown-frontmatter.v1`
 
+Default output is JSON. `crop frontmatter --format markdown` renders the same
+report as a Markdown key profile and metadata table for generated status pages;
+it does not change the JSON schema contract.
+
 ## Required fields
 
 | Field | Type | Meaning |

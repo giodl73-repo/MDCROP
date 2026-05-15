@@ -32,6 +32,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
 | 14 | PROOF artifact manifests | done | Added artifact manifest reports for generated output existence, staleness, and diagnostics. |
 | 15 | PROOF contracts | done | Added deterministic PROOF fixtures, schema docs/goldens, and a focused artifact module split. |
 | 16 | Artifact status tables | done | Added Markdown output for artifact health reports. |
+| 17 | Side-info status tables | done | Added Markdown output for links, backlinks, frontmatter, and heading reports. |
 
 ## Success criteria
 
@@ -71,5 +72,7 @@ before paying the cost of ingest/scoring/cropping a large corpus.
   existing public API and CLI behavior.
 - Artifact health can render as a Markdown table for generated README/status
   pages.
+- Link, backlink, frontmatter, and heading side-info can render as Markdown
+  tables for generated README/status pages while preserving JSON defaults.
 - `cargo fmt`, `cargo test --workspace`, inspect smoke runs, and `git diff
   --check` pass.

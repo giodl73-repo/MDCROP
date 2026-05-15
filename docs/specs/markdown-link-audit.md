@@ -4,6 +4,10 @@ Command: `crop links`
 
 Schema version: `crop.markdown-link-audit.v1`
 
+Default output is JSON. `crop links --format markdown` renders the same report
+as a Markdown table for generated status pages; it does not change the JSON
+schema contract.
+
 ## Required fields
 
 | Field | Type | Meaning |

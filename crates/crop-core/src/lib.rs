@@ -1274,6 +1274,29 @@ pub fn markdown_link_audit(
     })
 }
 
+pub fn render_markdown_link_audit(audit: &MarkdownLinkAudit) -> String {
+    let mut markdown = String::new();
+    markdown.push_str("# Markdown Link Audit\n\n");
+    markdown.push_str(&format!("Root: `{}`\n\n", audit.root));
+    markdown.push_str(&format!(
+        "Sources: **{}** | Links: **{}** | OK: **{}** | Broken: **{}**\n\n",
+        audit.source_count, audit.link_count, audit.ok_count, audit.broken_count
+    ));
+    markdown.push_str("| Source | Target | Status | Resolved source | Error |\n");
+    markdown.push_str("|--------|--------|--------|-----------------|-------|\n");
+    for link in &audit.links {
+        markdown.push_str(&format!(
+            "| `{}` | `{}` | `{}` | `{}` | {} |\n",
+            escape_markdown_cell(&link.source),
+            escape_markdown_cell(&link.target),
+            escape_markdown_cell(&link.status),
+            escape_markdown_cell(link.resolved_source.as_deref().unwrap_or("")),
+            escape_markdown_cell(link.error.as_deref().unwrap_or("")),
+        ));
+    }
+    markdown
+}
+
 pub fn markdown_backlinks_for_view_json(
     json: &str,
     base_dir: impl AsRef<Path>,
@@ -1366,6 +1389,36 @@ pub fn markdown_backlinks(
     })
 }
 
+pub fn render_markdown_backlinks(report: &MarkdownBacklinkReport) -> String {
+    let mut markdown = String::new();
+    markdown.push_str("# Markdown Backlinks\n\n");
+    markdown.push_str(&format!("Root: `{}`\n\n", report.root));
+    markdown.push_str(&format!(
+        "Sources: **{}** | OK links: **{}** | Orphans: **{}**\n\n",
+        report.source_count, report.ok_link_count, report.orphan_count
+    ));
+    markdown.push_str("| Source | Title | In | Out | Orphan | Inbound links |\n");
+    markdown.push_str("|--------|-------|---:|----:|--------|---------------|\n");
+    for page in &report.pages {
+        let inbound = page
+            .inbound_links
+            .iter()
+            .map(|link| format!("`{}` via `{}`", link.source, link.target))
+            .collect::<Vec<_>>()
+            .join("<br>");
+        markdown.push_str(&format!(
+            "| [`{source}`]({source}) | {title} | {inbound_count} | {outbound_count} | {orphan} | {inbound} |\n",
+            source = escape_markdown_cell(&page.source),
+            title = escape_markdown_cell(&page.title),
+            inbound_count = page.inbound_link_count,
+            outbound_count = page.outbound_link_count,
+            orphan = yes_no(page.orphan),
+            inbound = escape_markdown_cell(&inbound),
+        ));
+    }
+    markdown
+}
+
 pub fn markdown_frontmatter_inventory_for_view_json(
     json: &str,
     base_dir: impl AsRef<Path>,
@@ -1430,6 +1483,53 @@ pub fn markdown_frontmatter_inventory(
         key_counts,
         pages,
     })
+}
+
+pub fn render_markdown_frontmatter_inventory(inventory: &MarkdownFrontmatterInventory) -> String {
+    let metadata_columns = inventory.key_counts.keys().cloned().collect::<Vec<_>>();
+    let mut markdown = String::new();
+    markdown.push_str("# Markdown Frontmatter\n\n");
+    markdown.push_str(&format!("Root: `{}`\n\n", inventory.root));
+    markdown.push_str(&format!(
+        "Markdown sources: **{}** | Pages with frontmatter: **{}**\n\n",
+        inventory.source_count, inventory.page_count
+    ));
+    markdown.push_str("## Key profile\n\n");
+    markdown.push_str("| Key | Pages |\n");
+    markdown.push_str("|-----|------:|\n");
+    for (key, count) in &inventory.key_counts {
+        markdown.push_str(&format!(
+            "| `{}` | {} |\n",
+            escape_markdown_cell(key),
+            count
+        ));
+    }
+    markdown.push_str("\n## Page metadata\n\n");
+    markdown.push_str("| Source | Keys |");
+    for key in &metadata_columns {
+        markdown.push_str(&format!(" {} |", title_case(key)));
+    }
+    markdown.push('\n');
+    markdown.push_str("|--------|------|");
+    for _ in &metadata_columns {
+        markdown.push_str("------|");
+    }
+    markdown.push('\n');
+    for page in &inventory.pages {
+        markdown.push_str(&format!(
+            "| [`{source}`]({source}) | `{keys}` |",
+            source = escape_markdown_cell(&page.source),
+            keys = escape_markdown_cell(&page.keys.join(", ")),
+        ));
+        for key in &metadata_columns {
+            markdown.push_str(&format!(
+                " {} |",
+                escape_markdown_cell(page.fields.get(key).map_or("", String::as_str))
+            ));
+        }
+        markdown.push('\n');
+    }
+    markdown
 }
 
 pub fn markdown_heading_inventory_for_view_json(
@@ -1500,6 +1600,42 @@ pub fn markdown_heading_inventory(
         headings,
         duplicate_anchors,
     })
+}
+
+pub fn render_markdown_heading_inventory(inventory: &MarkdownHeadingInventory) -> String {
+    let mut markdown = String::new();
+    markdown.push_str("# Markdown Headings\n\n");
+    markdown.push_str(&format!("Root: `{}`\n\n", inventory.root));
+    markdown.push_str(&format!(
+        "Sources: **{}** | Headings: **{}** | Duplicate anchors: **{}**\n\n",
+        inventory.source_count, inventory.heading_count, inventory.duplicate_anchor_count
+    ));
+    markdown.push_str("| Source | Level | Line | Text | Anchor | MDPATH URI |\n");
+    markdown.push_str("|--------|------:|-----:|------|--------|------------|\n");
+    for heading in &inventory.headings {
+        markdown.push_str(&format!(
+            "| [`{source}`]({source}) | {level} | {line} | {text} | `{anchor}` | `{md_uri}` |\n",
+            source = escape_markdown_cell(&heading.source),
+            level = heading.level,
+            line = heading.line,
+            text = escape_markdown_cell(&heading.text),
+            anchor = escape_markdown_cell(&heading.anchor),
+            md_uri = escape_markdown_cell(&heading.md_uri),
+        ));
+    }
+    if !inventory.duplicate_anchors.is_empty() {
+        markdown.push_str("\n## Duplicate anchors\n\n");
+        markdown.push_str("| Anchor | Occurrences |\n");
+        markdown.push_str("|--------|------------:|\n");
+        for duplicate in &inventory.duplicate_anchors {
+            markdown.push_str(&format!(
+                "| `{}` | {} |\n",
+                escape_markdown_cell(&duplicate.anchor),
+                duplicate.occurrences.len()
+            ));
+        }
+    }
+    markdown
 }
 
 pub fn run_view(view: CropView, base_dir: impl AsRef<Path>) -> Result<CropViewRun, CropError> {
@@ -2692,7 +2828,15 @@ fn title_case(value: &str) -> String {
 }
 
 fn escape_markdown_cell(value: &str) -> String {
-    value.replace('|', "\\|")
+    value.replace('|', "\\|").replace(['\r', '\n'], " ")
+}
+
+fn yes_no(value: bool) -> &'static str {
+    if value {
+        "yes"
+    } else {
+        "no"
+    }
 }
 
 fn display_path(path: &Path) -> String {
@@ -4471,6 +4615,47 @@ mod tests {
         assert_eq!(inventory.source_count, 1);
         assert_eq!(inventory.heading_count, 1);
         assert_eq!(inventory.headings[0].text, "Included");
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn side_info_reports_render_markdown_tables() {
+        let root = unique_temp_dir("crop-side-info-markdown");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(
+            root.join("docs").join("one.md"),
+            "---\ntitle: One\ntags: [proof, crop]\n---\n# One\n\n[Two](two.md)\n[Missing](missing.md)",
+        )
+        .unwrap();
+        fs::write(
+            root.join("docs").join("two.md"),
+            "---\ntitle: Two\nstatus: ready\n---\n# Two\n\n## Detail\n",
+        )
+        .unwrap();
+
+        let options = IngestOptions {
+            include_extensions: vec!["md".to_string()],
+            exclude_dirs: Vec::new(),
+            frontmatter_query: None,
+        };
+        let links = render_markdown_link_audit(&markdown_link_audit(&root, &options).unwrap());
+        let backlinks = render_markdown_backlinks(&markdown_backlinks(&root, &options).unwrap());
+        let frontmatter = render_markdown_frontmatter_inventory(
+            &markdown_frontmatter_inventory(&root, &options).unwrap(),
+        );
+        let headings = render_markdown_heading_inventory(
+            &markdown_heading_inventory(&root, &options).unwrap(),
+        );
+
+        assert!(links.contains("# Markdown Link Audit"));
+        assert!(links.contains("| `docs/one.md` | `missing.md` | `broken` |"));
+        assert!(backlinks.contains("# Markdown Backlinks"));
+        assert!(backlinks.contains("`docs/one.md` via `two.md`"));
+        assert!(frontmatter.contains("# Markdown Frontmatter"));
+        assert!(frontmatter.contains("| [`docs/two.md`](docs/two.md) | `status, title` |"));
+        assert!(headings.contains("# Markdown Headings"));
+        assert!(headings.contains("| [`docs/two.md`](docs/two.md) | 2 |"));
 
         fs::remove_dir_all(root).unwrap();
     }
