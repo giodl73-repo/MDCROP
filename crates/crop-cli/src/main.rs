@@ -44,21 +44,27 @@ fn fixture_graph() -> EvidenceGraph {
                 id: "task-seed".to_string(),
                 source_id: "fixture:task".to_string(),
                 relevance: 1.0,
-                token_estimate: 100,
+                token_estimate: 80,
             },
             EvidenceUnit {
                 id: "bridge-note".to_string(),
                 source_id: "fixture:note".to_string(),
-                relevance: 0.9,
-                token_estimate: 50,
+                relevance: 0.2,
+                token_estimate: 40,
+            },
+            EvidenceUnit {
+                id: "target-note".to_string(),
+                source_id: "fixture:target".to_string(),
+                relevance: 0.95,
+                token_estimate: 40,
             },
             EvidenceUnit {
                 id: "stale-noise".to_string(),
                 source_id: "fixture:old".to_string(),
-                relevance: 0.1,
-                token_estimate: 50,
+                relevance: 0.9,
+                token_estimate: 40,
             },
         ],
-        adjacency: vec![vec![1, 2], vec![0], vec![0]],
+        adjacency: vec![vec![1, 3], vec![0, 2], vec![1], vec![0]],
     }
 }

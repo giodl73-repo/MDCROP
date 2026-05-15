@@ -1,5 +1,5 @@
 use rctx_core::RCTX_VERSION;
-use rgraph_core::undirected_boundary_metrics;
+use rgraph_core::{shortest_connector_path, undirected_boundary_metrics};
 use ropt_core::SeedPart;
 use rstat_core::summary::{summary_stats, SummaryError};
 use serde::{Deserialize, Serialize};
@@ -66,6 +66,8 @@ pub struct CropUnit {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CropReason {
     Seed,
+    BridgeConnector,
+    ConnectorTarget,
     RelevantNeighbor,
 }
 
@@ -97,6 +99,33 @@ pub fn crop_context(graph: &EvidenceGraph, options: CropOptions) -> Result<CropP
     let mut selected = vec![false; graph.units.len()];
     selected[options.seed] = true;
     let mut token_estimate = graph.units[options.seed].token_estimate;
+    let mut reasons = vec![None; graph.units.len()];
+    reasons[options.seed] = Some(CropReason::Seed);
+
+    if let Some(target) = highest_relevance_target(graph, options.seed) {
+        if let Some(path) = shortest_connector_path(&graph.adjacency, &[options.seed], &[target])
+            .map_err(|err| CropError::EdgeCut(err.to_string()))?
+        {
+            let path_token_estimate = path
+                .nodes
+                .iter()
+                .copied()
+                .filter(|&node| node != options.seed)
+                .map(|node| graph.units[node].token_estimate)
+                .sum::<usize>();
+            if token_estimate + path_token_estimate <= options.token_budget {
+                for &node in &path.bridge_nodes {
+                    selected[node] = true;
+                    reasons[node] = Some(CropReason::BridgeConnector);
+                }
+                if path.target != options.seed {
+                    selected[path.target] = true;
+                    reasons[path.target] = Some(CropReason::ConnectorTarget);
+                }
+                token_estimate += path_token_estimate;
+            }
+        }
+    }
 
     let mut neighbors = graph.adjacency[options.seed].clone();
     neighbors.sort_unstable_by(|&a, &b| {
@@ -112,6 +141,7 @@ pub fn crop_context(graph: &EvidenceGraph, options: CropOptions) -> Result<CropP
             continue;
         }
         selected[neighbor] = true;
+        reasons[neighbor] = Some(CropReason::RelevantNeighbor);
         token_estimate += unit.token_estimate;
     }
 
@@ -128,11 +158,7 @@ pub fn crop_context(graph: &EvidenceGraph, options: CropOptions) -> Result<CropP
                 source_id: unit.source_id.clone(),
                 relevance: unit.relevance,
                 token_estimate: unit.token_estimate,
-                reason: if index == options.seed {
-                    CropReason::Seed
-                } else {
-                    CropReason::RelevantNeighbor
-                },
+                reason: reasons[index].expect("selected crop unit has reason"),
             });
         }
     }
@@ -177,6 +203,20 @@ fn validate_graph(graph: &EvidenceGraph) -> Result<(), CropError> {
     Ok(())
 }
 
+fn highest_relevance_target(graph: &EvidenceGraph, seed: usize) -> Option<usize> {
+    graph
+        .units
+        .iter()
+        .enumerate()
+        .filter(|&(index, _)| index != seed)
+        .max_by(|(left_index, left), (right_index, right)| {
+            left.relevance
+                .total_cmp(&right.relevance)
+                .then_with(|| right_index.cmp(left_index))
+        })
+        .map(|(index, _)| index)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -185,23 +225,24 @@ mod tests {
     fn crops_seed_neighborhood_with_boundary_metric() {
         let graph = EvidenceGraph {
             units: vec![
-                unit("seed", 1.0, 100),
-                unit("bridge", 0.9, 50),
-                unit("noise", 0.1, 50),
+                unit("seed", 1.0, 80),
+                unit("bridge", 0.2, 40),
+                unit("target", 0.95, 40),
+                unit("noise", 0.9, 40),
             ],
-            adjacency: vec![vec![1, 2], vec![0], vec![0]],
+            adjacency: vec![vec![1, 3], vec![0, 2], vec![1], vec![0]],
         };
 
         let pack = crop_context(
             &graph,
             CropOptions {
                 seed: 0,
-                token_budget: 160,
+                token_budget: 170,
             },
         )
         .unwrap();
 
-        assert_eq!(pack.token_estimate, 150);
+        assert_eq!(pack.token_estimate, 160);
         assert_eq!(pack.boundary_cut_edges, 1);
         assert_eq!(pack.boundary_conductance, 1.0);
         assert_eq!(
@@ -209,7 +250,18 @@ mod tests {
                 .iter()
                 .map(|unit| unit.id.as_str())
                 .collect::<Vec<_>>(),
-            vec!["seed", "bridge"]
+            vec!["seed", "bridge", "target"]
+        );
+        assert_eq!(
+            pack.units
+                .iter()
+                .map(|unit| unit.reason)
+                .collect::<Vec<_>>(),
+            vec![
+                CropReason::Seed,
+                CropReason::BridgeConnector,
+                CropReason::ConnectorTarget
+            ]
         );
     }
 
