@@ -106,7 +106,9 @@ provenance paths; exclude stale duplicates and noisy periphery.
     links, orphan pages, or duplicate anchors after rendering the page.**
 20. **Status contracts**: machine-readable combined corpus health. **Active wave;
     `crop status --format json` emits `crop.corpus-status.v1` with per-surface
-    counts, issue totals, and strict-pass state for CI and downstream registries.**
+    counts, issue totals, strict policy names, and strict-pass state for CI and
+    downstream registries. `--strict-on` can limit CI gates to broken links,
+    orphan pages, or duplicate heading anchors.**
 
 ## Upstream kernel asks
 

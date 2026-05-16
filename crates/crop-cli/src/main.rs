@@ -131,6 +131,9 @@ enum Commands {
         /// Exit non-zero after rendering when links, orphans, or duplicate anchors report issues.
         #[arg(long)]
         strict: bool,
+        /// Limit --strict to selected issue classes. Repeat to select multiple classes.
+        #[arg(long = "strict-on", value_enum)]
+        strict_policies: Vec<StatusStrictPolicyArg>,
         /// Output format.
         #[arg(long, value_enum, default_value_t = SideInfoFormatArg::Markdown)]
         format: SideInfoFormatArg,
@@ -324,6 +327,13 @@ enum SideInfoFormatArg {
     Markdown,
 }
 
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum StatusStrictPolicyArg {
+    BrokenLinks,
+    OrphanPages,
+    DuplicateAnchors,
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
     match cli.command {
@@ -431,6 +441,7 @@ fn main() -> Result<()> {
             extensions,
             exclude_dirs,
             strict,
+            strict_policies,
             format,
             output,
         } => status::run(
@@ -440,6 +451,7 @@ fn main() -> Result<()> {
             extensions,
             exclude_dirs,
             strict,
+            strict_policies,
             format,
             output,
         )?,

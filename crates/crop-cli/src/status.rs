@@ -12,7 +12,7 @@ use serde::Serialize;
 use std::fs;
 use std::path::PathBuf;
 
-use crate::SideInfoFormatArg;
+use crate::{SideInfoFormatArg, StatusStrictPolicyArg};
 
 pub fn run(
     root: Option<PathBuf>,
@@ -21,11 +21,15 @@ pub fn run(
     extensions: Vec<String>,
     exclude_dirs: Vec<String>,
     strict: bool,
+    strict_policies: Vec<StatusStrictPolicyArg>,
     format: SideInfoFormatArg,
     output: Option<PathBuf>,
 ) -> Result<()> {
     if root.is_some() && view.is_some() {
         bail!("--root and --view cannot be combined");
+    }
+    if !strict && !strict_policies.is_empty() {
+        bail!("--strict-on requires --strict");
     }
 
     let docs = if let Some(view) = view {
@@ -37,9 +41,12 @@ pub fn run(
         status_docs_for_root(root, extensions, exclude_dirs)?
     };
 
+    let strict_policy = strict_policy(strict_policies);
     let rendered = match format {
         SideInfoFormatArg::Markdown => render_status_page(&title, &docs),
-        SideInfoFormatArg::Json => serde_json::to_string_pretty(&status_report(&title, &docs))?,
+        SideInfoFormatArg::Json => {
+            serde_json::to_string_pretty(&status_report(&title, &docs, &strict_policy))?
+        }
     };
     if let Some(output) = output {
         fs::write(output, rendered)?;
@@ -47,7 +54,7 @@ pub fn run(
         println!("{rendered}");
     }
     if strict {
-        let issue_count = docs.issue_count();
+        let issue_count = docs.strict_issue_count(&strict_policy);
         if issue_count > 0 {
             bail!("corpus status found {issue_count} issue(s)");
         }
@@ -68,6 +75,57 @@ impl StatusDocs {
     fn issue_count(&self) -> usize {
         self.links.broken_count + self.backlinks.orphan_count + self.headings.duplicate_anchor_count
     }
+
+    fn strict_issue_count(&self, policies: &[StatusStrictPolicy]) -> usize {
+        policies.iter().map(|policy| policy.issue_count(self)).sum()
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum StatusStrictPolicy {
+    BrokenLinks,
+    OrphanPages,
+    DuplicateAnchors,
+}
+
+impl StatusStrictPolicy {
+    fn name(self) -> &'static str {
+        match self {
+            Self::BrokenLinks => "broken_links",
+            Self::OrphanPages => "orphan_pages",
+            Self::DuplicateAnchors => "duplicate_anchors",
+        }
+    }
+
+    fn issue_count(self, docs: &StatusDocs) -> usize {
+        match self {
+            Self::BrokenLinks => docs.links.broken_count,
+            Self::OrphanPages => docs.backlinks.orphan_count,
+            Self::DuplicateAnchors => docs.headings.duplicate_anchor_count,
+        }
+    }
+}
+
+fn strict_policy(policies: Vec<StatusStrictPolicyArg>) -> Vec<StatusStrictPolicy> {
+    if policies.is_empty() {
+        return vec![
+            StatusStrictPolicy::BrokenLinks,
+            StatusStrictPolicy::OrphanPages,
+            StatusStrictPolicy::DuplicateAnchors,
+        ];
+    }
+
+    let mut selected = Vec::new();
+    for policy in policies.into_iter().map(|policy| match policy {
+        StatusStrictPolicyArg::BrokenLinks => StatusStrictPolicy::BrokenLinks,
+        StatusStrictPolicyArg::OrphanPages => StatusStrictPolicy::OrphanPages,
+        StatusStrictPolicyArg::DuplicateAnchors => StatusStrictPolicy::DuplicateAnchors,
+    }) {
+        if !selected.contains(&policy) {
+            selected.push(policy);
+        }
+    }
+    selected
 }
 
 #[derive(Debug, Serialize)]
@@ -76,7 +134,9 @@ struct CorpusStatusReport {
     title: String,
     input: String,
     issue_count: usize,
+    strict_issue_count: usize,
     strict_pass: bool,
+    strict_policy: Vec<&'static str>,
     surfaces: Vec<CorpusStatusSurface>,
 }
 
@@ -87,7 +147,11 @@ struct CorpusStatusSurface {
     issues: usize,
 }
 
-fn status_report(title: &str, docs: &StatusDocs) -> CorpusStatusReport {
+fn status_report(
+    title: &str,
+    docs: &StatusDocs,
+    strict_policy: &[StatusStrictPolicy],
+) -> CorpusStatusReport {
     let surfaces = vec![
         CorpusStatusSurface {
             name: "catalog_sources",
@@ -116,13 +180,16 @@ fn status_report(title: &str, docs: &StatusDocs) -> CorpusStatusReport {
         },
     ];
     let issue_count = docs.issue_count();
+    let strict_issue_count = docs.strict_issue_count(strict_policy);
 
     CorpusStatusReport {
         schema_version: "crop.corpus-status.v1",
         title: title.to_string(),
         input: docs.label.clone(),
         issue_count,
-        strict_pass: issue_count == 0,
+        strict_issue_count,
+        strict_pass: strict_issue_count == 0,
+        strict_policy: strict_policy.iter().map(|policy| policy.name()).collect(),
         surfaces,
     }
 }
@@ -237,6 +304,7 @@ mod tests {
             vec!["md".to_string()],
             Vec::new(),
             false,
+            Vec::new(),
             SideInfoFormatArg::Markdown,
             Some(output.clone()),
         )
@@ -268,6 +336,7 @@ mod tests {
             Vec::new(),
             Vec::new(),
             false,
+            Vec::new(),
             SideInfoFormatArg::Markdown,
             Some(output.clone()),
         )
@@ -306,6 +375,7 @@ mod tests {
             vec!["md".to_string()],
             Vec::new(),
             true,
+            Vec::new(),
             SideInfoFormatArg::Markdown,
             Some(output.clone()),
         );
@@ -335,6 +405,7 @@ mod tests {
             vec!["md".to_string()],
             Vec::new(),
             true,
+            Vec::new(),
             SideInfoFormatArg::Markdown,
             None,
         )
@@ -358,6 +429,7 @@ mod tests {
             vec!["md".to_string()],
             Vec::new(),
             false,
+            Vec::new(),
             SideInfoFormatArg::Json,
             Some(output.clone()),
         )
@@ -368,10 +440,86 @@ mod tests {
         assert_eq!(json["schema_version"], "crop.corpus-status.v1");
         assert_eq!(json["title"], "Fixture Status");
         assert!(json["issue_count"].as_u64().unwrap() > 0);
+        assert_eq!(json["strict_issue_count"], json["issue_count"]);
         assert_eq!(json["strict_pass"], false);
+        assert_eq!(json["strict_policy"].as_array().unwrap().len(), 3);
         assert_eq!(json["surfaces"].as_array().unwrap().len(), 5);
 
         fs::remove_file(output).unwrap();
+    }
+
+    #[test]
+    fn status_strict_can_gate_selected_issue_classes() {
+        let root = unique_temp_dir("crop-status-policy");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(root.join("docs").join("one.md"), "# One\n\n[Two](two.md)\n").unwrap();
+        fs::write(root.join("docs").join("two.md"), "# Two\n").unwrap();
+        fs::write(root.join("docs").join("orphan.md"), "# Orphan\n").unwrap();
+
+        run(
+            Some(root.join("docs")),
+            None,
+            "Selected Policy".to_string(),
+            vec!["md".to_string()],
+            Vec::new(),
+            true,
+            vec![StatusStrictPolicyArg::BrokenLinks],
+            SideInfoFormatArg::Markdown,
+            None,
+        )
+        .unwrap();
+
+        let result = run(
+            Some(root.join("docs")),
+            None,
+            "Selected Policy".to_string(),
+            vec!["md".to_string()],
+            Vec::new(),
+            true,
+            vec![StatusStrictPolicyArg::OrphanPages],
+            SideInfoFormatArg::Markdown,
+            None,
+        );
+
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("corpus status found"));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn status_strict_policy_requires_strict_mode() {
+        let result = run(
+            Some(PathBuf::from("unused")),
+            None,
+            "Invalid Policy".to_string(),
+            vec!["md".to_string()],
+            Vec::new(),
+            false,
+            vec![StatusStrictPolicyArg::BrokenLinks],
+            SideInfoFormatArg::Markdown,
+            None,
+        );
+
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("--strict-on requires --strict"));
+    }
+
+    #[test]
+    fn status_strict_policy_deduplicates_repeated_selectors() {
+        let policy = strict_policy(vec![
+            StatusStrictPolicyArg::BrokenLinks,
+            StatusStrictPolicyArg::BrokenLinks,
+            StatusStrictPolicyArg::OrphanPages,
+        ]);
+
+        assert_eq!(policy.len(), 2);
+        assert!(matches!(policy[0], StatusStrictPolicy::BrokenLinks));
+        assert!(matches!(policy[1], StatusStrictPolicy::OrphanPages));
     }
 
     fn unique_temp_file(name: &str) -> PathBuf {

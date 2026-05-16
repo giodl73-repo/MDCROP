@@ -81,6 +81,7 @@ Generate a combined corpus status page or machine-readable summary:
 cargo run -p crop-cli -- status --root C:\src\maxim --output STATUS.md
 cargo run -p crop-cli -- status --view examples\proof-fixture\proof-ready-view.json --output STATUS.md
 cargo run -p crop-cli -- status --root C:\src\maxim --strict --output STATUS.md
+cargo run -p crop-cli -- status --root C:\src\maxim --strict --strict-on broken-links --output STATUS.md
 cargo run -p crop-cli -- status --root C:\src\maxim --format json --output STATUS.json
 ```
 
@@ -90,7 +91,8 @@ the combined `crop.corpus-status.v1` summary contract with per-surface counts,
 issue totals, and strict-pass state. Use `--view` to generate status from a named
 `crop.view.v1` recipe, including frontmatter/tag filters. Add `--strict` in CI to
 exit non-zero after rendering when broken links, orphan pages, or duplicate
-anchors are present.
+anchors are present. Add repeatable `--strict-on` selectors to gate only
+`broken-links`, `orphan-pages`, or `duplicate-anchors`.
 
 Stable schema and consumer-integration notes live in [`docs\specs`](docs/specs),
 with a deterministic local contract fixture under `examples\proof-fixture`.

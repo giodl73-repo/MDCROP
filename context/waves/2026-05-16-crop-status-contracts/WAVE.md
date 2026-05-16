@@ -17,7 +17,7 @@ without separately parsing every side-info command.
 | Pulse | Title | Status | Outcome |
 |------:|-------|--------|---------|
 | 01 | JSON status summary | done | Added `crop status --format json` with `crop.corpus-status.v1` summary counts, issue totals, strict-pass state, docs, and tests. |
-| 02 | Strict policy selection | todo | Add configurable strict policies so CI can gate on selected issue classes. |
+| 02 | Strict policy selection | done | Added repeatable `--strict-on` policy selectors for broken links, orphan pages, and duplicate anchors while preserving default all-issue strict gates. |
 | 03 | Status JSON goldens | todo | Add deterministic root/view JSON goldens for consumer integration tests. |
 | 04 | Status contract docs | todo | Expand schema docs, README examples, and consumer integration notes for downstream adopters. |
 
