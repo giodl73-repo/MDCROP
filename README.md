@@ -4,6 +4,10 @@
 
 **Series:** [Tools & Infrastructure](https://github.com/giodl73-repo/giodl73-repo/blob/main/series/tools-infrastructure.md).
 
+**Review roles:** This repo uses
+[ROLES](https://github.com/giodl73-repo/ROLES), the `.roles` convention for
+repository-local review panels.
+
 CROP trims scattered evidence into focused, provenance-aware context packs from
 repos, notes, issues, chats, and documents. Most RAG systems retrieve chunks;
 CROP draws the boundary around the right context before an agent answers.
