@@ -3,4 +3,5 @@ target/
 .cargo/config.toml
 *.tmp
 *.log
+examples/bench-fixtures/out/
 

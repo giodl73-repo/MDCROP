@@ -309,8 +309,17 @@ Evaluation metrics:
 | `noise_token_share` | Selected noise tokens divided by selected tokens. |
 | `quality_score` | Method-specific scalar quality summary for quick comparison. |
 
-Latency is intentionally not part of fixture metrics yet; it should be measured
-on real corpora where filesystem and process noise can be handled separately.
+Latency is intentionally not part of the built-in eval fixture metrics; use the
+sized MD-vs-Pebble benchmark fixtures when comparing source formats:
+
+```powershell
+.\examples\bench-fixtures\generate.ps1 -Size all -Force
+.\examples\bench-fixtures\run.ps1 -Size all -Runs 5
+```
+
+Those generated fixtures cover small, medium, and large corpora under
+`examples\bench-fixtures\out\` so ingest, scoring, and crop timings can be
+compared with the same task and budget.
 
 Score saved external competitor results offline:
 
