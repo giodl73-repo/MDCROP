@@ -19,6 +19,7 @@ function New-Section {
         [string[]]$Path,
         [int]$Level,
         [int]$Line,
+        [System.Collections.IDictionary]$Metadata,
         [string]$Text
     )
     [ordered]@{
@@ -26,6 +27,7 @@ function New-Section {
         path = $Path
         level = $Level
         line = $Line
+        metadata = $Metadata
         text = $Text
     }
 }
@@ -72,6 +74,12 @@ function New-Fixture {
             "version: 1.0",
             "---"
         ) -join "`n"
+        $metadata = [ordered]@{
+            title = $title
+            tags = "[proof, benchmark, cluster-$cluster]"
+            status = "ready"
+            version = "1.0"
+        }
         $intro = "# $title`n`n$focus. This source links to [next]($next), [previous]($prev), and [cluster hub]($hub)."
         $evidence = "## Evidence`n`nThe evidence paragraph for $title repeats the task vocabulary when relevant: $focus."
         $details = "## Details`n`nThe details paragraph gives CROP another local unit with stable source identity, section shape, and linkable provenance."
@@ -94,8 +102,8 @@ function New-Fixture {
             "Source $topic belongs to cluster $cluster and preserves refs to $next, $prev, and $hub for context boundary reconstruction.",
             "The compact Pebble section keeps proof context provenance without carrying Markdown frontmatter as separate evidence."
         ) -join "`n"
-        [void]$sections.Add((New-Section "$topic-context" @($title, "Context") 1 7 $contextText))
-        [void]$sections.Add((New-Section "$topic-provenance" @($title, "Provenance") 2 15 $provenanceText))
+        [void]$sections.Add((New-Section "$topic-context" @($title, "Context") 1 7 $metadata $contextText))
+        [void]$sections.Add((New-Section "$topic-provenance" @($title, "Provenance") 2 15 $metadata $provenanceText))
 
         $document = [ordered]@{
             schema = "pebble.v1"
@@ -103,6 +111,7 @@ function New-Fixture {
             title = $title
             source = "$topic.md"
             format = "markdown"
+            metadata = $metadata
             sections = $sections
             refs = $refs
         }
