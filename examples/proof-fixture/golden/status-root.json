@@ -1,0 +1,40 @@
+{
+  "schema_version": "crop.corpus-status.v1",
+  "title": "Corpus Status",
+  "input": "examples\\proof-fixture\\src",
+  "issue_count": 3,
+  "strict_issue_count": 3,
+  "strict_pass": false,
+  "strict_policy": [
+    "broken_links",
+    "orphan_pages",
+    "duplicate_anchors"
+  ],
+  "surfaces": [
+    {
+      "name": "catalog_sources",
+      "count": 3,
+      "issues": 0
+    },
+    {
+      "name": "links",
+      "count": 2,
+      "issues": 1
+    },
+    {
+      "name": "orphan_pages",
+      "count": 3,
+      "issues": 2
+    },
+    {
+      "name": "frontmatter_pages",
+      "count": 3,
+      "issues": 0
+    },
+    {
+      "name": "headings",
+      "count": 5,
+      "issues": 0
+    }
+  ]
+}

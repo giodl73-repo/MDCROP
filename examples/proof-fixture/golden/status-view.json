@@ -1,0 +1,38 @@
+{
+  "schema_version": "crop.corpus-status.v1",
+  "title": "Ready View Status",
+  "input": "examples\\proof-fixture\\proof-ready-view.json",
+  "issue_count": 2,
+  "strict_issue_count": 1,
+  "strict_pass": false,
+  "strict_policy": [
+    "broken_links"
+  ],
+  "surfaces": [
+    {
+      "name": "catalog_sources",
+      "count": 2,
+      "issues": 0
+    },
+    {
+      "name": "links",
+      "count": 2,
+      "issues": 1
+    },
+    {
+      "name": "orphan_pages",
+      "count": 2,
+      "issues": 1
+    },
+    {
+      "name": "frontmatter_pages",
+      "count": 2,
+      "issues": 0
+    },
+    {
+      "name": "headings",
+      "count": 4,
+      "issues": 0
+    }
+  ]
+}

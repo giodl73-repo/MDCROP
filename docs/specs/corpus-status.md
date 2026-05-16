@@ -38,3 +38,7 @@ mode gates on broken links, orphan pages, and duplicate heading anchors. Add
 repeatable `--strict-on broken-links`, `--strict-on orphan-pages`, or
 `--strict-on duplicate-anchors` to gate on selected issue classes. This lets CI
 systems publish the status artifact while still gating on corpus health.
+
+Deterministic root and view examples are checked in at
+`examples\proof-fixture\golden\status-root.json` and
+`examples\proof-fixture\golden\status-view.json`.

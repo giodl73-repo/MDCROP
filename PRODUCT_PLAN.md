@@ -108,7 +108,8 @@ provenance paths; exclude stale duplicates and noisy periphery.
     `crop status --format json` emits `crop.corpus-status.v1` with per-surface
     counts, issue totals, strict policy names, and strict-pass state for CI and
     downstream registries. `--strict-on` can limit CI gates to broken links,
-    orphan pages, or duplicate heading anchors.**
+    orphan pages, or duplicate heading anchors, and root/view JSON goldens live
+    under `examples/proof-fixture/golden`.**
 
 ## Upstream kernel asks
 

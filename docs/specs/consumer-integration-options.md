@@ -98,7 +98,9 @@ crop status --view .crop\views\ready-guides.json --strict --strict-on broken-lin
 Strict mode writes the status page before failing, so CI can upload the page as
 an artifact. By default it gates on broken links, orphan pages, and duplicate
 anchors. Add repeatable `--strict-on` selectors to gate only `broken-links`,
-`orphan-pages`, or `duplicate-anchors`.
+`orphan-pages`, or `duplicate-anchors`. Root and view JSON examples live in
+`examples\proof-fixture\golden\status-root.json` and
+`examples\proof-fixture\golden\status-view.json`.
 
 ### Generate machine-readable side-info
 

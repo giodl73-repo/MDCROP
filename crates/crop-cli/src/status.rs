@@ -449,6 +449,46 @@ mod tests {
     }
 
     #[test]
+    fn status_root_json_matches_golden_contract() {
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("..");
+        let fixture = repo.join("examples").join("proof-fixture");
+        let mut docs =
+            status_docs_for_root(fixture.join("src"), vec!["md".to_string()], Vec::new()).unwrap();
+        docs.label = "examples\\proof-fixture\\src".to_string();
+
+        assert_status_golden(
+            status_report("Corpus Status", &docs, &strict_policy(vec![])),
+            include_str!("../../../examples/proof-fixture/golden/status-root.json"),
+        );
+    }
+
+    #[test]
+    fn status_view_json_matches_golden_contract() {
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("..");
+        let fixture = repo.join("examples").join("proof-fixture");
+        let mut docs = status_docs_for_view(
+            fixture.join("proof-ready-view.json"),
+            Vec::new(),
+            Vec::new(),
+        )
+        .unwrap();
+        docs.label = "examples\\proof-fixture\\proof-ready-view.json".to_string();
+
+        assert_status_golden(
+            status_report(
+                "Ready View Status",
+                &docs,
+                &strict_policy(vec![StatusStrictPolicyArg::BrokenLinks]),
+            ),
+            include_str!("../../../examples/proof-fixture/golden/status-view.json"),
+        );
+    }
+
+    #[test]
     fn status_strict_can_gate_selected_issue_classes() {
         let root = unique_temp_dir("crop-status-policy");
         fs::create_dir_all(root.join("docs")).unwrap();
@@ -520,6 +560,12 @@ mod tests {
         assert_eq!(policy.len(), 2);
         assert!(matches!(policy[0], StatusStrictPolicy::BrokenLinks));
         assert!(matches!(policy[1], StatusStrictPolicy::OrphanPages));
+    }
+
+    fn assert_status_golden(report: CorpusStatusReport, golden: &str) {
+        let actual = serde_json::to_value(report).unwrap();
+        let expected: serde_json::Value = serde_json::from_str(golden).unwrap();
+        assert_eq!(actual, expected);
     }
 
     fn unique_temp_file(name: &str) -> PathBuf {
