@@ -108,6 +108,8 @@ pub struct EvidenceUnit {
     pub source_id: String,
     pub content_hash: String,
     pub text: String,
+    #[serde(default)]
+    pub metadata: BTreeMap<String, String>,
     pub relevance: f64,
     pub token_estimate: usize,
 }
@@ -130,6 +132,8 @@ pub struct CropUnit {
     pub source_id: String,
     pub content_hash: String,
     pub text: String,
+    #[serde(default)]
+    pub metadata: BTreeMap<String, String>,
     pub relevance: f64,
     pub token_estimate: usize,
     pub reason: CropReason,
@@ -1827,6 +1831,8 @@ pub fn ingest_path_with_options(
         })?;
         let source_id = source_id(root, file);
         let source_hash = sha256_hex(text.as_bytes());
+        let metadata = parse_markdown_frontmatter(&text).unwrap_or_default();
+        let content_text = strip_markdown_frontmatter(&text);
 
         if let Some((pebble_source_id, refs, pebble_units)) =
             pebble_evidence_units(&source_id, &text)
@@ -1843,7 +1849,7 @@ pub fn ingest_path_with_options(
             continue;
         }
 
-        let chunks = text_chunks(&text);
+        let chunks = text_chunks(content_text);
         source_links.insert(source_id.clone(), markdown_links(root, file, &text));
 
         for (chunk_index, chunk) in chunks.into_iter().enumerate() {
@@ -1856,6 +1862,7 @@ pub fn ingest_path_with_options(
                     source_id: source_id.clone(),
                     content_hash: source_hash.clone(),
                     text: chunk.to_string(),
+                    metadata: metadata.clone(),
                     relevance: 0.0,
                     token_estimate: estimate_tokens(chunk),
                 },
@@ -1919,6 +1926,7 @@ fn pebble_document_from_view_run(run: &CropViewRun) -> PebbleDocument {
             path: vec![unit.source_id.clone()],
             level: 0,
             line: 1,
+            metadata: unit.metadata.clone(),
             text: unit.text.clone(),
         })
         .collect();
@@ -1929,6 +1937,7 @@ fn pebble_document_from_view_run(run: &CropViewRun) -> PebbleDocument {
         title: run.name.clone(),
         source: run.root.clone(),
         format: "markdown".to_string(),
+        metadata: BTreeMap::new(),
         sections,
         refs,
     }
@@ -1961,6 +1970,7 @@ fn pebble_evidence_units(
             content_hash: sha256_hex(text.as_bytes()),
             token_estimate: estimate_tokens(&text),
             text,
+            metadata: section.metadata,
             relevance: 0.0,
         });
     }
@@ -1971,6 +1981,7 @@ fn pebble_evidence_units(
             content_hash: sha256_hex(document.title.as_bytes()),
             token_estimate: estimate_tokens(&document.title),
             text: document.title,
+            metadata: document.metadata,
             relevance: 0.0,
         });
     }
@@ -2095,6 +2106,7 @@ pub fn crop_context(graph: &EvidenceGraph, options: CropOptions) -> Result<CropP
                 source_id: unit.source_id.clone(),
                 content_hash: unit.content_hash.clone(),
                 text: unit.text.clone(),
+                metadata: unit.metadata.clone(),
                 relevance: unit.relevance,
                 token_estimate: unit.token_estimate,
                 reason: reasons[index].expect("selected crop unit has reason"),
@@ -2782,6 +2794,23 @@ fn parse_markdown_frontmatter(text: &str) -> Option<BTreeMap<String, String>> {
         fields.insert(key.to_string(), value);
     }
     None
+}
+
+fn strip_markdown_frontmatter(text: &str) -> &str {
+    let Some(rest) = text
+        .strip_prefix("---\n")
+        .or_else(|| text.strip_prefix("---\r\n"))
+    else {
+        return text;
+    };
+    let Some(end) = rest.find("\n---") else {
+        return text;
+    };
+    let after = &rest[end + "\n---".len()..];
+    after
+        .strip_prefix("\r\n")
+        .or_else(|| after.strip_prefix('\n'))
+        .unwrap_or(after)
 }
 
 fn markdown_file_matches_frontmatter_query(
@@ -3817,7 +3846,7 @@ mod tests {
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("index.md"),
-            "# View recipe\n\nTask seed context links to [target](target.md).",
+            "---\nmaxim_schema: maxim.frontmatter.v1\nkind: guide\nsource_custody: verified\n---\n# View recipe\n\nTask seed context links to [target](target.md).",
         )
         .unwrap();
         fs::write(
@@ -3843,6 +3872,26 @@ mod tests {
         assert_eq!(document.source, "docs");
         assert!(!document.sections.is_empty());
         assert!(document.refs.iter().any(|source| source == "index.md"));
+        let index_section = document
+            .sections
+            .iter()
+            .find(|section| section.path == vec!["index.md".to_string()])
+            .expect("index.md section is selected");
+        assert_eq!(
+            index_section
+                .metadata
+                .get("maxim_schema")
+                .map(String::as_str),
+            Some("maxim.frontmatter.v1")
+        );
+        assert_eq!(
+            index_section
+                .metadata
+                .get("source_custody")
+                .map(String::as_str),
+            Some("verified")
+        );
+        assert!(!index_section.text.contains("maxim_schema:"));
 
         fs::remove_dir_all(root).unwrap();
     }
@@ -3857,6 +3906,10 @@ mod tests {
             "src/guides/generated.source.md",
             ["data/records.json".to_string()],
         );
+        let mut document = document;
+        document.sections[0]
+            .metadata
+            .insert("source_custody".to_string(), "verified".to_string());
         fs::write(
             root.join("generated.pebble.json"),
             document.to_json().unwrap(),
@@ -3874,6 +3927,13 @@ mod tests {
         assert!(ingested.graph.units[0]
             .text
             .contains("Proof-produced Pebble context."));
+        assert_eq!(
+            ingested.graph.units[0]
+                .metadata
+                .get("source_custody")
+                .map(String::as_str),
+            Some("verified")
+        );
 
         fs::remove_dir_all(root).unwrap();
     }
@@ -5022,6 +5082,7 @@ fn unit_with_source(
         source_id: source_id.to_string(),
         content_hash: sha256_hex(text.as_bytes()),
         text: text.to_string(),
+        metadata: BTreeMap::new(),
         relevance,
         token_estimate,
     }

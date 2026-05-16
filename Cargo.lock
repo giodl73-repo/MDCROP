@@ -243,7 +243,7 @@ checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
 [[package]]
 name = "pebble"
 version = "0.1.0"
-source = "git+https://github.com/giodl73-repo/PEBBLE?rev=ec4ac5a1995b1d49a2070d345e4bad8975602178#ec4ac5a1995b1d49a2070d345e4bad8975602178"
+source = "git+https://github.com/giodl73-repo/PEBBLE?rev=d87afe63737a545762d4e2e99ee4571df443b5a2#d87afe63737a545762d4e2e99ee4571df443b5a2"
 dependencies = [
  "serde",
  "serde_json",
