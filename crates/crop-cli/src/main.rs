@@ -10,8 +10,8 @@ use crop_core::{
     markdown_link_audit, markdown_link_audit_for_view_json, prefix_cached_pack,
     render_markdown_backlinks, render_markdown_frontmatter_inventory,
     render_markdown_heading_inventory, render_markdown_link_audit, run_view_json,
-    run_view_prefix_cached_json, score_graph_for_task, CropOptions, CropView, EvalCase, EvalMethod,
-    IngestOptions, PrefixCacheProfile,
+    run_view_pebble_json, run_view_prefix_cached_json, score_graph_for_task, CropOptions, CropView,
+    EvalCase, EvalMethod, IngestOptions, PrefixCacheProfile,
 };
 use std::fs;
 use std::path::Path;
@@ -287,6 +287,9 @@ enum Commands {
         /// Emit prefix-cache-aware JSON for the view pack.
         #[arg(long, value_enum)]
         prefix_cache: Option<PrefixCacheArg>,
+        /// Output format for a view run.
+        #[arg(long, value_enum, default_value_t = ViewFormatArg::Crop)]
+        format: ViewFormatArg,
         /// Override the view task for a one-off searchable run.
         #[arg(long)]
         query: Option<String>,
@@ -319,6 +322,12 @@ enum EvalMethodArg {
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum PrefixCacheArg {
     Generic,
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum, PartialEq, Eq)]
+enum ViewFormatArg {
+    Crop,
+    Pebble,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -728,6 +737,7 @@ fn main() -> Result<()> {
             file,
             dir,
             prefix_cache,
+            format,
             query,
             extensions,
             exclude_dirs,
@@ -736,11 +746,17 @@ fn main() -> Result<()> {
                 bail!("--strict requires --inspect");
             }
             let json = if list {
+                if format == ViewFormatArg::Pebble {
+                    bail!("--format pebble cannot be combined with --list");
+                }
                 if inspect {
                     bail!("--list cannot be combined with --inspect");
                 }
                 serde_json::to_string_pretty(&list_views(dir)?)?
             } else if inspect && file.is_none() {
+                if format == ViewFormatArg::Pebble {
+                    bail!("--format pebble cannot be combined with --inspect");
+                }
                 if prefix_cache.is_some() {
                     bail!("--prefix-cache cannot be combined with --inspect");
                 }
@@ -771,16 +787,24 @@ fn main() -> Result<()> {
                 view.exclude_dirs.extend(exclude_dirs);
                 let view_json = serde_json::to_string(&view)?;
                 if inspect {
+                    if format == ViewFormatArg::Pebble {
+                        bail!("--format pebble cannot be combined with --inspect");
+                    }
                     if prefix_cache.is_some() {
                         bail!("--prefix-cache cannot be combined with --inspect");
                     }
                     serde_json::to_string_pretty(&inspect_view_json(&view_json, base_dir)?)?
                 } else if let Some(prefix_cache) = prefix_cache {
+                    if format == ViewFormatArg::Pebble {
+                        bail!("--format pebble cannot be combined with --prefix-cache");
+                    }
                     serde_json::to_string_pretty(&run_view_prefix_cached_json(
                         &view_json,
                         base_dir,
                         prefix_cache.into(),
                     )?)?
+                } else if format == ViewFormatArg::Pebble {
+                    serde_json::to_string_pretty(&run_view_pebble_json(&view_json, base_dir)?)?
                 } else {
                     serde_json::to_string_pretty(&run_view_json(&view_json, base_dir)?)?
                 }

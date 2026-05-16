@@ -19,6 +19,7 @@ serde_json = "1"
 sha2 = "0.10"
 thiserror = "2"
 mdpath = { git = "https://github.com/giodl73-repo/MDPATH.git", branch = "master" }
+pebble = { git = "https://github.com/giodl73-repo/PEBBLE", rev = "ec4ac5a1995b1d49a2070d345e4bad8975602178" }
 
 # Canonical upstream dependencies. Local development can override these with
 # .cargo/config.toml copied from .cargo/config.local.example.toml.

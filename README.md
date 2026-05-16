@@ -182,8 +182,18 @@ View files use `crop.view.v1` JSON:
 }
 ```
 
-Relative roots resolve from the view file location. The output is
+Relative roots resolve from the view file location. The default output is
 `crop.view-run.v1` JSON containing the view metadata and produced context pack.
+Use `--format pebble` to emit the same selected context as a compact
+`pebble.v1` transfer pack that PROOF and other tools can exchange:
+
+```powershell
+cargo run -p crop-cli -- view --file examples\views\docs-view.json --format pebble
+```
+
+CROP also reads `pebble.v1` JSON files during normal ingest, using each Pebble
+section as an evidence unit while preserving the original Pebble `source` path.
+
 `frontmatter_query` is optional and filters Markdown sources using simple
 SQL/OData-style predicates over any top-level frontmatter field: `field eq
 'value'`, `field ne 'value'`, and `field has 'value'`, joined with `and`. This
@@ -435,6 +445,8 @@ caveats.
   anchor, duplicate-anchor, and `md://` section URI inventories.
 - `run_view_json(json, base_dir)` runs a persisted `crop.view.v1` recipe and
   returns `crop.view-run.v1` with the produced context pack.
+- `run_view_pebble_json(json, base_dir)` runs the same recipe and returns a
+  `pebble.v1` transfer pack for compact AI/cross-tool interchange.
 - `run_view_prefix_cached_json(json, base_dir, profile)` runs a view and returns
   `crop.view-prefix-cache.v1` with a prefix-cache-aware pack.
 - `inspect_view_json(json, base_dir)` validates a view and returns

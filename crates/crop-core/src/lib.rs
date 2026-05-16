@@ -1,3 +1,4 @@
+use pebble::{PebbleDocument, PebbleSection};
 use rctx_core::RCTX_VERSION;
 use rgraph_core::{
     shortest_connector_path, undirected_boundary_metrics, undirected_cluster_summaries,
@@ -710,7 +711,7 @@ pub fn eval_suite(token_budget: usize) -> Result<EvalSuiteReport, CropError> {
 }
 
 pub fn eval_competitor_json(json: &str) -> Result<CompetitorEvalReport, CropError> {
-    let input = serde_json::from_str(json).map_err(|source| CropError::CompetitorImport(source))?;
+    let input = serde_json::from_str(json).map_err(CropError::CompetitorImport)?;
     eval_competitor_results(input)
 }
 
@@ -853,8 +854,7 @@ pub fn bench_manifest_json(
     json: &str,
     base_dir: impl AsRef<Path>,
 ) -> Result<BenchManifestReport, CropError> {
-    let manifest =
-        serde_json::from_str(json).map_err(|source| CropError::BenchManifestImport(source))?;
+    let manifest = serde_json::from_str(json).map_err(CropError::BenchManifestImport)?;
     bench_manifest(manifest, base_dir)
 }
 
@@ -899,8 +899,16 @@ pub fn bench_manifest(
 }
 
 pub fn run_view_json(json: &str, base_dir: impl AsRef<Path>) -> Result<CropViewRun, CropError> {
-    let view = serde_json::from_str(json).map_err(|source| CropError::ViewImport(source))?;
+    let view = serde_json::from_str(json).map_err(CropError::ViewImport)?;
     run_view(view, base_dir)
+}
+
+pub fn run_view_pebble_json(
+    json: &str,
+    base_dir: impl AsRef<Path>,
+) -> Result<PebbleDocument, CropError> {
+    let view = serde_json::from_str(json).map_err(CropError::ViewImport)?;
+    run_view_pebble(view, base_dir)
 }
 
 pub fn run_view_prefix_cached_json(
@@ -908,7 +916,7 @@ pub fn run_view_prefix_cached_json(
     base_dir: impl AsRef<Path>,
     profile: PrefixCacheProfile,
 ) -> Result<CropViewPrefixCachedRun, CropError> {
-    let view = serde_json::from_str(json).map_err(|source| CropError::ViewImport(source))?;
+    let view = serde_json::from_str(json).map_err(CropError::ViewImport)?;
     run_view_prefix_cached(view, base_dir, profile)
 }
 
@@ -916,7 +924,7 @@ pub fn inspect_view_json(
     json: &str,
     base_dir: impl AsRef<Path>,
 ) -> Result<CropViewInspect, CropError> {
-    let view = serde_json::from_str(json).map_err(|source| CropError::ViewImport(source))?;
+    let view = serde_json::from_str(json).map_err(CropError::ViewImport)?;
     inspect_view(view, base_dir)
 }
 
@@ -1050,8 +1058,7 @@ pub fn markdown_index_for_view_json(
     json: &str,
     base_dir: impl AsRef<Path>,
 ) -> Result<String, CropError> {
-    let view: CropView =
-        serde_json::from_str(json).map_err(|source| CropError::ViewImport(source))?;
+    let view: CropView = serde_json::from_str(json).map_err(CropError::ViewImport)?;
     validate_view(&view)?;
     let root = manifest_root(base_dir.as_ref(), &view.root);
     markdown_index(root, &view.name, &view_ingest_options(&view))
@@ -1070,8 +1077,7 @@ pub fn markdown_catalog_for_view_json(
     json: &str,
     base_dir: impl AsRef<Path>,
 ) -> Result<String, CropError> {
-    let view: CropView =
-        serde_json::from_str(json).map_err(|source| CropError::ViewImport(source))?;
+    let view: CropView = serde_json::from_str(json).map_err(CropError::ViewImport)?;
     validate_view(&view)?;
     let root = manifest_root(base_dir.as_ref(), &view.root);
     markdown_catalog(root, &view.name, &view_ingest_options(&view))
@@ -1207,8 +1213,7 @@ pub fn markdown_link_audit_for_view_json(
     json: &str,
     base_dir: impl AsRef<Path>,
 ) -> Result<MarkdownLinkAudit, CropError> {
-    let view: CropView =
-        serde_json::from_str(json).map_err(|source| CropError::ViewImport(source))?;
+    let view: CropView = serde_json::from_str(json).map_err(CropError::ViewImport)?;
     validate_view(&view)?;
     let root = manifest_root(base_dir.as_ref(), &view.root);
     markdown_link_audit(root, &view_ingest_options(&view))
@@ -1301,8 +1306,7 @@ pub fn markdown_backlinks_for_view_json(
     json: &str,
     base_dir: impl AsRef<Path>,
 ) -> Result<MarkdownBacklinkReport, CropError> {
-    let view: CropView =
-        serde_json::from_str(json).map_err(|source| CropError::ViewImport(source))?;
+    let view: CropView = serde_json::from_str(json).map_err(CropError::ViewImport)?;
     validate_view(&view)?;
     let root = manifest_root(base_dir.as_ref(), &view.root);
     markdown_backlinks(root, &view_ingest_options(&view))
@@ -1423,8 +1427,7 @@ pub fn markdown_frontmatter_inventory_for_view_json(
     json: &str,
     base_dir: impl AsRef<Path>,
 ) -> Result<MarkdownFrontmatterInventory, CropError> {
-    let view: CropView =
-        serde_json::from_str(json).map_err(|source| CropError::ViewImport(source))?;
+    let view: CropView = serde_json::from_str(json).map_err(CropError::ViewImport)?;
     validate_view(&view)?;
     let root = manifest_root(base_dir.as_ref(), &view.root);
     markdown_frontmatter_inventory(root, &view_ingest_options(&view))
@@ -1536,8 +1539,7 @@ pub fn markdown_heading_inventory_for_view_json(
     json: &str,
     base_dir: impl AsRef<Path>,
 ) -> Result<MarkdownHeadingInventory, CropError> {
-    let view: CropView =
-        serde_json::from_str(json).map_err(|source| CropError::ViewImport(source))?;
+    let view: CropView = serde_json::from_str(json).map_err(CropError::ViewImport)?;
     validate_view(&view)?;
     let root = manifest_root(base_dir.as_ref(), &view.root);
     markdown_heading_inventory(root, &view_ingest_options(&view))
@@ -1654,6 +1656,14 @@ pub fn run_view(view: CropView, base_dir: impl AsRef<Path>) -> Result<CropViewRu
     })
 }
 
+pub fn run_view_pebble(
+    view: CropView,
+    base_dir: impl AsRef<Path>,
+) -> Result<PebbleDocument, CropError> {
+    let run = run_view(view, base_dir)?;
+    Ok(pebble_document_from_view_run(&run))
+}
+
 pub fn run_view_prefix_cached(
     view: CropView,
     base_dir: impl AsRef<Path>,
@@ -1731,8 +1741,7 @@ pub fn list_views(store: impl AsRef<Path>) -> Result<CropViewList, CropError> {
             path: path.display().to_string(),
             source,
         })?;
-        let view: CropView =
-            serde_json::from_str(&json).map_err(|source| CropError::ViewImport(source))?;
+        let view: CropView = serde_json::from_str(&json).map_err(CropError::ViewImport)?;
         if view.schema_version != CROP_VIEW_SCHEMA {
             return Err(CropError::UnsupportedViewSchema {
                 schema_version: view.schema_version,
@@ -1818,26 +1827,39 @@ pub fn ingest_path_with_options(
         })?;
         let source_id = source_id(root, file);
         let source_hash = sha256_hex(text.as_bytes());
+
+        if let Some((pebble_source_id, refs, pebble_units)) =
+            pebble_evidence_units(&source_id, &text)
+        {
+            source_links.insert(pebble_source_id, refs);
+            for unit in pebble_units {
+                push_evidence_unit(
+                    &mut units,
+                    &mut source_first_unit,
+                    &mut source_unit_indices,
+                    unit,
+                );
+            }
+            continue;
+        }
+
         let chunks = text_chunks(&text);
         source_links.insert(source_id.clone(), markdown_links(root, file, &text));
 
         for (chunk_index, chunk) in chunks.into_iter().enumerate() {
-            let unit_index = units.len();
-            source_first_unit
-                .entry(source_id.clone())
-                .or_insert(unit_index);
-            source_unit_indices
-                .entry(source_id.clone())
-                .or_default()
-                .push(unit_index);
-            units.push(EvidenceUnit {
-                id: format!("{source_id}#{chunk_index:03}"),
-                source_id: source_id.clone(),
-                content_hash: source_hash.clone(),
-                text: chunk.to_string(),
-                relevance: 0.0,
-                token_estimate: estimate_tokens(chunk),
-            });
+            push_evidence_unit(
+                &mut units,
+                &mut source_first_unit,
+                &mut source_unit_indices,
+                EvidenceUnit {
+                    id: format!("{source_id}#{chunk_index:03}"),
+                    source_id: source_id.clone(),
+                    content_hash: source_hash.clone(),
+                    text: chunk.to_string(),
+                    relevance: 0.0,
+                    token_estimate: estimate_tokens(chunk),
+                },
+            );
         }
     }
 
@@ -1877,6 +1899,108 @@ pub fn ingest_path_with_options(
             edge_count,
         },
     })
+}
+
+fn pebble_document_from_view_run(run: &CropViewRun) -> PebbleDocument {
+    let refs = run
+        .pack
+        .units
+        .iter()
+        .map(|unit| unit.source_id.clone())
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect::<Vec<_>>();
+    let sections = run
+        .pack
+        .units
+        .iter()
+        .map(|unit| PebbleSection {
+            id: unit.id.clone(),
+            path: vec![unit.source_id.clone()],
+            level: 0,
+            line: 1,
+            text: unit.text.clone(),
+        })
+        .collect();
+
+    PebbleDocument {
+        schema: pebble::SCHEMA.to_string(),
+        kind: "corpus-slice".to_string(),
+        title: run.name.clone(),
+        source: run.root.clone(),
+        format: "markdown".to_string(),
+        sections,
+        refs,
+    }
+}
+
+fn pebble_evidence_units(
+    fallback_source_id: &str,
+    text: &str,
+) -> Option<(String, Vec<String>, Vec<EvidenceUnit>)> {
+    let document = PebbleDocument::from_json(text).ok()?;
+    if document.schema != pebble::SCHEMA {
+        return None;
+    }
+
+    let source_id = if document.source.trim().is_empty() {
+        fallback_source_id.to_string()
+    } else {
+        document.source
+    };
+    let mut units = Vec::new();
+    for (index, section) in document.sections.into_iter().enumerate() {
+        let text = if section.text.trim().is_empty() {
+            document.title.clone()
+        } else {
+            section.text
+        };
+        units.push(EvidenceUnit {
+            id: format!("{source_id}#{}", pebble_unit_id(index, &section.id)),
+            source_id: source_id.clone(),
+            content_hash: sha256_hex(text.as_bytes()),
+            token_estimate: estimate_tokens(&text),
+            text,
+            relevance: 0.0,
+        });
+    }
+    if units.is_empty() {
+        units.push(EvidenceUnit {
+            id: format!("{source_id}#document"),
+            source_id: source_id.clone(),
+            content_hash: sha256_hex(document.title.as_bytes()),
+            token_estimate: estimate_tokens(&document.title),
+            text: document.title,
+            relevance: 0.0,
+        });
+    }
+
+    Some((source_id, document.refs, units))
+}
+
+fn pebble_unit_id(index: usize, section_id: &str) -> String {
+    if section_id.trim().is_empty() {
+        format!("{index:03}")
+    } else {
+        section_id.to_string()
+    }
+}
+
+fn push_evidence_unit(
+    units: &mut Vec<EvidenceUnit>,
+    source_first_unit: &mut BTreeMap<String, usize>,
+    source_unit_indices: &mut BTreeMap<String, Vec<usize>>,
+    unit: EvidenceUnit,
+) {
+    let unit_index = units.len();
+    source_first_unit
+        .entry(unit.source_id.clone())
+        .or_insert(unit_index);
+    source_unit_indices
+        .entry(unit.source_id.clone())
+        .or_default()
+        .push(unit_index);
+    units.push(unit);
 }
 
 pub fn score_graph_for_task(graph: &mut EvidenceGraph, task: &str) {
@@ -2250,7 +2374,7 @@ fn eval_case(
     let selected = match method {
         EvalMethod::Crop => {
             crop_pack = Some(crop_context(
-                &graph,
+                graph,
                 CropOptions {
                     seed: 0,
                     token_budget,
@@ -2266,15 +2390,15 @@ fn eval_case(
         }
         EvalMethod::ScoreTopK => {
             crop_pack = None;
-            score_top_k_selection(&graph, token_budget)
+            score_top_k_selection(graph, token_budget)
         }
         EvalMethod::LexicalTopK => {
             crop_pack = None;
-            lexical_top_k_selection(&graph, fixture.task, token_budget)
+            lexical_top_k_selection(graph, fixture.task, token_budget)
         }
         EvalMethod::HybridTopK => {
             crop_pack = None;
-            hybrid_top_k_selection(&graph, fixture.task, token_budget)
+            hybrid_top_k_selection(graph, fixture.task, token_budget)
         }
     };
     eval_selected_units(&fixture, &selected, token_budget, crop_pack.as_ref()).map(|mut report| {
@@ -3683,6 +3807,73 @@ mod tests {
         assert_eq!(run.token_budget, 160);
         assert!(!run.pack.units.is_empty());
         assert!(run.pack.token_estimate <= 160);
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn run_view_pebble_json_emits_transfer_pack() {
+        let root = unique_temp_dir("crop-view-pebble");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(
+            root.join("docs").join("index.md"),
+            "# View recipe\n\nTask seed context links to [target](target.md).",
+        )
+        .unwrap();
+        fs::write(
+            root.join("docs").join("target.md"),
+            "# Target\n\nTarget view evidence explains persisted crops.",
+        )
+        .unwrap();
+
+        let view = r#"{
+          "schema_version": "crop.view.v1",
+          "name": "docs-view",
+          "root": "docs",
+          "task": "persisted view crops",
+          "token_budget": 160,
+          "seed": 0
+        }"#;
+
+        let document = run_view_pebble_json(view, &root).unwrap();
+
+        assert_eq!(document.schema, pebble::SCHEMA);
+        assert_eq!(document.kind, "corpus-slice");
+        assert_eq!(document.title, "docs-view");
+        assert_eq!(document.source, "docs");
+        assert!(!document.sections.is_empty());
+        assert!(document.refs.iter().any(|source| source == "index.md"));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn ingest_path_loads_pebble_sections_as_evidence_units() {
+        let root = unique_temp_dir("crop-ingest-pebble");
+        fs::create_dir_all(&root).unwrap();
+        let document = pebble::PebbleDocument::from_markdown(
+            "# Generated Guide\n\nProof-produced Pebble context.",
+            "Generated Guide",
+            "src/guides/generated.source.md",
+            ["data/records.json".to_string()],
+        );
+        fs::write(
+            root.join("generated.pebble.json"),
+            document.to_json().unwrap(),
+        )
+        .unwrap();
+
+        let ingested = ingest_path(&root).unwrap();
+
+        assert_eq!(ingested.report.source_count, 1);
+        assert_eq!(ingested.graph.units.len(), 1);
+        assert_eq!(
+            ingested.graph.units[0].source_id,
+            "src/guides/generated.source.md"
+        );
+        assert!(ingested.graph.units[0]
+            .text
+            .contains("Proof-produced Pebble context."));
 
         fs::remove_dir_all(root).unwrap();
     }
