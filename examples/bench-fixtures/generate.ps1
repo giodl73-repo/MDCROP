@@ -87,10 +87,15 @@ function New-Fixture {
             }
         }
         $sections = New-Object System.Collections.ArrayList
-        [void]$sections.Add((New-Section "$topic-intro" @($title) 1 7 $intro))
-        [void]$sections.Add((New-Section "$topic-evidence" @($title, "Evidence") 2 11 $evidence))
-        [void]$sections.Add((New-Section "$topic-details" @($title, "Details") 2 15 $details))
-        [void]$sections.Add((New-Section "$topic-handoff" @($title, "Handoff") 2 19 $handoff))
+        $contextText = @($intro, $evidence) -join "`n`n"
+        $provenanceText = @(
+            "## Provenance",
+            "",
+            "Source $topic belongs to cluster $cluster and preserves refs to $next, $prev, and $hub for context boundary reconstruction.",
+            "The compact Pebble section keeps proof context provenance without carrying Markdown frontmatter as separate evidence."
+        ) -join "`n"
+        [void]$sections.Add((New-Section "$topic-context" @($title, "Context") 1 7 $contextText))
+        [void]$sections.Add((New-Section "$topic-provenance" @($title, "Provenance") 2 15 $provenanceText))
 
         $document = [ordered]@{
             schema = "pebble.v1"
