@@ -20,6 +20,7 @@ sha2 = "0.10"
 thiserror = "2"
 mdpath = { git = "https://github.com/giodl73-repo/MDPATH.git", branch = "master" }
 pebble = { git = "https://github.com/giodl73-repo/PEBBLE", rev = "d87afe63737a545762d4e2e99ee4571df443b5a2" }
+slice-core = { git = "https://github.com/giodl73-repo/SLICE", package = "slice-core", rev = "ffa956cf8704cae5086af676c9044ae10a9a9b15" }
 
 # Canonical upstream dependencies. Local development can override these with
 # .cargo/config.toml copied from .cargo/config.local.example.toml.

@@ -99,6 +99,10 @@ format. By default strict mode gates on broken links, orphan pages, and duplicat
 anchors; repeat `--strict-on` to gate only `broken-links`, `orphan-pages`, or
 `duplicate-anchors`.
 
+`frontmatter_query` predicates are evaluated through SLICE's shared selector
+kernel while CROP still owns view recipes, frontmatter extraction, graph
+selection, and output rendering.
+
 Stable schema and consumer-integration notes live in [`docs\specs`](docs/specs),
 with deterministic status contract goldens under
 `examples\proof-fixture\golden`.

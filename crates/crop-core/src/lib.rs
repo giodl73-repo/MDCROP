@@ -7,7 +7,9 @@ use ropt_core::{exact_budgeted_selection, BudgetItem, RoptError, SeedPart};
 use rstat_core::scoring::{weighted_component_score, ScoringError};
 use rstat_core::summary::{summary_stats, SummaryError};
 use serde::{Deserialize, Serialize};
+use serde_json::{Map, Value};
 use sha2::{Digest, Sha256};
+use slice_core::{FieldCatalog, Operator, ValueType};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -2835,66 +2837,67 @@ fn frontmatter_query_matches(
     fields: &BTreeMap<String, String>,
     query: &str,
 ) -> Result<bool, CropError> {
-    let clauses = query
-        .split(" and ")
-        .map(str::trim)
-        .filter(|clause| !clause.is_empty())
-        .collect::<Vec<_>>();
-    if clauses.is_empty() {
-        return Err(CropError::InvalidFrontmatterQuery {
+    let parsed = slice_core::parse(query).map_err(|_| CropError::InvalidFrontmatterQuery {
+        query: query.to_string(),
+    })?;
+    let mut catalog = FieldCatalog::new();
+    for clause in parsed.clauses() {
+        let path = clause.path().join(".");
+        let value_type = match clause.op() {
+            Operator::Eq | Operator::Ne => ValueType::String,
+            Operator::Has => ValueType::Any,
+            Operator::Contains | Operator::Gt | Operator::Ge | Operator::Lt | Operator::Le => {
+                return Err(CropError::InvalidFrontmatterQuery {
+                    query: query.to_string(),
+                });
+            }
+        };
+        catalog.insert(path, value_type);
+    }
+    let selector =
+        slice_core::compile(query, &catalog).map_err(|_| CropError::InvalidFrontmatterQuery {
             query: query.to_string(),
-        });
-    }
-    for clause in clauses {
-        if !frontmatter_clause_matches(fields, clause)? {
-            return Ok(false);
-        }
-    }
-    Ok(true)
+        })?;
+    Ok(selector.matches(&materialize_frontmatter_query_row(
+        fields,
+        selector
+            .requirements()
+            .fields
+            .iter()
+            .map(|field| field.path.as_str()),
+    )))
 }
 
-fn frontmatter_clause_matches(
+fn materialize_frontmatter_query_row<'a>(
     fields: &BTreeMap<String, String>,
-    clause: &str,
-) -> Result<bool, CropError> {
-    let parts = clause.split_whitespace().collect::<Vec<_>>();
-    if parts.len() < 3 {
-        return Err(CropError::InvalidFrontmatterQuery {
-            query: clause.to_string(),
-        });
+    required_paths: impl IntoIterator<Item = &'a str>,
+) -> Value {
+    let mut object = Map::new();
+    for path in required_paths {
+        let value = fields
+            .get(path)
+            .map(|field| frontmatter_query_value(field))
+            .unwrap_or(Value::Null);
+        object.insert(path.to_string(), value);
     }
-    let field = parts[0];
-    let operator = parts[1];
-    let value = unquote_query_value(&parts[2..].join(" "));
-    let Some(actual) = fields.get(field) else {
-        return Ok(matches!(operator, "ne"));
-    };
-    match operator {
-        "eq" => Ok(actual == &value),
-        "ne" => Ok(actual != &value),
-        "has" => Ok(frontmatter_field_has(actual, &value)),
-        _ => Err(CropError::InvalidFrontmatterQuery {
-            query: clause.to_string(),
-        }),
-    }
+    Value::Object(object)
 }
 
-fn unquote_query_value(value: &str) -> String {
-    value
-        .trim()
-        .trim_matches('"')
-        .trim_matches('\'')
-        .trim()
-        .to_string()
-}
-
-fn frontmatter_field_has(actual: &str, needle: &str) -> bool {
-    actual
-        .trim_matches(['[', ']'])
-        .split(',')
-        .map(|part| part.trim().trim_matches('"').trim_matches('\'').trim())
-        .any(|part| part == needle)
-        || actual.split_whitespace().any(|part| part == needle)
+fn frontmatter_query_value(value: &str) -> Value {
+    let trimmed = value.trim();
+    if let Some(inner) = trimmed
+        .strip_prefix('[')
+        .and_then(|value| value.strip_suffix(']'))
+    {
+        let values = inner
+            .split(',')
+            .map(|part| part.trim().trim_matches('"').trim_matches('\'').trim())
+            .filter(|part| !part.is_empty())
+            .map(|part| Value::String(part.to_string()))
+            .collect::<Vec<_>>();
+        return Value::Array(values);
+    }
+    Value::String(trimmed.to_string())
 }
 
 fn render_markdown_index(index: &MarkdownIndex) -> String {
@@ -4133,6 +4136,40 @@ mod tests {
             inspect_view_json(view, &root),
             Err(CropError::InvalidFrontmatterQuery { .. })
         ));
+
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn view_frontmatter_query_preserves_missing_field_ne() {
+        let root = unique_temp_dir("crop-view-frontmatter-query-missing-ne");
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(
+            root.join("docs").join("one.md"),
+            "---\ntags: [computing]\nstatus: ready\n---\n# One\n",
+        )
+        .unwrap();
+        fs::write(
+            root.join("docs").join("two.md"),
+            "---\ntags: [computing]\nstatus: ready\nowner: docs\n---\n# Two\n",
+        )
+        .unwrap();
+
+        let view = r#"{
+          "schema_version": "crop.view.v1",
+          "name": "missing-owner",
+          "root": "docs",
+          "task": "missing owner",
+          "token_budget": 160,
+          "seed": 0,
+          "include_extensions": ["md"],
+          "frontmatter_query": "tags has 'computing' and owner ne 'docs'"
+        }"#;
+
+        let inspect = inspect_view_json(view, &root).unwrap();
+
+        assert_eq!(inspect.supported_source_count, 1);
+        assert_eq!(inspect.sample_sources, vec!["one.md"]);
 
         fs::remove_dir_all(root).unwrap();
     }

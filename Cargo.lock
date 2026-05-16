@@ -152,6 +152,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+ "slice-core",
  "thiserror",
 ]
 
@@ -395,6 +396,16 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "digest",
+]
+
+[[package]]
+name = "slice-core"
+version = "0.1.0"
+source = "git+https://github.com/giodl73-repo/SLICE?rev=ffa956cf8704cae5086af676c9044ae10a9a9b15#ffa956cf8704cae5086af676c9044ae10a9a9b15"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror",
 ]
 
 [[package]]

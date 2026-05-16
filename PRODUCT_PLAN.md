@@ -85,7 +85,9 @@ provenance paths; exclude stale duplicates and noisy periphery.
 15. **Frontmatter query views**: tag and metadata slices for large corpora.
     **First slice; `crop.view.v1` supports `frontmatter_query` predicates like
     `tags has 'computing' and status ne 'draft'` over arbitrary top-level
-    frontmatter fields for Maxim/PROOF-style reusable views.**
+    frontmatter fields for Maxim/PROOF-style reusable views. The predicate
+    kernel now uses SLICE while CROP keeps frontmatter extraction, view policy,
+    graph selection, and rendering.**
 16. **PROOF artifact manifests**: generated-output health for docs pipelines.
     **First slice; `crop artifacts` reads PROOF `.proof/artifacts.json` records
     and reports source/output mappings, missing outputs, stale outputs, cache
