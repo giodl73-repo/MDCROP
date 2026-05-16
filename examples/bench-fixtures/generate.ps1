@@ -103,7 +103,7 @@ function New-Fixture {
         }
         [System.IO.File]::WriteAllText(
             (Join-Path $pebbleRoot "$topic.pebble.json"),
-            ($document | ConvertTo-Json -Depth 10),
+            ($document | ConvertTo-Json -Depth 10 -Compress),
             $utf8NoBom
         )
     }
