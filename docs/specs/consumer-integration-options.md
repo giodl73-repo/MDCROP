@@ -27,7 +27,8 @@ insufficient.
 | Source inventory | `crop index` | Markdown | README/TOC table with extension profile and outbound link counts. |
 | Catalog page | `crop catalog` | Markdown | Combines titles, link counts, orphan flags, and selected frontmatter fields. |
 | Combined status page | `crop status` | Markdown | Composes catalog, links, backlinks, frontmatter, and headings for any Markdown corpus. |
-| CI corpus gate | `crop status --strict` | Markdown + exit code | Renders first, then fails on broken links, orphan pages, or duplicate anchors. |
+| Combined status summary | `crop status --format json` | JSON | Emits `crop.corpus-status.v1` with per-surface counts, issue totals, and strict-pass state. |
+| CI corpus gate | `crop status --strict` | Markdown or JSON + exit code | Writes output first, then fails on broken links, orphan pages, or duplicate anchors. |
 | Local link audit | `crop links` | JSON or Markdown | Validates Markdown and `md://` local targets; ignores external HTTP links. |
 | Backlink/orphan report | `crop backlinks` | JSON or Markdown | Reports inbound links, outbound counts, and orphan pages. |
 | Frontmatter inventory | `crop frontmatter` | JSON or Markdown | Reports top-level Markdown frontmatter key/value fields. |
@@ -90,6 +91,7 @@ crop status --view .crop\views\ready-guides.json --output READY_GUIDES.md
 
 ```powershell
 crop status --view .crop\views\ready-guides.json --strict --output READY_GUIDES.md
+crop status --view .crop\views\ready-guides.json --format json --strict --output READY_GUIDES.status.json
 ```
 
 Strict mode writes the status page before failing, so CI can upload the page as
@@ -141,4 +143,5 @@ Examples of issue scopes:
 - additional status-page sections that are useful for any Markdown corpus;
 - configurable strict-mode policies;
 - adapters for non-Markdown source metadata;
-- stable JSON report for combined status summaries.
+- richer JSON reports for combined status summaries beyond the
+  `crop.corpus-status.v1` health summary.

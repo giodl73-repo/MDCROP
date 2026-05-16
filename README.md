@@ -75,20 +75,21 @@ diagnostic counts so PROOF can keep generated Markdown, ASCII, and HTML
 surfaces aligned with source. Use `--format markdown` for a ready-to-embed
 artifact health table.
 
-Generate a combined Markdown corpus status page:
+Generate a combined corpus status page or machine-readable summary:
 
 ```powershell
 cargo run -p crop-cli -- status --root C:\src\maxim --output STATUS.md
 cargo run -p crop-cli -- status --view examples\proof-fixture\proof-ready-view.json --output STATUS.md
 cargo run -p crop-cli -- status --root C:\src\maxim --strict --output STATUS.md
+cargo run -p crop-cli -- status --root C:\src\maxim --format json --output STATUS.json
 ```
 
 `crop status` composes the catalog, link audit, backlinks, frontmatter, and
-headings into one Markdown page for any Markdown corpus. JSON remains available
-from the individual side-info commands; this command is for generated
-README/status surfaces. Use `--view` to generate the page from a named
-`crop.view.v1` recipe, including frontmatter/tag filters. Add `--strict` in CI
-to exit non-zero after rendering when broken links, orphan pages, or duplicate
+headings into one Markdown page for any Markdown corpus. Use `--format json` for
+the combined `crop.corpus-status.v1` summary contract with per-surface counts,
+issue totals, and strict-pass state. Use `--view` to generate status from a named
+`crop.view.v1` recipe, including frontmatter/tag filters. Add `--strict` in CI to
+exit non-zero after rendering when broken links, orphan pages, or duplicate
 anchors are present.
 
 Stable schema and consumer-integration notes live in [`docs\specs`](docs/specs),

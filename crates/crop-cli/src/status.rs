@@ -8,8 +8,11 @@ use crop_core::{
     render_markdown_frontmatter_inventory, render_markdown_heading_inventory,
     render_markdown_link_audit, CropView, IngestOptions,
 };
+use serde::Serialize;
 use std::fs;
 use std::path::PathBuf;
+
+use crate::SideInfoFormatArg;
 
 pub fn run(
     root: Option<PathBuf>,
@@ -18,6 +21,7 @@ pub fn run(
     extensions: Vec<String>,
     exclude_dirs: Vec<String>,
     strict: bool,
+    format: SideInfoFormatArg,
     output: Option<PathBuf>,
 ) -> Result<()> {
     if root.is_some() && view.is_some() {
@@ -33,11 +37,14 @@ pub fn run(
         status_docs_for_root(root, extensions, exclude_dirs)?
     };
 
-    let markdown = render_status_page(&title, &docs);
+    let rendered = match format {
+        SideInfoFormatArg::Markdown => render_status_page(&title, &docs),
+        SideInfoFormatArg::Json => serde_json::to_string_pretty(&status_report(&title, &docs))?,
+    };
     if let Some(output) = output {
-        fs::write(output, markdown)?;
+        fs::write(output, rendered)?;
     } else {
-        println!("{markdown}");
+        println!("{rendered}");
     }
     if strict {
         let issue_count = docs.issue_count();
@@ -60,6 +67,63 @@ struct StatusDocs {
 impl StatusDocs {
     fn issue_count(&self) -> usize {
         self.links.broken_count + self.backlinks.orphan_count + self.headings.duplicate_anchor_count
+    }
+}
+
+#[derive(Debug, Serialize)]
+struct CorpusStatusReport {
+    schema_version: &'static str,
+    title: String,
+    input: String,
+    issue_count: usize,
+    strict_pass: bool,
+    surfaces: Vec<CorpusStatusSurface>,
+}
+
+#[derive(Debug, Serialize)]
+struct CorpusStatusSurface {
+    name: &'static str,
+    count: usize,
+    issues: usize,
+}
+
+fn status_report(title: &str, docs: &StatusDocs) -> CorpusStatusReport {
+    let surfaces = vec![
+        CorpusStatusSurface {
+            name: "catalog_sources",
+            count: docs.backlinks.source_count,
+            issues: 0,
+        },
+        CorpusStatusSurface {
+            name: "links",
+            count: docs.links.link_count,
+            issues: docs.links.broken_count,
+        },
+        CorpusStatusSurface {
+            name: "orphan_pages",
+            count: docs.backlinks.source_count,
+            issues: docs.backlinks.orphan_count,
+        },
+        CorpusStatusSurface {
+            name: "frontmatter_pages",
+            count: docs.frontmatter.page_count,
+            issues: 0,
+        },
+        CorpusStatusSurface {
+            name: "headings",
+            count: docs.headings.heading_count,
+            issues: docs.headings.duplicate_anchor_count,
+        },
+    ];
+    let issue_count = docs.issue_count();
+
+    CorpusStatusReport {
+        schema_version: "crop.corpus-status.v1",
+        title: title.to_string(),
+        input: docs.label.clone(),
+        issue_count,
+        strict_pass: issue_count == 0,
+        surfaces,
     }
 }
 
@@ -173,6 +237,7 @@ mod tests {
             vec!["md".to_string()],
             Vec::new(),
             false,
+            SideInfoFormatArg::Markdown,
             Some(output.clone()),
         )
         .unwrap();
@@ -203,6 +268,7 @@ mod tests {
             Vec::new(),
             Vec::new(),
             false,
+            SideInfoFormatArg::Markdown,
             Some(output.clone()),
         )
         .unwrap();
@@ -240,6 +306,7 @@ mod tests {
             vec!["md".to_string()],
             Vec::new(),
             true,
+            SideInfoFormatArg::Markdown,
             Some(output.clone()),
         );
 
@@ -268,11 +335,43 @@ mod tests {
             vec!["md".to_string()],
             Vec::new(),
             true,
+            SideInfoFormatArg::Markdown,
             None,
         )
         .unwrap();
 
         fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn status_can_emit_json_summary_contract() {
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("..");
+        let fixture = repo.join("examples").join("proof-fixture");
+        let output = unique_temp_file("crop-status.json");
+
+        run(
+            Some(fixture.join("src")),
+            None,
+            "Fixture Status".to_string(),
+            vec!["md".to_string()],
+            Vec::new(),
+            false,
+            SideInfoFormatArg::Json,
+            Some(output.clone()),
+        )
+        .unwrap();
+
+        let json: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&output).unwrap()).unwrap();
+        assert_eq!(json["schema_version"], "crop.corpus-status.v1");
+        assert_eq!(json["title"], "Fixture Status");
+        assert!(json["issue_count"].as_u64().unwrap() > 0);
+        assert_eq!(json["strict_pass"], false);
+        assert_eq!(json["surfaces"].as_array().unwrap().len(), 5);
+
+        fs::remove_file(output).unwrap();
     }
 
     fn unique_temp_file(name: &str) -> PathBuf {

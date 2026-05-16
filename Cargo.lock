@@ -135,6 +135,7 @@ dependencies = [
  "anyhow",
  "clap",
  "crop-core",
+ "serde",
  "serde_json",
 ]
 

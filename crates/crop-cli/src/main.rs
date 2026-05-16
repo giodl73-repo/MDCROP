@@ -131,7 +131,10 @@ enum Commands {
         /// Exit non-zero after rendering when links, orphans, or duplicate anchors report issues.
         #[arg(long)]
         strict: bool,
-        /// Optional Markdown output path. Defaults to stdout.
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = SideInfoFormatArg::Markdown)]
+        format: SideInfoFormatArg,
+        /// Optional output path. Defaults to stdout.
         #[arg(long)]
         output: Option<PathBuf>,
     },
@@ -428,8 +431,18 @@ fn main() -> Result<()> {
             extensions,
             exclude_dirs,
             strict,
+            format,
             output,
-        } => status::run(root, view, title, extensions, exclude_dirs, strict, output)?,
+        } => status::run(
+            root,
+            view,
+            title,
+            extensions,
+            exclude_dirs,
+            strict,
+            format,
+            output,
+        )?,
         Commands::Index {
             root,
             view,

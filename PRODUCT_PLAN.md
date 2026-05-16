@@ -53,7 +53,7 @@ provenance paths; exclude stale duplicates and noisy periphery.
    discovers local view stores; views can emit prefix-cache-aware packs with
    `--prefix-cache generic`, and checked examples cover docs-only, whole-repo,
    troubleshooting, Maxim, and Resonance slices.**
-8. **View inspection**: safe preflight for named views. **Active wave;
+8. **View inspection**: safe preflight for named views. **Done;
    `crop view --inspect` validates recipes, resolves roots, applies filters, and
    reports matched source counts before running a full crop. Store-wide
    inspection reports per-view status plus aggregate source-count and extension
@@ -104,6 +104,9 @@ provenance paths; exclude stale duplicates and noisy periphery.
     and heading tables into a single Markdown status page, and can source
     documentation side-info from a named view. `--strict` can gate CI on broken
     links, orphan pages, or duplicate anchors after rendering the page.**
+20. **Status contracts**: machine-readable combined corpus health. **Active wave;
+    `crop status --format json` emits `crop.corpus-status.v1` with per-surface
+    counts, issue totals, and strict-pass state for CI and downstream registries.**
 
 ## Upstream kernel asks
 

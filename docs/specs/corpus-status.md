@@ -2,10 +2,10 @@
 
 Command: `crop status`
 
-Output: Markdown
+Output: Markdown by default; JSON with `--format json`
 
-`crop status` is a generic composition surface, not a new JSON schema. It
-renders one generated page containing:
+`crop status` is a generic composition surface. In Markdown mode, it renders one
+generated page containing:
 
 - a health summary table,
 - `crop catalog` Markdown,
@@ -14,13 +14,22 @@ renders one generated page containing:
 - `crop frontmatter --format markdown`,
 - `crop headings --format markdown`.
 
-Use the individual commands when a downstream system needs stable
-machine-readable JSON contracts. Use `crop status` when any Markdown corpus
-needs a generated README/status page. The input can come from `--root` or from a
-named `crop.view.v1` recipe via `--view`; view mode preserves
+Use `--format json` when a downstream system needs the combined health summary
+as a stable machine-readable contract. The input can come from `--root` or from
+a named `crop.view.v1` recipe via `--view`; view mode preserves
 `frontmatter_query` filters for tag/status-specific pages.
 
-`--strict` renders the same Markdown output, then exits non-zero if the health
+The JSON summary uses schema version `crop.corpus-status.v1`:
+
+| Field | Meaning |
+|-------|---------|
+| `schema_version` | Literal `crop.corpus-status.v1`. |
+| `title` | Status title used for the report. |
+| `input` | Root path or view path that produced the report. |
+| `issue_count` | Total broken links, orphan pages, and duplicate anchors. |
+| `strict_pass` | `true` when `issue_count` is zero. |
+| `surfaces` | Rows for `catalog_sources`, `links`, `orphan_pages`, `frontmatter_pages`, and `headings`, each with `count` and `issues`. |
+
+`--strict` writes the selected output format, then exits non-zero if the health
 summary includes broken links, orphan pages, or duplicate heading anchors. This
-lets CI systems publish the status page as an artifact while still gating on
-corpus health.
+lets CI systems publish the status artifact while still gating on corpus health.

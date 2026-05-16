@@ -2,24 +2,28 @@
 
 ## Active wave
 
-`2026-05-15-crop-view-inspection` — add safe preflight inspection for named
-views so large or optional corpora can be validated before running a full crop.
+`2026-05-16-crop-status-contracts` - harden corpus status output into consumer
+contracts with a stable JSON summary, policy-aware strict gates, and fixtures.
 
 ## Completed waves
 
-`2026-05-15-crop-named-views` — turned ad hoc crop recipes into persisted named
+`2026-05-15-crop-view-inspection` - added safe preflight inspection for named
+views, store-wide inspection, strict CI gates, Markdown side-info surfaces, and
+combined corpus status pages for roots and views.
+
+`2026-05-15-crop-named-views` - turned ad hoc crop recipes into persisted named
 views for reusable context packs, benchmarks, prefix-cache workflows, and
 large-corpus filtered/searchable views.
 
-`2026-05-15-crop-real-corpus-benchmarks` — moved from deterministic fixtures to
+`2026-05-15-crop-real-corpus-benchmarks` - moved from deterministic fixtures to
 local-corpus benchmark commands, manifests, competitor exports, aggregate
 reports, and fair benchmark documentation.
 
-`2026-05-15-crop-evaluation-suite` — built the apple-to-apple fixture and
+`2026-05-15-crop-evaluation-suite` - built the apple-to-apple fixture and
 baseline suite, metrics contract, and offline competitor import contract that
 prove when graph-cut context cropping beats ordinary ranking/index approaches.
 
-`2026-05-15-crop-product` — established the local-first CROP engine and product
+`2026-05-15-crop-product` - established the local-first CROP engine and product
 surface for graph-cut context cropping.
 
 ## Operating protocol
