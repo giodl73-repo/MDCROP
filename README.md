@@ -88,14 +88,16 @@ cargo run -p crop-cli -- status --root C:\src\maxim --format json --output STATU
 `crop status` composes the catalog, link audit, backlinks, frontmatter, and
 headings into one Markdown page for any Markdown corpus. Use `--format json` for
 the combined `crop.corpus-status.v1` summary contract with per-surface counts,
-issue totals, and strict-pass state. Use `--view` to generate status from a named
-`crop.view.v1` recipe, including frontmatter/tag filters. Add `--strict` in CI to
-exit non-zero after rendering when broken links, orphan pages, or duplicate
-anchors are present. Add repeatable `--strict-on` selectors to gate only
-`broken-links`, `orphan-pages`, or `duplicate-anchors`.
+issue totals, selected strict policy names, and strict-pass state. Use `--view`
+to generate status from a named `crop.view.v1` recipe, including frontmatter/tag
+filters. Add `--strict` in CI to exit non-zero after writing the selected output
+format. By default strict mode gates on broken links, orphan pages, and duplicate
+anchors; repeat `--strict-on` to gate only `broken-links`, `orphan-pages`, or
+`duplicate-anchors`.
 
 Stable schema and consumer-integration notes live in [`docs\specs`](docs/specs),
-with a deterministic local contract fixture under `examples\proof-fixture`.
+with deterministic status contract goldens under
+`examples\proof-fixture\golden`.
 
 Audit local Markdown links as structured side-info:
 

@@ -102,6 +102,17 @@ anchors. Add repeatable `--strict-on` selectors to gate only `broken-links`,
 `examples\proof-fixture\golden\status-root.json` and
 `examples\proof-fixture\golden\status-view.json`.
 
+### Feed a registry or tracker
+
+```powershell
+crop status --root C:\path\to\corpus --format json --output STATUS.json
+```
+
+Registries should read `schema_version`, `issue_count`, `strict_pass`,
+`strict_policy`, and the `surfaces` rows from `crop.corpus-status.v1`. If a
+registry needs the underlying row-level evidence, run the individual side-info
+commands listed below and link those artifacts from the registry record.
+
 ### Generate machine-readable side-info
 
 ```powershell

@@ -104,7 +104,7 @@ provenance paths; exclude stale duplicates and noisy periphery.
     and heading tables into a single Markdown status page, and can source
     documentation side-info from a named view. `--strict` can gate CI on broken
     links, orphan pages, or duplicate anchors after rendering the page.**
-20. **Status contracts**: machine-readable combined corpus health. **Active wave;
+20. **Status contracts**: machine-readable combined corpus health. **Done;
     `crop status --format json` emits `crop.corpus-status.v1` with per-surface
     counts, issue totals, strict policy names, and strict-pass state for CI and
     downstream registries. `--strict-on` can limit CI gates to broken links,

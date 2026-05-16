@@ -19,6 +19,22 @@ as a stable machine-readable contract. The input can come from `--root` or from
 a named `crop.view.v1` recipe via `--view`; view mode preserves
 `frontmatter_query` filters for tag/status-specific pages.
 
+## CLI contract
+
+| Option | Behavior |
+|--------|----------|
+| `--root <path>` | Scan a directory or file directly. Cannot be combined with `--view`. |
+| `--view <path>` | Scan the root and filters from a `crop.view.v1` recipe. Cannot be combined with `--root`. |
+| `--format markdown` | Render the combined status page. This is the default. |
+| `--format json` | Render the combined `crop.corpus-status.v1` summary. |
+| `--strict` | Write the selected output format, then exit non-zero if the active strict policy has issues. |
+| `--strict-on <policy>` | Repeatable selector for `broken-links`, `orphan-pages`, or `duplicate-anchors`; requires `--strict`. |
+
+With no `--strict-on` selectors, `--strict` preserves the historical behavior
+and gates on all three issue classes.
+
+## JSON contract
+
 The JSON summary uses schema version `crop.corpus-status.v1`:
 
 | Field | Meaning |
@@ -31,6 +47,31 @@ The JSON summary uses schema version `crop.corpus-status.v1`:
 | `strict_pass` | `true` when `strict_issue_count` is zero. |
 | `strict_policy` | Active policy names: `broken_links`, `orphan_pages`, and/or `duplicate_anchors`. |
 | `surfaces` | Rows for `catalog_sources`, `links`, `orphan_pages`, `frontmatter_pages`, and `headings`, each with `count` and `issues`. |
+
+The `surfaces` rows are intentionally summary-level. Use `crop links`,
+`crop backlinks`, `crop frontmatter`, or `crop headings` when a consumer needs
+the detailed per-source rows behind a status count.
+
+Example:
+
+```json
+{
+  "schema_version": "crop.corpus-status.v1",
+  "title": "Corpus Status",
+  "input": "examples\\proof-fixture\\src",
+  "issue_count": 3,
+  "strict_issue_count": 3,
+  "strict_pass": false,
+  "strict_policy": ["broken_links", "orphan_pages", "duplicate_anchors"],
+  "surfaces": [
+    {"name": "catalog_sources", "count": 3, "issues": 0},
+    {"name": "links", "count": 2, "issues": 1},
+    {"name": "orphan_pages", "count": 3, "issues": 2},
+    {"name": "frontmatter_pages", "count": 3, "issues": 0},
+    {"name": "headings", "count": 5, "issues": 0}
+  ]
+}
+```
 
 `--strict` writes the selected output format, then exits non-zero if the health
 summary includes issues covered by the active policy. With no selectors, strict

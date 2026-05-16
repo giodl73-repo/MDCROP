@@ -2,10 +2,13 @@
 
 ## Active wave
 
-`2026-05-16-crop-status-contracts` - harden corpus status output into consumer
-contracts with a stable JSON summary, policy-aware strict gates, and fixtures.
+None. Start the next wave when a new product slice is selected.
 
 ## Completed waves
+
+`2026-05-16-crop-status-contracts` - hardened corpus status output into
+consumer contracts with `crop.corpus-status.v1`, policy-aware strict gates,
+root/view goldens, and downstream documentation.
 
 `2026-05-15-crop-view-inspection` - added safe preflight inspection for named
 views, store-wide inspection, strict CI gates, Markdown side-info surfaces, and
