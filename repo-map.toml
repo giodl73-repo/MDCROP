@@ -1,0 +1,49 @@
+# Local tracker repo map for generated Cargo dependency overrides.
+# Cargo does not read this file directly; run:
+#
+#   python tools\repo_map.py write-cargo-config
+#
+
+[standard]
+version = 1
+cargo_config = ".cargo/config.toml"
+
+[repos.this_repo]
+role = "current repository"
+relative = "."
+clone_url = "https://github.com/giodl73-repo/CROP.git"
+
+[repos.mdpath]
+role = "tracker dependency for crop"
+relative = "..\\..\\standards-protocols\\mdpath"
+clone_url = "https://github.com/giodl73-repo/MDPATH.git"
+cargo_patches = [
+  { package = "mdpath", source = "https://github.com/giodl73-repo/MDPATH.git", path = "." },
+]
+
+[repos.pebble]
+role = "tracker dependency for crop"
+relative = "..\\..\\standards-protocols\\pebble"
+clone_url = "https://github.com/giodl73-repo/PEBBLE.git"
+cargo_patches = [
+  { package = "pebble", source = "https://github.com/giodl73-repo/PEBBLE", path = "." },
+]
+
+[repos.rline]
+role = "tracker dependency for crop"
+relative = "..\\rline"
+clone_url = "https://github.com/giodl73-repo/RLINE.git"
+cargo_patches = [
+  { package = "rctx-core", source = "https://github.com/giodl73-repo/RLINE.git", path = "crates/rctx-core" },
+  { package = "rgraph-core", source = "https://github.com/giodl73-repo/RLINE.git", path = "crates/rgraph-core" },
+  { package = "rstat-core", source = "https://github.com/giodl73-repo/RLINE.git", path = "crates/rstat-core" },
+  { package = "ropt-core", source = "https://github.com/giodl73-repo/RLINE.git", path = "crates/ropt-core" },
+]
+
+[repos.slice]
+role = "tracker dependency for crop"
+relative = "..\\slice"
+clone_url = "https://github.com/giodl73-repo/SLICE.git"
+cargo_patches = [
+  { package = "slice-core", source = "https://github.com/giodl73-repo/SLICE", path = "crates/slice-core" },
+]
