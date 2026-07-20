@@ -310,7 +310,7 @@ dependencies = [
 [[package]]
 name = "rctx-core"
 version = "0.1.0"
-source = "git+https://github.com/giodl73-repo/RLINE.git?branch=master#7a612a3be30e398590787f64cfae097e865ff4b8"
+source = "git+https://github.com/giodl73-repo/RLINE.git?branch=master#a92cf5990fb8c1531d9f4565d486703f17c13d82"
 dependencies = [
  "serde",
  "serde_json",
@@ -321,7 +321,7 @@ dependencies = [
 [[package]]
 name = "rgraph-core"
 version = "0.1.0"
-source = "git+https://github.com/giodl73-repo/RLINE.git?branch=master#7a612a3be30e398590787f64cfae097e865ff4b8"
+source = "git+https://github.com/giodl73-repo/RLINE.git?branch=master#a92cf5990fb8c1531d9f4565d486703f17c13d82"
 dependencies = [
  "thiserror",
 ]
@@ -329,7 +329,7 @@ dependencies = [
 [[package]]
 name = "ropt-core"
 version = "0.1.0"
-source = "git+https://github.com/giodl73-repo/RLINE.git?branch=master#7a612a3be30e398590787f64cfae097e865ff4b8"
+source = "git+https://github.com/giodl73-repo/RLINE.git?branch=master#a92cf5990fb8c1531d9f4565d486703f17c13d82"
 dependencies = [
  "sha2",
  "thiserror",
@@ -338,7 +338,7 @@ dependencies = [
 [[package]]
 name = "rstat-core"
 version = "0.1.0"
-source = "git+https://github.com/giodl73-repo/RLINE.git?branch=master#7a612a3be30e398590787f64cfae097e865ff4b8"
+source = "git+https://github.com/giodl73-repo/RLINE.git?branch=master#a92cf5990fb8c1531d9f4565d486703f17c13d82"
 dependencies = [
  "rand",
  "thiserror",
