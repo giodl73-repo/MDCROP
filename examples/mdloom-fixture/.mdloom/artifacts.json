@@ -1,6 +1,6 @@
 {
   "schema_version": "1",
-  "generated_by": "proof compile",
+  "generated_by": "mdloom compile",
   "config_root": "..",
   "generated_at_ms": 1,
   "artifacts": [

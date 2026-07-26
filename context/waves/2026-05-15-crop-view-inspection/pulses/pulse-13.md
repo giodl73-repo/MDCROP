@@ -43,4 +43,4 @@ tagged files can become reusable named views.
 ## Outcome
 
 Named views can now behave like lightweight SQL/OData views over Markdown
-frontmatter, enabling tag-based Maxim slices and richer PROOF metadata views.
+frontmatter, enabling tag-based Maxim slices and richer MDLOOM metadata views.

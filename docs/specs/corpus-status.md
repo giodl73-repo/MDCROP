@@ -58,7 +58,7 @@ Example:
 {
   "schema_version": "crop.corpus-status.v1",
   "title": "Corpus Status",
-  "input": "examples\\proof-fixture\\src",
+  "input": "examples\\mdloom-fixture\\src",
   "issue_count": 3,
   "strict_issue_count": 3,
   "strict_pass": false,
@@ -81,5 +81,5 @@ repeatable `--strict-on broken-links`, `--strict-on orphan-pages`, or
 systems publish the status artifact while still gating on corpus health.
 
 Deterministic root and view examples are checked in at
-`examples\proof-fixture\golden\status-root.json` and
-`examples\proof-fixture\golden\status-view.json`.
+`examples\mdloom-fixture\golden\status-root.json` and
+`examples\mdloom-fixture\golden\status-view.json`.

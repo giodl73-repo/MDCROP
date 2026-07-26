@@ -21,16 +21,16 @@ before paying the cost of ingest/scoring/cropping a large corpus.
 | 03 | Strict inspect gate | done | Added `--strict` so store inspection prints JSON and exits non-zero on failed recipes. |
 | 04 | Store inspect aggregates | done | Added total and max supported source counts to store inspection reports. |
 | 05 | Extension profiles | done | Added per-view and aggregate extension counts for choosing large-corpus filters. |
-| 06 | Markdown index API | done | Added reusable README/TOC-style Markdown index generation for PROOF integration. |
-| 07 | Markdown link audit | done | Added root/view local Markdown link audit JSON for PROOF and docs curation. |
+| 06 | Markdown index API | done | Added reusable README/TOC-style Markdown index generation for MDLOOM integration. |
+| 07 | Markdown link audit | done | Added root/view local Markdown link audit JSON for MDLOOM and docs curation. |
 | 08 | MDPATH link resolution | done | Upgraded link audits to validate heading fragments and `md://` targets using MDPATH. |
 | 09 | Heading inventory | done | Added root/view heading inventories with anchors, `md://` section URIs, and duplicate groups. |
 | 10 | Backlink side-info | done | Added root/view backlink reports with inbound links, outbound counts, and orphan-page flags. |
 | 11 | Frontmatter inventory | done | Added root/view frontmatter inventories with field maps and aggregate key counts. |
 | 12 | Markdown catalog | done | Added root/view catalog tables carrying frontmatter tags/status plus link side-info. |
 | 13 | Frontmatter query views | done | Added OData-style `frontmatter_query` view filters over tags and arbitrary metadata fields. |
-| 14 | PROOF artifact manifests | done | Added artifact manifest reports for generated output existence, staleness, and diagnostics. |
-| 15 | PROOF contracts | done | Added deterministic PROOF fixtures, schema docs/goldens, and a focused artifact module split. |
+| 14 | MDLOOM artifact manifests | done | Added artifact manifest reports for generated output existence, staleness, and diagnostics. |
+| 15 | MDLOOM contracts | done | Added deterministic MDLOOM fixtures, schema docs/goldens, and a focused artifact module split. |
 | 16 | Artifact status tables | done | Added Markdown output for artifact health reports. |
 | 17 | Side-info status tables | done | Added Markdown output for links, backlinks, frontmatter, and heading reports. |
 | 18 | Corpus status page | done | Added `crop status` to compose catalog and side-info tables for any Markdown corpus. |
@@ -55,9 +55,9 @@ before paying the cost of ingest/scoring/cropping a large corpus.
   depend on without adopting CROP's CLI.
 - CROP exposes reusable Markdown link side-info so downstream generators can
   report local link health.
-- Link side-info uses MDPATH-compatible heading and `md://` resolution for PROOF
+- Link side-info uses MDPATH-compatible heading and `md://` resolution for MDLOOM
   workflows.
-- Heading inventories expose TOC/anchor primitives for PROOF and other generated
+- Heading inventories expose TOC/anchor primitives for MDLOOM and other generated
   documentation workflows.
 - Backlink reports expose referenced-by and orphan-page primitives for generated
   README and TOC workflows.
@@ -67,11 +67,11 @@ before paying the cost of ingest/scoring/cropping a large corpus.
   side-info into ready-to-embed README/TOC tables.
 - Views can filter Markdown sources by frontmatter predicates such as tag
   membership, status, wave, version, or other top-level metadata fields.
-- Artifact reports map PROOF source files to generated outputs and flag missing
+- Artifact reports map MDLOOM source files to generated outputs and flag missing
   or stale generated Markdown/ASCII/HTML surfaces.
-- PROOF side-info contracts have deterministic fixtures, documented schemas, and
+- MDLOOM side-info contracts have deterministic fixtures, documented schemas, and
   golden examples for integration tests.
-- The PROOF artifact surface has focused core and CLI modules while preserving
+- The MDLOOM artifact surface has focused core and CLI modules while preserving
   existing public API and CLI behavior.
 - Artifact health can render as a Markdown table for generated README/status
   pages.

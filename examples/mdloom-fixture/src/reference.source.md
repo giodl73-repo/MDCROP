@@ -1,6 +1,6 @@
 ---
 title: Reference
-tags: [proof, reference]
+tags: [mdloom, reference]
 status: ready
 version: 1.0
 ---

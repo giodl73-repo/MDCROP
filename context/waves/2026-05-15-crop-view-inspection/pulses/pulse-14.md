@@ -1,18 +1,18 @@
-# Pulse 14: PROOF Artifact Manifests
+# Pulse 14: MDLOOM Artifact Manifests
 
 ## Goal
 
-Let CROP read PROOF generated artifact manifests and report generated-output
+Let CROP read MDLOOM generated artifact manifests and report generated-output
 health for Markdown, ASCII, HTML, and related targets.
 
 ## Scope
 
 - Add `crop artifacts --root` and `crop artifacts --manifest`.
-- Read PROOF `.proof/artifacts.json` records.
+- Read MDLOOM `.mdloom/artifacts.json` records.
 - Map source paths to output paths and target/status metadata.
 - Report missing outputs, stale outputs, cache status, directive counts, and
   diagnostic counts.
-- Keep PROOF responsible for generation while CROP provides corpus intelligence
+- Keep MDLOOM responsible for generation while CROP provides corpus intelligence
   over generated artifacts.
 
 ## Checklist
@@ -29,6 +29,6 @@ health for Markdown, ASCII, HTML, and related targets.
 
 ## Outcome
 
-`crop artifacts` emits `crop.proof-artifacts.v1` JSON that downstream PROOF
+`crop artifacts` emits `crop.mdloom-artifacts.v1` JSON that downstream MDLOOM
 workflows can use to audit whether generated documentation outputs still match
 their sources.

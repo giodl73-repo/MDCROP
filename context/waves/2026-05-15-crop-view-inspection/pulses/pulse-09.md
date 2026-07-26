@@ -3,13 +3,13 @@
 ## Scout commands
 
 ```powershell
-cargo run -q -p crop-cli -- links --root C:\src\proof -e md --exclude-dir target
+cargo run -q -p crop-cli -- links --root C:\src\mdloom -e md --exclude-dir target
 cargo run -q -p crop-cli -- links --view examples\views\whole-repo-view.json -e md
 ```
 
 ## Decision
 
-PROOF needs TOC and anchor primitives in addition to link checks. Since MDPATH
+MDLOOM needs TOC and anchor primitives in addition to link checks. Since MDPATH
 already defines heading normalization, CROP should expose heading inventories
 with canonical `md://` section URIs and duplicate-anchor groups for downstream
 documentation tools.
@@ -31,7 +31,7 @@ documentation tools.
 ```powershell
 cargo fmt
 cargo test --workspace
-cargo run -q -p crop-cli -- headings --root C:\src\proof -e md --exclude-dir target
+cargo run -q -p crop-cli -- headings --root C:\src\mdloom -e md --exclude-dir target
 cargo run -q -p crop-cli -- headings --view examples\views\whole-repo-view.json -e md
 git diff --check
 ```

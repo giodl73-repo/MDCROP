@@ -25,8 +25,8 @@ try {
             & $generator -Size $name -Output $Output -Force
         }
         $manifest = Get-Content (Join-Path $fixtureRoot "manifest.json") -Raw | ConvertFrom-Json
-        foreach ($mode in @("md", "pebble")) {
-            $relativeRoot = if ($mode -eq "md") { $manifest.md_root } else { $manifest.pebble_root }
+        foreach ($mode in @("md", "mdport")) {
+            $relativeRoot = if ($mode -eq "md") { $manifest.md_root } else { $manifest.mdport_root }
             $root = Join-Path $fixtureRoot $relativeRoot
             $measurements = New-Object System.Collections.ArrayList
             for ($i = 0; $i -lt $Runs; $i++) {

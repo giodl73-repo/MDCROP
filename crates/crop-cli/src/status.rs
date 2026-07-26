@@ -294,7 +294,7 @@ mod tests {
         let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("..")
             .join("..");
-        let fixture = repo.join("examples").join("proof-fixture");
+        let fixture = repo.join("examples").join("mdloom-fixture");
         let output = unique_temp_file("crop-status.md");
 
         run(
@@ -316,7 +316,7 @@ mod tests {
         assert!(markdown.contains("# Document Catalog"));
         assert!(markdown.contains("# Markdown Link Audit"));
         assert!(markdown.contains("# Markdown Headings"));
-        assert!(!markdown.contains("# PROOF Artifact Health"));
+        assert!(!markdown.contains("# MDLOOM Artifact Health"));
 
         fs::remove_file(output).unwrap();
     }
@@ -326,12 +326,12 @@ mod tests {
         let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("..")
             .join("..");
-        let fixture = repo.join("examples").join("proof-fixture");
+        let fixture = repo.join("examples").join("mdloom-fixture");
         let output = unique_temp_file("crop-view-status.md");
 
         run(
             None,
-            Some(fixture.join("proof-ready-view.json")),
+            Some(fixture.join("mdloom-ready-view.json")),
             "View Status".to_string(),
             Vec::new(),
             Vec::new(),
@@ -345,7 +345,7 @@ mod tests {
         let markdown = fs::read_to_string(&output).unwrap();
         assert!(markdown.contains("# View Status"));
         assert!(markdown.contains("Input: `"));
-        assert!(markdown.contains("# proof-fixture-ready"));
+        assert!(markdown.contains("# mdloom-fixture-ready"));
         assert!(markdown.contains("guide.source.md"));
         assert!(!markdown.contains("draft.source.md"));
 
@@ -365,7 +365,7 @@ mod tests {
         let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("..")
             .join("..");
-        let fixture = repo.join("examples").join("proof-fixture");
+        let fixture = repo.join("examples").join("mdloom-fixture");
         let output = unique_temp_file("crop-status-strict.md");
 
         let result = run(
@@ -419,7 +419,7 @@ mod tests {
         let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("..")
             .join("..");
-        let fixture = repo.join("examples").join("proof-fixture");
+        let fixture = repo.join("examples").join("mdloom-fixture");
         let output = unique_temp_file("crop-status.json");
 
         run(
@@ -453,14 +453,14 @@ mod tests {
         let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("..")
             .join("..");
-        let fixture = repo.join("examples").join("proof-fixture");
+        let fixture = repo.join("examples").join("mdloom-fixture");
         let mut docs =
             status_docs_for_root(fixture.join("src"), vec!["md".to_string()], Vec::new()).unwrap();
-        docs.label = "examples\\proof-fixture\\src".to_string();
+        docs.label = "examples\\mdloom-fixture\\src".to_string();
 
         assert_status_golden(
             status_report("Corpus Status", &docs, &strict_policy(vec![])),
-            include_str!("../../../examples/proof-fixture/golden/status-root.json"),
+            include_str!("../../../examples/mdloom-fixture/golden/status-root.json"),
         );
     }
 
@@ -469,14 +469,14 @@ mod tests {
         let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("..")
             .join("..");
-        let fixture = repo.join("examples").join("proof-fixture");
+        let fixture = repo.join("examples").join("mdloom-fixture");
         let mut docs = status_docs_for_view(
-            fixture.join("proof-ready-view.json"),
+            fixture.join("mdloom-ready-view.json"),
             Vec::new(),
             Vec::new(),
         )
         .unwrap();
-        docs.label = "examples\\proof-fixture\\proof-ready-view.json".to_string();
+        docs.label = "examples\\mdloom-fixture\\mdloom-ready-view.json".to_string();
 
         assert_status_golden(
             status_report(
@@ -484,7 +484,7 @@ mod tests {
                 &docs,
                 &strict_policy(vec![StatusStrictPolicyArg::BrokenLinks]),
             ),
-            include_str!("../../../examples/proof-fixture/golden/status-view.json"),
+            include_str!("../../../examples/mdloom-fixture/golden/status-view.json"),
         );
     }
 

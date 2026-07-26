@@ -1,6 +1,6 @@
 ---
 title: Guide
-tags: [proof, guide]
+tags: [mdloom, guide]
 status: ready
 version: 1.0
 ---
@@ -10,4 +10,4 @@ See the [Reference](reference.source.md#reference) and the [missing page](missin
 
 ## Overview
 
-This source file represents a PROOF input document.
+This source file represents a MDLOOM input document.

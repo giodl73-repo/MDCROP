@@ -7,7 +7,7 @@ that show how CROP behaves on actual repositories and document trees.
 
 ## Thesis
 
-Fixture wins prove specific retrieval failure modes. The next proof needs real
+Fixture wins prove specific retrieval failure modes. The next mdloom needs real
 local roots, measured ingest/score/crop costs, stable benchmark JSON, and a path
 for external competitors to export comparable selections without hosted test
 dependencies.

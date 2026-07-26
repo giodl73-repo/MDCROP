@@ -23,4 +23,4 @@ pages; it does not change the JSON schema contract.
 `md_uri` values use `md://<source>#<anchor>` and exclude synthetic parser root
 headings.
 
-Golden fixture: `examples/proof-fixture/golden/headings.json`.
+Golden fixture: `examples/mdloom-fixture/golden/headings.json`.

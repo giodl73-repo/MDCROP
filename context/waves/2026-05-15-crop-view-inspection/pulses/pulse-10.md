@@ -2,7 +2,7 @@
 
 ## Goal
 
-Expose PROOF-ready inbound-reference and orphan-page side-info from CROP roots
+Expose MDLOOM-ready inbound-reference and orphan-page side-info from CROP roots
 and named views.
 
 ## Scope
@@ -11,7 +11,7 @@ and named views.
 - Add `crop backlinks --root` and `crop backlinks --view`.
 - Reuse MDPATH-compatible local link resolution from the Markdown link audit.
 - Report per-page inbound links, outbound link counts, and orphan flags.
-- Document the command for PROOF README/TOC generation workflows.
+- Document the command for MDLOOM README/TOC generation workflows.
 
 ## Checklist
 
@@ -22,11 +22,11 @@ and named views.
 - [x] README, product plan, and wave tracker updates.
 - [x] `cargo fmt`
 - [x] `cargo test --workspace`
-- [x] PROOF/root and view smoke runs.
+- [x] MDLOOM/root and view smoke runs.
 - [x] `git diff --check`
 
 ## Outcome
 
 `crop backlinks` emits `crop.markdown-backlinks.v1` JSON that downstream tools
-such as PROOF can use to annotate generated indexes with referenced-by context
+such as MDLOOM can use to annotate generated indexes with referenced-by context
 and identify Markdown pages that no other local page points at.

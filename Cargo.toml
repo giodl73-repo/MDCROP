@@ -19,7 +19,7 @@ serde_json = "1"
 sha2 = "0.10"
 thiserror = "2"
 mdpath = { git = "https://github.com/giodl73-repo/MDPATH.git", branch = "master" }
-pebble = { git = "https://github.com/giodl73-repo/PEBBLE", rev = "80c6e104f99b316f0d8bca5f87a1999feee0d520" }
+mdport = { version = "0.2.0", git = "https://github.com/giodl73-repo/MDPORT", rev = "86da46bfe78bd43fa5dd075dd1bb63344a624072" }
 slice-core = { git = "https://github.com/giodl73-repo/SLICE", package = "slice-core", rev = "ffa956cf8704cae5086af676c9044ae10a9a9b15" }
 
 # Canonical upstream dependencies. Local development can override these with
@@ -28,4 +28,3 @@ rctx-core = { git = "https://github.com/giodl73-repo/RLINE.git", package = "rctx
 rgraph-core = { git = "https://github.com/giodl73-repo/RLINE.git", package = "rgraph-core", branch = "master" }
 rstat-core = { git = "https://github.com/giodl73-repo/RLINE.git", package = "rstat-core", branch = "master" }
 ropt-core = { git = "https://github.com/giodl73-repo/RLINE.git", package = "ropt-core", branch = "master" }
-

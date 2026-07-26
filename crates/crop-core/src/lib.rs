@@ -1,4 +1,4 @@
-use pebble::{PebbleDocument, PebbleSection};
+use mdport::{MdportDocument, MdportSection};
 use rctx_core::RCTX_VERSION;
 use rgraph_core::{
     shortest_connector_path, undirected_boundary_metrics, undirected_cluster_summaries,
@@ -16,11 +16,11 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 use thiserror::Error;
 
-mod proof_artifacts;
-pub use proof_artifacts::{
-    proof_artifacts, proof_artifacts_for_root, proof_artifacts_json,
-    render_proof_artifact_markdown, ProofArtifactDiagnostic, ProofArtifactManifest,
-    ProofArtifactRecord, ProofArtifactReport, ProofArtifactReportEntry,
+mod mdloom_artifacts;
+pub use mdloom_artifacts::{
+    mdloom_artifacts, mdloom_artifacts_for_root, mdloom_artifacts_json,
+    render_mdloom_artifact_markdown, MdloomArtifactDiagnostic, MdloomArtifactManifest,
+    MdloomArtifactRecord, MdloomArtifactReport, MdloomArtifactReportEntry,
 };
 
 pub const COMPETITOR_RESULTS_SCHEMA: &str = "crop.competitor-results.v1";
@@ -909,12 +909,12 @@ pub fn run_view_json(json: &str, base_dir: impl AsRef<Path>) -> Result<CropViewR
     run_view(view, base_dir)
 }
 
-pub fn run_view_pebble_json(
+pub fn run_view_mdport_json(
     json: &str,
     base_dir: impl AsRef<Path>,
-) -> Result<PebbleDocument, CropError> {
+) -> Result<MdportDocument, CropError> {
     let view = serde_json::from_str(json).map_err(CropError::ViewImport)?;
-    run_view_pebble(view, base_dir)
+    run_view_mdport(view, base_dir)
 }
 
 pub fn run_view_prefix_cached_json(
@@ -1662,12 +1662,12 @@ pub fn run_view(view: CropView, base_dir: impl AsRef<Path>) -> Result<CropViewRu
     })
 }
 
-pub fn run_view_pebble(
+pub fn run_view_mdport(
     view: CropView,
     base_dir: impl AsRef<Path>,
-) -> Result<PebbleDocument, CropError> {
+) -> Result<MdportDocument, CropError> {
     let run = run_view(view, base_dir)?;
-    Ok(pebble_document_from_view_run(&run))
+    Ok(mdport_document_from_view_run(&run))
 }
 
 pub fn run_view_prefix_cached(
@@ -1836,11 +1836,11 @@ pub fn ingest_path_with_options(
         let metadata = parse_markdown_frontmatter(&text).unwrap_or_default();
         let content_text = strip_markdown_frontmatter(&text);
 
-        if let Some((pebble_source_id, refs, pebble_units)) =
-            pebble_evidence_units(&source_id, &text)
+        if let Some((mdport_source_id, refs, mdport_units)) =
+            mdport_evidence_units(&source_id, &text)
         {
-            source_links.insert(pebble_source_id, refs);
-            for unit in pebble_units {
+            source_links.insert(mdport_source_id, refs);
+            for unit in mdport_units {
                 push_evidence_unit(
                     &mut units,
                     &mut source_first_unit,
@@ -1910,7 +1910,7 @@ pub fn ingest_path_with_options(
     })
 }
 
-fn pebble_document_from_view_run(run: &CropViewRun) -> PebbleDocument {
+fn mdport_document_from_view_run(run: &CropViewRun) -> MdportDocument {
     let refs = run
         .pack
         .units
@@ -1923,7 +1923,7 @@ fn pebble_document_from_view_run(run: &CropViewRun) -> PebbleDocument {
         .pack
         .units
         .iter()
-        .map(|unit| PebbleSection {
+        .map(|unit| MdportSection {
             id: unit.id.clone(),
             path: vec![unit.source_id.clone()],
             level: 0,
@@ -1933,8 +1933,8 @@ fn pebble_document_from_view_run(run: &CropViewRun) -> PebbleDocument {
         })
         .collect();
 
-    PebbleDocument {
-        schema: pebble::SCHEMA.to_string(),
+    MdportDocument {
+        schema: mdport::SCHEMA.to_string(),
         kind: "corpus-slice".to_string(),
         title: run.name.clone(),
         source: run.root.clone(),
@@ -1945,12 +1945,12 @@ fn pebble_document_from_view_run(run: &CropViewRun) -> PebbleDocument {
     }
 }
 
-fn pebble_evidence_units(
+fn mdport_evidence_units(
     fallback_source_id: &str,
     text: &str,
 ) -> Option<(String, Vec<String>, Vec<EvidenceUnit>)> {
-    let document = PebbleDocument::from_json(text).ok()?;
-    if document.schema != pebble::SCHEMA {
+    let document = MdportDocument::from_json(text).ok()?;
+    if document.schema != mdport::SCHEMA {
         return None;
     }
 
@@ -1967,7 +1967,7 @@ fn pebble_evidence_units(
             section.text
         };
         units.push(EvidenceUnit {
-            id: format!("{source_id}#{}", pebble_unit_id(index, &section.id)),
+            id: format!("{source_id}#{}", mdport_unit_id(index, &section.id)),
             source_id: source_id.clone(),
             content_hash: sha256_hex(text.as_bytes()),
             token_estimate: estimate_tokens(&text),
@@ -1991,7 +1991,7 @@ fn pebble_evidence_units(
     Some((source_id, document.refs, units))
 }
 
-fn pebble_unit_id(index: usize, section_id: &str) -> String {
+fn mdport_unit_id(index: usize, section_id: &str) -> String {
     if section_id.trim().is_empty() {
         format!("{index:03}")
     } else {
@@ -3844,8 +3844,8 @@ mod tests {
     }
 
     #[test]
-    fn run_view_pebble_json_emits_transfer_pack() {
-        let root = unique_temp_dir("crop-view-pebble");
+    fn run_view_mdport_json_emits_transfer_pack() {
+        let root = unique_temp_dir("crop-view-mdport");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("index.md"),
@@ -3867,9 +3867,9 @@ mod tests {
           "seed": 0
         }"#;
 
-        let document = run_view_pebble_json(view, &root).unwrap();
+        let document = run_view_mdport_json(view, &root).unwrap();
 
-        assert_eq!(document.schema, pebble::SCHEMA);
+        assert_eq!(document.schema, mdport::SCHEMA);
         assert_eq!(document.kind, "corpus-slice");
         assert_eq!(document.title, "docs-view");
         assert_eq!(document.source, "docs");
@@ -3900,11 +3900,11 @@ mod tests {
     }
 
     #[test]
-    fn ingest_path_loads_pebble_sections_as_evidence_units() {
-        let root = unique_temp_dir("crop-ingest-pebble");
+    fn ingest_path_loads_mdport_sections_as_evidence_units() {
+        let root = unique_temp_dir("crop-ingest-mdport");
         fs::create_dir_all(&root).unwrap();
-        let document = pebble::PebbleDocument::from_markdown(
-            "# Generated Guide\n\nProof-produced Pebble context.",
+        let document = mdport::MdportDocument::from_markdown(
+            "# Generated Guide\n\nMdloom-produced Mdport context.",
             "Generated Guide",
             "src/guides/generated.source.md",
             ["data/records.json".to_string()],
@@ -3914,7 +3914,7 @@ mod tests {
             .metadata
             .insert("source_custody".to_string(), "verified".to_string());
         fs::write(
-            root.join("generated.pebble.json"),
+            root.join("generated.mdport.json"),
             document.to_json().unwrap(),
         )
         .unwrap();
@@ -3929,7 +3929,7 @@ mod tests {
         );
         assert!(ingested.graph.units[0]
             .text
-            .contains("Proof-produced Pebble context."));
+            .contains("Mdloom-produced Mdport context."));
         assert_eq!(
             ingested.graph.units[0]
                 .metadata
@@ -4291,7 +4291,7 @@ mod tests {
 
         let markdown = markdown_index(
             &root,
-            "PROOF generated docs",
+            "MDLOOM generated docs",
             &IngestOptions {
                 include_extensions: vec!["md".to_string(), "html".to_string()],
                 exclude_dirs: Vec::new(),
@@ -4300,7 +4300,7 @@ mod tests {
         )
         .unwrap();
 
-        assert!(markdown.contains("# PROOF generated docs"));
+        assert!(markdown.contains("# MDLOOM generated docs"));
         assert!(markdown.contains("| `html` | 1 |"));
         assert!(markdown.contains("| `md` | 2 |"));
         assert!(markdown.contains("[`docs/intro.md`](docs/intro.md)"));
@@ -4326,9 +4326,9 @@ mod tests {
 
         let view = r#"{
           "schema_version": "crop.view.v1",
-          "name": "proof-view",
+          "name": "mdloom-view",
           "root": "docs",
-          "task": "index proof docs",
+          "task": "index mdloom docs",
           "token_budget": 160,
           "seed": 0,
           "include_extensions": ["md"]
@@ -4336,7 +4336,7 @@ mod tests {
 
         let markdown = markdown_index_for_view_json(view, &root).unwrap();
 
-        assert!(markdown.contains("# proof-view"));
+        assert!(markdown.contains("# mdloom-view"));
         assert!(markdown.contains("[`readme.md`](readme.md)"));
         assert!(!markdown.contains("skip.txt"));
 
@@ -4349,7 +4349,7 @@ mod tests {
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("intro.md"),
-            "---\ntitle: Intro Metadata\ntags: [proof, crop]\nstatus: draft\n---\n# Intro\n\n[API](api.md)",
+            "---\ntitle: Intro Metadata\ntags: [mdloom, crop]\nstatus: draft\n---\n# Intro\n\n[API](api.md)",
         )
         .unwrap();
         fs::write(
@@ -4360,7 +4360,7 @@ mod tests {
 
         let markdown = markdown_catalog(
             &root,
-            "PROOF catalog",
+            "MDLOOM catalog",
             &IngestOptions {
                 include_extensions: vec!["md".to_string()],
                 exclude_dirs: Vec::new(),
@@ -4369,9 +4369,9 @@ mod tests {
         )
         .unwrap();
 
-        assert!(markdown.contains("# PROOF catalog"));
+        assert!(markdown.contains("# MDLOOM catalog"));
         assert!(markdown.contains("| Path | Title | In | Out | Orphan | Status | Tags | Title |"));
-        assert!(markdown.contains("| [`docs/intro.md`](docs/intro.md) | Intro Metadata | 0 | 1 | yes | draft | [proof, crop] | Intro Metadata |"));
+        assert!(markdown.contains("| [`docs/intro.md`](docs/intro.md) | Intro Metadata | 0 | 1 | yes | draft | [mdloom, crop] | Intro Metadata |"));
         assert!(markdown.contains("| [`docs/api.md`](docs/api.md) | API Metadata | 1 | 0 | no | ready |  | API Metadata |"));
 
         fs::remove_dir_all(root).unwrap();
@@ -4413,21 +4413,21 @@ mod tests {
     }
 
     #[test]
-    fn proof_artifacts_reports_missing_and_stale_outputs() {
-        let root = unique_temp_dir("crop-proof-artifacts");
-        fs::create_dir_all(root.join(".proof")).unwrap();
+    fn mdloom_artifacts_reports_missing_and_stale_outputs() {
+        let root = unique_temp_dir("crop-mdloom-artifacts");
+        fs::create_dir_all(root.join(".mdloom")).unwrap();
         fs::create_dir_all(root.join("src")).unwrap();
         fs::create_dir_all(root.join("out")).unwrap();
         fs::write(root.join("out").join("guide.md"), "old output").unwrap();
         std::thread::sleep(std::time::Duration::from_millis(20));
         fs::write(root.join("src").join("guide.source.md"), "new source").unwrap();
         fs::write(root.join("src").join("missing.source.md"), "missing source").unwrap();
-        let manifest = root.join(".proof").join("artifacts.json");
+        let manifest = root.join(".mdloom").join("artifacts.json");
         fs::write(
             &manifest,
             r#"{
               "schema_version": "1",
-              "generated_by": "proof compile",
+              "generated_by": "mdloom compile",
               "config_root": "..",
               "generated_at_ms": 1,
               "artifacts": [
@@ -4456,9 +4456,9 @@ mod tests {
         )
         .unwrap();
 
-        let report = proof_artifacts(&manifest).unwrap();
+        let report = mdloom_artifacts(&manifest).unwrap();
 
-        assert_eq!(report.schema_version, "crop.proof-artifacts.v1");
+        assert_eq!(report.schema_version, "crop.mdloom-artifacts.v1");
         assert_eq!(report.artifact_count, 2);
         assert_eq!(report.missing_output_count, 1);
         assert_eq!(report.stale_count, 1);
@@ -4467,8 +4467,8 @@ mod tests {
         assert!(report.artifacts[0].output_exists);
         assert!(!report.artifacts[1].output_exists);
         assert_eq!(report.artifacts[1].diagnostic_count, 1);
-        let markdown = render_proof_artifact_markdown(&report);
-        assert!(markdown.contains("# PROOF Artifact Health"));
+        let markdown = render_mdloom_artifact_markdown(&report);
+        assert!(markdown.contains("# MDLOOM Artifact Health"));
         assert!(markdown.contains("| Source | Output | Target | Status | Exists | Stale | Cache | Directives | Diagnostics |"));
         assert!(markdown.contains("| `src/guide.source.md` | `out/guide.md` | `markdown` | `written` | yes | yes | no | 2 | 0 |"));
 
@@ -4476,8 +4476,8 @@ mod tests {
     }
 
     #[test]
-    fn proof_fixture_exercises_side_info_contracts() {
-        let root = proof_fixture_root();
+    fn mdloom_fixture_exercises_side_info_contracts() {
+        let root = mdloom_fixture_root();
         let src = root.join("src");
         let options = IngestOptions {
             include_extensions: vec!["md".to_string()],
@@ -4485,8 +4485,8 @@ mod tests {
             frontmatter_query: None,
         };
 
-        let artifacts = proof_artifacts_for_root(&root).unwrap();
-        assert_eq!(artifacts.schema_version, "crop.proof-artifacts.v1");
+        let artifacts = mdloom_artifacts_for_root(&root).unwrap();
+        assert_eq!(artifacts.schema_version, "crop.mdloom-artifacts.v1");
         assert_eq!(artifacts.artifact_count, 2);
         assert_eq!(artifacts.missing_output_count, 1);
         assert_eq!(artifacts.diagnostic_count, 1);
@@ -4529,21 +4529,21 @@ mod tests {
         assert!(catalog
             .contains("| Path | Title | In | Out | Orphan | Status | Tags | Title | Version |"));
         assert!(catalog.contains("Guide"));
-        assert!(catalog.contains("[proof, guide]"));
+        assert!(catalog.contains("[mdloom, guide]"));
 
-        let view_json = fs::read_to_string(root.join("proof-ready-view.json")).unwrap();
+        let view_json = fs::read_to_string(root.join("mdloom-ready-view.json")).unwrap();
         let inspect = inspect_view_json(&view_json, &root).unwrap();
         assert_eq!(inspect.supported_source_count, 2);
         assert_eq!(
             inspect.frontmatter_query.as_deref(),
-            Some("tags has 'proof' and status eq 'ready'")
+            Some("tags has 'mdloom' and status eq 'ready'")
         );
         assert!(!inspect
             .sample_sources
             .contains(&"draft.source.md".to_string()));
 
         for (file, schema) in [
-            ("artifacts.json", "crop.proof-artifacts.v1"),
+            ("artifacts.json", "crop.mdloom-artifacts.v1"),
             ("headings.json", "crop.markdown-heading-inventory.v1"),
             ("links.json", "crop.markdown-link-audit.v1"),
             ("backlinks.json", "crop.markdown-backlinks.v1"),
@@ -4765,7 +4765,7 @@ mod tests {
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("one.md"),
-            "---\ntitle: One\ntags: [proof, crop]\nstatus: draft\n---\n# One\n",
+            "---\ntitle: One\ntags: [mdloom, crop]\nstatus: draft\n---\n# One\n",
         )
         .unwrap();
         fs::write(
@@ -4799,7 +4799,7 @@ mod tests {
         assert_eq!(inventory.pages[0].fields.get("title").unwrap(), "One");
         assert_eq!(
             inventory.pages[0].fields.get("tags").unwrap(),
-            "[proof, crop]"
+            "[mdloom, crop]"
         );
 
         fs::remove_dir_all(root).unwrap();
@@ -4913,7 +4913,7 @@ mod tests {
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("one.md"),
-            "---\ntitle: One\ntags: [proof, crop]\n---\n# One\n\n[Two](two.md)\n[Missing](missing.md)",
+            "---\ntitle: One\ntags: [mdloom, crop]\n---\n# One\n\n[Two](two.md)\n[Missing](missing.md)",
         )
         .unwrap();
         fs::write(
@@ -5069,12 +5069,12 @@ mod tests {
         ))
     }
 
-    fn proof_fixture_root() -> PathBuf {
+    fn mdloom_fixture_root() -> PathBuf {
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("..")
             .join("..")
             .join("examples")
-            .join("proof-fixture")
+            .join("mdloom-fixture")
     }
 
     fn prefix_cached_pack_for_task(path: &Path, task: &str) -> PrefixCachedPack {

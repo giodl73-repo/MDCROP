@@ -45,11 +45,11 @@ function New-Fixture {
     Remove-Item -Recurse -Force $root -ErrorAction SilentlyContinue
 
     $mdRoot = Join-Path $root "md"
-    $pebbleRoot = Join-Path $root "pebble"
-    New-Item -ItemType Directory -Path $mdRoot, $pebbleRoot | Out-Null
+    $mdportRoot = Join-Path $root "mdport"
+    New-Item -ItemType Directory -Path $mdRoot, $mdportRoot | Out-Null
 
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-    $task = "ready proof context boundary topic 0 cluster 0"
+    $task = "ready mdloom context boundary topic 0 cluster 0"
     $clusterSize = 16
 
     for ($i = 0; $i -lt $Count; $i++) {
@@ -61,7 +61,7 @@ function New-Fixture {
         $hubIndex = [int]($cluster * $clusterSize)
         $hub = "topic-{0:D4}.md" -f $hubIndex
         $focus = if ($cluster -eq 0) {
-            "ready proof context boundary seed evidence cluster zero benchmark"
+            "ready mdloom context boundary seed evidence cluster zero benchmark"
         } else {
             "background corpus contrast material cluster $cluster benchmark"
         }
@@ -69,14 +69,14 @@ function New-Fixture {
         $frontmatter = @(
             "---",
             "title: $title",
-            "tags: [proof, benchmark, cluster-$cluster]",
+            "tags: [mdloom, benchmark, cluster-$cluster]",
             "status: ready",
             "version: 1.0",
             "---"
         ) -join "`n"
         $metadata = [ordered]@{
             title = $title
-            tags = "[proof, benchmark, cluster-$cluster]"
+            tags = "[mdloom, benchmark, cluster-$cluster]"
             status = "ready"
             version = "1.0"
         }
@@ -100,13 +100,13 @@ function New-Fixture {
             "## Provenance",
             "",
             "Source $topic belongs to cluster $cluster and preserves refs to $next, $prev, and $hub for context boundary reconstruction.",
-            "The compact Pebble section keeps proof context provenance without carrying Markdown frontmatter as separate evidence."
+            "The compact Mdport section keeps mdloom context provenance without carrying Markdown frontmatter as separate evidence."
         ) -join "`n"
         [void]$sections.Add((New-Section "$topic-context" @($title, "Context") 1 7 $metadata $contextText))
         [void]$sections.Add((New-Section "$topic-provenance" @($title, "Provenance") 2 15 $metadata $provenanceText))
 
         $document = [ordered]@{
-            schema = "pebble.v1"
+            schema = "mdport.v1"
             kind = "document"
             title = $title
             source = "$topic.md"
@@ -116,7 +116,7 @@ function New-Fixture {
             refs = $refs
         }
         [System.IO.File]::WriteAllText(
-            (Join-Path $pebbleRoot "$topic.pebble.json"),
+            (Join-Path $mdportRoot "$topic.mdport.json"),
             ($document | ConvertTo-Json -Depth 10 -Compress),
             $utf8NoBom
         )
@@ -129,7 +129,7 @@ function New-Fixture {
         task = $task
         budget = 2000
         md_root = "md"
-        pebble_root = "pebble"
+        mdport_root = "mdport"
     }
     [System.IO.File]::WriteAllText(
         (Join-Path $root "manifest.json"),

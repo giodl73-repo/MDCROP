@@ -21,12 +21,12 @@ cargo_patches = [
   { package = "mdpath", source = "https://github.com/giodl73-repo/MDPATH.git", path = "." },
 ]
 
-[repos.pebble]
+[repos.mdport]
 role = "tracker dependency for crop"
-relative = "..\\..\\standards-protocols\\pebble"
-clone_url = "https://github.com/giodl73-repo/PEBBLE.git"
+relative = "..\\..\\standards-protocols\\mdport"
+clone_url = "https://github.com/giodl73-repo/MDPORT.git"
 cargo_patches = [
-  { package = "pebble", source = "https://github.com/giodl73-repo/PEBBLE", path = "." },
+  { package = "mdport", source = "https://github.com/giodl73-repo/MDPORT", path = "." },
 ]
 
 [repos.rline]

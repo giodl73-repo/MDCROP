@@ -42,40 +42,40 @@ Add `--output context.crop.json` to write the pack to disk instead of stdout.
 Generate a Markdown README/TOC-style source index:
 
 ```powershell
-cargo run -p crop-cli -- index --root C:\src\proof -e md -e html --exclude-dir target
+cargo run -p crop-cli -- index --root C:\src\mdloom -e md -e html --exclude-dir target
 cargo run -p crop-cli -- index --view examples\views\whole-repo-view.json --output INDEX.md
 ```
 
 `crop index` emits Markdown tables with an extension profile and one row per
 source path, title, directory, extension, and outbound Markdown-link count. It is
-designed as a reusable `crop-core` surface for tools such as PROOF, which can own
+designed as a reusable `crop-core` surface for tools such as MDLOOM, which can own
 its compile/render pipeline while depending on CROP for corpus index primitives.
 
 Generate a richer Markdown catalog table for README/TOC pages:
 
 ```powershell
-cargo run -p crop-cli -- catalog --root C:\src\proof -e md --exclude-dir target --output CATALOG.md
+cargo run -p crop-cli -- catalog --root C:\src\mdloom -e md --exclude-dir target --output CATALOG.md
 cargo run -p crop-cli -- catalog --view examples\views\whole-repo-view.json
 ```
 
 `crop catalog` emits Markdown that combines source titles, inbound/outbound link
 counts, orphan flags, and selected frontmatter fields such as `status`, `tags`,
-`title`, `wave`, and `version`. It is a ready-to-embed table surface for PROOF
+`title`, `wave`, and `version`. It is a ready-to-embed table surface for MDLOOM
 while the structured JSON side-info remains available through `links`,
 `backlinks`, `frontmatter`, and `headings`.
 
-Report PROOF generated artifact health:
+Report MDLOOM generated artifact health:
 
 ```powershell
-cargo run -p crop-cli -- artifacts --root C:\src\proof
-cargo run -p crop-cli -- artifacts --manifest C:\src\proof\.proof\artifacts.json
-cargo run -p crop-cli -- artifacts --root C:\src\proof --format markdown --output ARTIFACTS.md
+cargo run -p crop-cli -- artifacts --root C:\src\mdloom
+cargo run -p crop-cli -- artifacts --manifest C:\src\mdloom\.mdloom\artifacts.json
+cargo run -p crop-cli -- artifacts --root C:\src\mdloom --format markdown --output ARTIFACTS.md
 ```
 
-`crop artifacts` emits `crop.proof-artifacts.v1` JSON from PROOF's
-`.proof\artifacts.json` contract. It maps source files to generated outputs and
+`crop artifacts` emits `crop.mdloom-artifacts.v1` JSON from MDLOOM's
+`.mdloom\artifacts.json` contract. It maps source files to generated outputs and
 reports missing outputs, stale outputs, cache status, directive counts, and
-diagnostic counts so PROOF can keep generated Markdown, ASCII, and HTML
+diagnostic counts so MDLOOM can keep generated Markdown, ASCII, and HTML
 surfaces aligned with source. Use `--format markdown` for a ready-to-embed
 artifact health table.
 
@@ -83,7 +83,7 @@ Generate a combined corpus status page or machine-readable summary:
 
 ```powershell
 cargo run -p crop-cli -- status --root C:\src\maxim --output STATUS.md
-cargo run -p crop-cli -- status --view examples\proof-fixture\proof-ready-view.json --output STATUS.md
+cargo run -p crop-cli -- status --view examples\mdloom-fixture\mdloom-ready-view.json --output STATUS.md
 cargo run -p crop-cli -- status --root C:\src\maxim --strict --output STATUS.md
 cargo run -p crop-cli -- status --root C:\src\maxim --strict --strict-on broken-links --output STATUS.md
 cargo run -p crop-cli -- status --root C:\src\maxim --format json --output STATUS.json
@@ -105,63 +105,63 @@ selection, and output rendering.
 
 Stable schema and consumer-integration notes live in [`docs\specs`](docs/specs),
 with deterministic status contract goldens under
-`examples\proof-fixture\golden`.
+`examples\mdloom-fixture\golden`.
 
 Audit local Markdown links as structured side-info:
 
 ```powershell
-cargo run -p crop-cli -- links --root C:\src\proof -e md --exclude-dir target
+cargo run -p crop-cli -- links --root C:\src\mdloom -e md --exclude-dir target
 cargo run -p crop-cli -- links --view examples\views\whole-repo-view.json
-cargo run -p crop-cli -- links --root C:\src\proof -e md --format markdown --output LINK_AUDIT.md
+cargo run -p crop-cli -- links --root C:\src\mdloom -e md --format markdown --output LINK_AUDIT.md
 ```
 
 `crop links` emits `crop.markdown-link-audit.v1` JSON with source, target,
 status, resolved source, error details, and aggregate ok/broken counts. It uses
 MDPATH-compatible resolution for `md://` URIs and heading fragments, while
-ignoring external links so PROOF can focus this report on local corpus health.
+ignoring external links so MDLOOM can focus this report on local corpus health.
 Use `--format markdown` for a ready-to-embed local link health table.
 
 Report backlinks and orphan pages:
 
 ```powershell
-cargo run -p crop-cli -- backlinks --root C:\src\proof -e md --exclude-dir target
+cargo run -p crop-cli -- backlinks --root C:\src\mdloom -e md --exclude-dir target
 cargo run -p crop-cli -- backlinks --view examples\views\whole-repo-view.json
-cargo run -p crop-cli -- backlinks --root C:\src\proof -e md --format markdown --output BACKLINKS.md
+cargo run -p crop-cli -- backlinks --root C:\src\mdloom -e md --format markdown --output BACKLINKS.md
 ```
 
 `crop backlinks` emits `crop.markdown-backlinks.v1` JSON with one page row per
 Markdown source, title, inbound link list, outbound link count, and orphan flag.
-It reuses CROP's MDPATH-compatible link resolution so PROOF can build indexes
+It reuses CROP's MDPATH-compatible link resolution so MDLOOM can build indexes
 and README tables with "referenced by" side-info. Use `--format markdown` for a
 page-level inbound/orphan table.
 
 Inventory Markdown frontmatter:
 
 ```powershell
-cargo run -p crop-cli -- frontmatter --root C:\src\proof -e md --exclude-dir target
+cargo run -p crop-cli -- frontmatter --root C:\src\mdloom -e md --exclude-dir target
 cargo run -p crop-cli -- frontmatter --view examples\views\whole-repo-view.json
-cargo run -p crop-cli -- frontmatter --root C:\src\proof -e md --format markdown --output FRONTMATTER.md
+cargo run -p crop-cli -- frontmatter --root C:\src\mdloom -e md --format markdown --output FRONTMATTER.md
 ```
 
 `crop frontmatter` emits `crop.markdown-frontmatter.v1` JSON with source paths,
 top-level frontmatter key/value fields, and aggregate key counts. This gives
-PROOF a small metadata feed for generated README tables, HTML sidebars, and
-status/tag summaries without taking over PROOF's renderer. Use
+MDLOOM a small metadata feed for generated README tables, HTML sidebars, and
+status/tag summaries without taking over MDLOOM's renderer. Use
 `--format markdown` for a key profile and metadata table across arbitrary
 frontmatter fields.
 
 Inventory headings and MDPATH anchors:
 
 ```powershell
-cargo run -p crop-cli -- headings --root C:\src\proof -e md --exclude-dir target
+cargo run -p crop-cli -- headings --root C:\src\mdloom -e md --exclude-dir target
 cargo run -p crop-cli -- headings --view examples\views\whole-repo-view.json
-cargo run -p crop-cli -- headings --root C:\src\proof -e md --format markdown --output HEADINGS.md
+cargo run -p crop-cli -- headings --root C:\src\mdloom -e md --format markdown --output HEADINGS.md
 ```
 
 `crop headings` emits `crop.markdown-heading-inventory.v1` JSON with source,
 level, text, normalized MDPATH/GitHub anchor, line number, canonical `md://`
 section URI, and duplicate-anchor groups. This is the raw TOC and anchor
-inventory surface for PROOF. Use `--format markdown` for an embeddable heading
+inventory surface for MDLOOM. Use `--format markdown` for an embeddable heading
 and duplicate-anchor table.
 
 Run a persisted named view recipe:
@@ -188,15 +188,15 @@ View files use `crop.view.v1` JSON:
 
 Relative roots resolve from the view file location. The default output is
 `crop.view-run.v1` JSON containing the view metadata and produced context pack.
-Use `--format pebble` to emit the same selected context as a compact
-`pebble.v1` transfer pack that PROOF and other tools can exchange:
+Use `--format mdport` to emit the same selected context as a compact
+`mdport.v1` transfer pack that MDLOOM and other tools can exchange:
 
 ```powershell
-cargo run -p crop-cli -- view --file examples\views\docs-view.json --format pebble
+cargo run -p crop-cli -- view --file examples\views\docs-view.json --format mdport
 ```
 
-CROP also reads `pebble.v1` JSON files during normal ingest, using each Pebble
-section as an evidence unit while preserving the original Pebble `source` path.
+CROP also reads `mdport.v1` JSON files during normal ingest, using each Mdport
+section as an evidence unit while preserving the original Mdport `source` path.
 
 `frontmatter_query` is optional and filters Markdown sources using simple
 SQL/OData-style predicates over any top-level frontmatter field: `field eq
@@ -314,7 +314,7 @@ Evaluation metrics:
 | `quality_score` | Method-specific scalar quality summary for quick comparison. |
 
 Latency is intentionally not part of the built-in eval fixture metrics; use the
-sized MD-vs-Pebble benchmark fixtures when comparing source formats:
+sized MD-vs-Mdport benchmark fixtures when comparing source formats:
 
 ```powershell
 .\examples\bench-fixtures\generate.ps1 -Size all -Force
@@ -449,7 +449,7 @@ caveats.
   cases from `crop.bench-manifest.v1` JSON.
 - `markdown_index(root, title, options)` and
   `markdown_index_for_view_json(json, base_dir)` generate README/TOC-style
-  Markdown source indexes for documentation tools such as PROOF.
+  Markdown source indexes for documentation tools such as MDLOOM.
 - `markdown_link_audit(root, options)` and
   `markdown_link_audit_for_view_json(json, base_dir)` report local Markdown link
   and MDPATH heading health as structured side-info.
@@ -458,8 +458,8 @@ caveats.
   anchor, duplicate-anchor, and `md://` section URI inventories.
 - `run_view_json(json, base_dir)` runs a persisted `crop.view.v1` recipe and
   returns `crop.view-run.v1` with the produced context pack.
-- `run_view_pebble_json(json, base_dir)` runs the same recipe and returns a
-  `pebble.v1` transfer pack for compact AI/cross-tool interchange.
+- `run_view_mdport_json(json, base_dir)` runs the same recipe and returns a
+  `mdport.v1` transfer pack for compact AI/cross-tool interchange.
 - `run_view_prefix_cached_json(json, base_dir, profile)` runs a view and returns
   `crop.view-prefix-cache.v1` with a prefix-cache-aware pack.
 - `inspect_view_json(json, base_dir)` validates a view and returns

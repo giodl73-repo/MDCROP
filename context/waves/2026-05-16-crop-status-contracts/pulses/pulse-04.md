@@ -30,7 +30,7 @@ cargo test -p crop-cli status -- --test-threads=1
 cargo fmt
 cargo test -p crop-cli status -- --test-threads=1
 cargo test --workspace
-cargo run -p crop-cli -- status --root examples\proof-fixture\src --format json --output target\crop-status-smoke.json
+cargo run -p crop-cli -- status --root examples\mdloom-fixture\src --format json --output target\crop-status-smoke.json
 git diff --check
 ```
 

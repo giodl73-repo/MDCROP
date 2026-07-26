@@ -2,7 +2,7 @@
 
 ## Goal
 
-Let PROOF render CROP side-info reports directly into generated README/status
+Let MDLOOM render CROP side-info reports directly into generated README/status
 pages without losing the stable JSON feeds.
 
 ## Changes
@@ -18,7 +18,7 @@ pages without losing the stable JSON feeds.
 
 - `cargo fmt`
 - `cargo test --workspace`
-- CLI smoke checks for Markdown output on the PROOF fixture
+- CLI smoke checks for Markdown output on the MDLOOM fixture
 - `git diff --check`
 
 ## Status

@@ -1,0 +1,10 @@
+{
+  "schema_version": "crop.view.v1",
+  "name": "mdloom-fixture-ready",
+  "root": "src",
+  "task": "ready mdloom source context",
+  "token_budget": 12000,
+  "seed": 0,
+  "include_extensions": ["md"],
+  "frontmatter_query": "tags has 'mdloom' and status eq 'ready'"
+}

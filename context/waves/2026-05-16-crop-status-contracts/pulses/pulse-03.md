@@ -8,14 +8,14 @@ consumer integration tests can detect accidental contract drift.
 ## Scout commands
 
 ```powershell
-rg "golden|proof_fixture|include_str" crates\crop-core\src\lib.rs crates\crop-cli\src\status.rs examples
+rg "golden|mdloom_fixture|include_str" crates\crop-core\src\lib.rs crates\crop-cli\src\status.rs examples
 cargo test -p crop-cli status -- --test-threads=1
 ```
 
 ## Implementation checklist
 
-- [x] Add a root status JSON golden under `examples\proof-fixture\golden`.
-- [x] Add a view status JSON golden under `examples\proof-fixture\golden`.
+- [x] Add a root status JSON golden under `examples\mdloom-fixture\golden`.
+- [x] Add a view status JSON golden under `examples\mdloom-fixture\golden`.
 - [x] Add focused tests that compare generated `crop.corpus-status.v1` reports
       against those golden files.
 - [x] Normalize input labels in tests so goldens are deterministic across local
@@ -30,7 +30,7 @@ cargo test -p crop-cli status -- --test-threads=1
 cargo fmt
 cargo test -p crop-cli status -- --test-threads=1
 cargo test --workspace
-cargo run -p crop-cli -- status --root examples\proof-fixture\src --format json --output target\crop-status-smoke.json
+cargo run -p crop-cli -- status --root examples\mdloom-fixture\src --format json --output target\crop-status-smoke.json
 git diff --check
 ```
 

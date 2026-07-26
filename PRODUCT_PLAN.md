@@ -61,7 +61,7 @@ provenance paths; exclude stale duplicates and noisy periphery.
    CI-friendly non-zero exits.**
 9. **Docs indexes for generators**: Markdown README/TOC index primitives.
    **First slice; `crop index` and `crop-core` index APIs generate source tables
-   that PROOF can consume while keeping rendering and compile targets in PROOF.**
+   that MDLOOM can consume while keeping rendering and compile targets in MDLOOM.**
 10. **Docs link side-info**: local Markdown link audits for generators and
     curators. **First slice; `crop links` and `crop-core` link audit APIs report
     ok/broken local links, heading fragments, and `md://` targets for roots or
@@ -76,7 +76,7 @@ provenance paths; exclude stale duplicates and noisy periphery.
     MDPATH-compatible local link resolution.**
 13. **Frontmatter inventories**: metadata primitives for generated docs.
     **First slice; `crop frontmatter` and `crop-core` frontmatter APIs expose
-    top-level Markdown metadata fields and aggregate key counts for PROOF README
+    top-level Markdown metadata fields and aggregate key counts for MDLOOM README
     tables and HTML sidebars.**
 14. **Markdown catalogs**: ready-to-embed README/TOC tables for generators.
     **First slice; `crop catalog` combines source titles, frontmatter metadata
@@ -85,17 +85,17 @@ provenance paths; exclude stale duplicates and noisy periphery.
 15. **Frontmatter query views**: tag and metadata slices for large corpora.
     **First slice; `crop.view.v1` supports `frontmatter_query` predicates like
     `tags has 'computing' and status ne 'draft'` over arbitrary top-level
-    frontmatter fields for Maxim/PROOF-style reusable views. The predicate
+    frontmatter fields for Maxim/MDLOOM-style reusable views. The predicate
     kernel now uses SLICE while CROP keeps frontmatter extraction, view policy,
     graph selection, and rendering.**
-16. **PROOF artifact manifests**: generated-output health for docs pipelines.
-    **First slice; `crop artifacts` reads PROOF `.proof/artifacts.json` records
+16. **MDLOOM artifact manifests**: generated-output health for docs pipelines.
+    **First slice; `crop artifacts` reads MDLOOM `.mdloom/artifacts.json` records
     and reports source/output mappings, missing outputs, stale outputs, cache
     status, directive counts, and diagnostics. Markdown status-table output is
     available with `--format markdown`.**
-17. **PROOF contract hardening**: fixtures, schema docs, and module boundaries.
-    **First slice; deterministic `examples/proof-fixture` goldens and
-    `docs/specs` contracts cover PROOF side-info outputs, with the artifact
+17. **MDLOOM contract hardening**: fixtures, schema docs, and module boundaries.
+    **First slice; deterministic `examples/mdloom-fixture` goldens and
+    `docs/specs` contracts cover MDLOOM side-info outputs, with the artifact
     surface split into focused core/CLI modules.**
 18. **Markdown status surfaces**: embeddable tables for side-info reports.
     **First slice; `crop links`, `crop backlinks`, `crop frontmatter`, and
@@ -111,7 +111,7 @@ provenance paths; exclude stale duplicates and noisy periphery.
     counts, issue totals, strict policy names, and strict-pass state for CI and
     downstream registries. `--strict-on` can limit CI gates to broken links,
     orphan pages, or duplicate heading anchors, and root/view JSON goldens live
-    under `examples/proof-fixture/golden`.**
+    under `examples/mdloom-fixture/golden`.**
 
 ## Upstream kernel asks
 
