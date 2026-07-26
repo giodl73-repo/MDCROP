@@ -24,6 +24,26 @@ Markdown → MDPATH → MDCROP → MDLOOM → MDPORT
 | [MDLOOM](https://github.com/giodl73-repo/MDLOOM) | Validation, compilation, rendering, and publication. |
 | [MDPORT](https://github.com/giodl73-repo/MDPORT) | Compact portable `mdport.v1` records. |
 
+## Context & Harness family
+
+MDCROP is also the candidate-selection layer in a broader context-control
+family:
+
+```text
+Sources → FLETCH → MDCROP → LATTICE → FLETCHER
+           fetch     select     close       replay
+```
+
+| Repo | Responsibility |
+|------|----------------|
+| [FLETCH](https://github.com/giodl73-repo/FLETCH) | Acquire, verify, cache, partition, and bundle source material. |
+| **MDCROP** | Index and select bounded, provenance-aware candidate context. |
+| [LATTICE](https://github.com/giodl73-repo/LATTICE) | Apply closure, meet/join, budgets, frontiers, packs, and receipts. |
+| [FLETCHER](https://github.com/giodl73-repo/FLETCHER) | Capture harness events, checkpoints, context deltas, and deterministic replay. |
+
+MDCROP proposes the bounded candidate context. It does not fetch sources,
+guarantee semantic closure, or control an agent harness.
+
 MDCROP trims Markdown evidence into focused, provenance-aware context packs from
 repos, notes, issues, chats, and document corpora. Most RAG systems retrieve chunks;
 MDCROP draws the boundary around the right context before an agent answers.
