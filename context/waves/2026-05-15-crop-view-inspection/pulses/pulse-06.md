@@ -3,14 +3,14 @@
 ## Scout commands
 
 ```powershell
-cargo run -q -p crop-cli -- view --inspect --dir examples\views --strict
+cargo run -q -p mdcrop-cli -- view --inspect --dir examples\views --strict
 Get-ChildItem C:\src\mdloom
 ```
 
 ## Decision
 
-MDLOOM should own Markdown/HTML/ASCII rendering, but it can depend on CROP for
-corpus indexing primitives. This slice adds a reusable `crop-core` API and a CLI
+MDLOOM should own Markdown/HTML/ASCII rendering, but it can depend on MDCROP for
+corpus indexing primitives. This slice adds a reusable `mdcrop-core` API and a CLI
 smoke surface for README/TOC-style source tables without writing into MDLOOM
 outputs by default.
 
@@ -19,7 +19,7 @@ outputs by default.
 - [x] Add source-index data structures.
 - [x] Add root-based Markdown index generation.
 - [x] Add view-based Markdown index generation.
-- [x] Add CLI `crop index` with optional output path.
+- [x] Add CLI `mdcrop index` with optional output path.
 - [x] Add positive tests for root and view indexing.
 - [x] Update README, product plan, and wave docs.
 - [x] Create MDLOOM-side integration spec.
@@ -30,7 +30,7 @@ outputs by default.
 ```powershell
 cargo fmt
 cargo test --workspace
-cargo run -q -p crop-cli -- index --root C:\src\mdloom -e md -e html --exclude-dir target
-cargo run -q -p crop-cli -- index --view examples\views\whole-repo-view.json -e md
+cargo run -q -p mdcrop-cli -- index --root C:\src\mdloom -e md -e html --exclude-dir target
+cargo run -q -p mdcrop-cli -- index --view examples\views\whole-repo-view.json -e md
 git diff --check
 ```

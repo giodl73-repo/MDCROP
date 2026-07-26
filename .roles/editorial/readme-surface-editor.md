@@ -8,7 +8,7 @@ tier: editorial
 
 ## Checks
 
-- README opens with the public CROP story: focused context packs and corpus health.
+- README opens with the public MDCROP story: focused context packs and corpus health.
 - Commands match the current CLI, flags, and example paths.
 - Development and CI guidance mention the real Cargo commands.
 - Series link points to Tools & Infrastructure.

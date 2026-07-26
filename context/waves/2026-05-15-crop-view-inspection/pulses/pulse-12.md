@@ -7,8 +7,8 @@ metadata and link side-info.
 
 ## Scope
 
-- Add reusable `crop-core` catalog report and Markdown rendering APIs.
-- Add `crop catalog --root` and `crop catalog --view`.
+- Add reusable `mdcrop-core` catalog report and Markdown rendering APIs.
+- Add `mdcrop catalog --root` and `mdcrop catalog --view`.
 - Combine the source index with frontmatter fields and backlink reports.
 - Carry useful MDLOOM frontmatter fields such as `status`, `tags`, `title`,
   `wave`, and `version` into rendered tables when present.
@@ -28,6 +28,6 @@ metadata and link side-info.
 
 ## Outcome
 
-`crop catalog` emits Markdown tables that MDLOOM can embed directly in generated
-README/TOC pages while preserving CROP's structured JSON side-info surfaces for
+`mdcrop catalog` emits Markdown tables that MDLOOM can embed directly in generated
+README/TOC pages while preserving MDCROP's structured JSON side-info surfaces for
 custom renderers.

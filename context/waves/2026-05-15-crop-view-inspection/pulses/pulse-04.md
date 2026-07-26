@@ -3,7 +3,7 @@
 ## Scout commands
 
 ```powershell
-cargo run -q -p crop-cli -- view --inspect --dir examples\views --strict
+cargo run -q -p mdcrop-cli -- view --inspect --dir examples\views --strict
 ```
 
 ## Decision
@@ -14,8 +14,8 @@ counts to the store-level artifact while preserving the existing per-view rows.
 
 ## Checklist
 
-- [x] Add total supported source count to `crop.view-store-inspect.v1`.
-- [x] Add max supported source count to `crop.view-store-inspect.v1`.
+- [x] Add total supported source count to `mdcrop.view-store-inspect.v1`.
+- [x] Add max supported source count to `mdcrop.view-store-inspect.v1`.
 - [x] Cover aggregates in store inspection tests.
 - [x] Update README, view guide, product plan, and wave docs.
 - [x] Run validation gates.
@@ -25,6 +25,6 @@ counts to the store-level artifact while preserving the existing per-view rows.
 ```powershell
 cargo fmt
 cargo test --workspace
-cargo run -q -p crop-cli -- view --inspect --dir examples\views --strict
+cargo run -q -p mdcrop-cli -- view --inspect --dir examples\views --strict
 git diff --check
 ```

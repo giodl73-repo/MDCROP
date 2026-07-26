@@ -2,12 +2,12 @@
 
 ## Goal
 
-Expose MDLOOM-ready Markdown metadata side-info from CROP roots and named views.
+Expose MDLOOM-ready Markdown metadata side-info from MDCROP roots and named views.
 
 ## Scope
 
-- Add a reusable `crop-core` frontmatter inventory API.
-- Add `crop frontmatter --root` and `crop frontmatter --view`.
+- Add a reusable `mdcrop-core` frontmatter inventory API.
+- Add `mdcrop frontmatter --root` and `mdcrop frontmatter --view`.
 - Extract simple top-level YAML-style frontmatter key/value fields.
 - Report per-page field maps and aggregate key counts.
 - Document the command for MDLOOM README and HTML generation workflows.
@@ -26,6 +26,6 @@ Expose MDLOOM-ready Markdown metadata side-info from CROP roots and named views.
 
 ## Outcome
 
-`crop frontmatter` emits `crop.markdown-frontmatter.v1` JSON that downstream
+`mdcrop frontmatter` emits `mdcrop.markdown-frontmatter.v1` JSON that downstream
 tools such as MDLOOM can use to populate generated README tables, status/tag
 summaries, and HTML sidebars from source-document metadata.

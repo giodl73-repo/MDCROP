@@ -3,19 +3,19 @@
 Audience: downstream documentation systems such as MDLOOM, knowledge bases,
 research notebooks, and large Markdown corpora.
 
-CROP exposes reusable corpus-intelligence surfaces. Consumers should call these
-surfaces as generic CROP features instead of expecting consumer-specific logic in
-CROP core. If a needed option is missing, file an issue describing the generic
+MDCROP exposes reusable corpus-intelligence surfaces. Consumers should call these
+surfaces as generic MDCROP features instead of expecting consumer-specific logic in
+MDCROP core. If a needed option is missing, file an issue describing the generic
 capability, expected input, expected output, and why the current surfaces are
 insufficient.
 
 ## Principles
 
-- CROP owns corpus inspection, graph/context selection, Markdown side-info, named
+- MDCROP owns corpus inspection, graph/context selection, Markdown side-info, named
   views, and generated status surfaces.
 - Consumers own their renderers, compile pipelines, publishing targets, and
   product-specific semantics.
-- CROP commands should stay useful for any compatible corpus; consumer-specific
+- MDCROP commands should stay useful for any compatible corpus; consumer-specific
   behavior should be expressed as view files, manifests, or documented adapters.
 - JSON outputs are the stable machine-readable contracts. Markdown outputs are
   generated status/README conveniences over the same reports.
@@ -24,34 +24,34 @@ insufficient.
 
 | Need | Command/API | Output | Notes |
 |------|-------------|--------|-------|
-| Source inventory | `crop index` | Markdown | README/TOC table with extension profile and outbound link counts. |
-| Catalog page | `crop catalog` | Markdown | Combines titles, link counts, orphan flags, and selected frontmatter fields. |
-| Combined status page | `crop status` | Markdown | Composes catalog, links, backlinks, frontmatter, and headings for any Markdown corpus. |
-| Combined status summary | `crop status --format json` | JSON | Emits `crop.corpus-status.v1` with per-surface counts, issue totals, and strict-pass state. |
-| CI corpus gate | `crop status --strict` | Markdown or JSON + exit code | Writes output first, then fails on selected strict issue classes. |
-| Local link audit | `crop links` | JSON or Markdown | Validates Markdown and `md://` local targets; ignores external HTTP links. |
-| Backlink/orphan report | `crop backlinks` | JSON or Markdown | Reports inbound links, outbound counts, and orphan pages. |
-| Frontmatter inventory | `crop frontmatter` | JSON or Markdown | Reports top-level Markdown frontmatter key/value fields. |
-| Heading inventory | `crop headings` | JSON or Markdown | Reports anchors, line numbers, `md://` section URIs, and duplicate anchors. |
-| Named corpus slice | `crop view --file` | JSON context pack | Runs persisted `crop.view.v1` recipes. |
-| View preflight | `crop view --inspect` | JSON | Validates roots, filters, source counts, extension profiles, and samples. |
-| Store preflight | `crop view --inspect --dir --strict` | JSON + exit code | Validates every view in a store and fails on broken recipes. |
+| Source inventory | `mdcrop index` | Markdown | README/TOC table with extension profile and outbound link counts. |
+| Catalog page | `mdcrop catalog` | Markdown | Combines titles, link counts, orphan flags, and selected frontmatter fields. |
+| Combined status page | `mdcrop status` | Markdown | Composes catalog, links, backlinks, frontmatter, and headings for any Markdown corpus. |
+| Combined status summary | `mdcrop status --format json` | JSON | Emits `mdcrop.corpus-status.v1` with per-surface counts, issue totals, and strict-pass state. |
+| CI corpus gate | `mdcrop status --strict` | Markdown or JSON + exit code | Writes output first, then fails on selected strict issue classes. |
+| Local link audit | `mdcrop links` | JSON or Markdown | Validates Markdown and `md://` local targets; ignores external HTTP links. |
+| Backlink/orphan report | `mdcrop backlinks` | JSON or Markdown | Reports inbound links, outbound counts, and orphan pages. |
+| Frontmatter inventory | `mdcrop frontmatter` | JSON or Markdown | Reports top-level Markdown frontmatter key/value fields. |
+| Heading inventory | `mdcrop headings` | JSON or Markdown | Reports anchors, line numbers, `md://` section URIs, and duplicate anchors. |
+| Named corpus slice | `mdcrop view --file` | JSON context pack | Runs persisted `mdcrop.view.v1` recipes. |
+| View preflight | `mdcrop view --inspect` | JSON | Validates roots, filters, source counts, extension profiles, and samples. |
+| Store preflight | `mdcrop view --inspect --dir --strict` | JSON + exit code | Validates every view in a store and fails on broken recipes. |
 
 Most source-oriented commands accept either `--root <path>` or `--view
-<crop.view.v1>`. View mode preserves relative roots, extension filters,
+<mdcrop.view.v1>`. View mode preserves relative roots, extension filters,
 directory excludes, and `frontmatter_query` predicates.
 
 ## View options
 
-`crop.view.v1` supports:
+`mdcrop.view.v1` supports:
 
 | Field | Purpose |
 |-------|---------|
 | `name` | Human-readable view/status title. |
 | `root` | Root path; relative roots resolve from the view file location. |
-| `task` | Context-crop task prompt for `crop view --file`. |
-| `token_budget` | Context-crop budget. |
-| `seed` | Seed unit index for crop expansion. |
+| `task` | Context-mdcrop task prompt for `mdcrop view --file`. |
+| `token_budget` | Context-mdcrop budget. |
+| `seed` | Seed unit index for mdcrop expansion. |
 | `include_extensions` | File extension allow-list, such as `["md"]`. |
 | `exclude_dirs` | Directory basenames to skip. |
 | `frontmatter_query` | Optional metadata filter. |
@@ -67,7 +67,7 @@ Examples:
 
 ```json
 {
-  "schema_version": "crop.view.v1",
+  "schema_version": "mdcrop.view.v1",
   "name": "ready-guides",
   "root": "docs",
   "task": "ready guide corpus",
@@ -83,16 +83,16 @@ Examples:
 ### Publish a generated corpus status page
 
 ```powershell
-crop status --root C:\path\to\corpus --output STATUS.md
-crop status --view .crop\views\ready-guides.json --output READY_GUIDES.md
+mdcrop status --root C:\path\to\corpus --output STATUS.md
+mdcrop status --view .mdcrop\views\ready-guides.json --output READY_GUIDES.md
 ```
 
 ### Gate CI while preserving the Markdown artifact
 
 ```powershell
-crop status --view .crop\views\ready-guides.json --strict --output READY_GUIDES.md
-crop status --view .crop\views\ready-guides.json --format json --strict --output READY_GUIDES.status.json
-crop status --view .crop\views\ready-guides.json --strict --strict-on broken-links --output READY_GUIDES.md
+mdcrop status --view .mdcrop\views\ready-guides.json --strict --output READY_GUIDES.md
+mdcrop status --view .mdcrop\views\ready-guides.json --format json --strict --output READY_GUIDES.status.json
+mdcrop status --view .mdcrop\views\ready-guides.json --strict --strict-on broken-links --output READY_GUIDES.md
 ```
 
 Strict mode writes the status page before failing, so CI can upload the page as
@@ -105,21 +105,21 @@ anchors. Add repeatable `--strict-on` selectors to gate only `broken-links`,
 ### Feed a registry or tracker
 
 ```powershell
-crop status --root C:\path\to\corpus --format json --output STATUS.json
+mdcrop status --root C:\path\to\corpus --format json --output STATUS.json
 ```
 
 Registries should read `schema_version`, `issue_count`, `strict_pass`,
-`strict_policy`, and the `surfaces` rows from `crop.corpus-status.v1`. If a
+`strict_policy`, and the `surfaces` rows from `mdcrop.corpus-status.v1`. If a
 registry needs the underlying row-level evidence, run the individual side-info
 commands listed below and link those artifacts from the registry record.
 
 ### Generate machine-readable side-info
 
 ```powershell
-crop links --view .crop\views\ready-guides.json --output links.json
-crop backlinks --view .crop\views\ready-guides.json --output backlinks.json
-crop frontmatter --view .crop\views\ready-guides.json --output frontmatter.json
-crop headings --view .crop\views\ready-guides.json --output headings.json
+mdcrop links --view .mdcrop\views\ready-guides.json --output links.json
+mdcrop backlinks --view .mdcrop\views\ready-guides.json --output backlinks.json
+mdcrop frontmatter --view .mdcrop\views\ready-guides.json --output frontmatter.json
+mdcrop headings --view .mdcrop\views\ready-guides.json --output headings.json
 ```
 
 Add `--format markdown` to any of those commands when a README/status table is
@@ -128,12 +128,12 @@ needed instead of JSON.
 ## Optional artifact-health adapter
 
 If a consumer emits a generated-artifact manifest compatible with
-`crop.mdloom-artifacts.v1`, CROP can report missing, stale, cached, or diagnostic
+`mdcrop.mdloom-artifacts.v1`, MDCROP can report missing, stale, cached, or diagnostic
 artifact rows:
 
 ```powershell
-crop artifacts --manifest .mdloom\artifacts.json
-crop artifacts --manifest .mdloom\artifacts.json --format markdown --output ARTIFACTS.md
+mdcrop artifacts --manifest .mdloom\artifacts.json
+mdcrop artifacts --manifest .mdloom\artifacts.json --format markdown --output ARTIFACTS.md
 ```
 
 This is an adapter over an external manifest. It should not be required for
@@ -146,7 +146,7 @@ issues should include:
 
 | Field | Guidance |
 |-------|----------|
-| Generic capability | Describe the reusable CROP feature, not only the consumer-specific use case. |
+| Generic capability | Describe the reusable MDCROP feature, not only the consumer-specific use case. |
 | Current workaround | Name the closest existing command or schema. |
 | Input contract | Provide a small fixture or view/manifest example. |
 | Output contract | Describe JSON fields, Markdown table shape, or exit-code behavior. |
@@ -161,4 +161,4 @@ Examples of issue scopes:
   `orphan-pages`, and `duplicate-anchors`;
 - adapters for non-Markdown source metadata;
 - richer JSON reports for combined status summaries beyond the
-  `crop.corpus-status.v1` health summary.
+  `mdcrop.corpus-status.v1` health summary.

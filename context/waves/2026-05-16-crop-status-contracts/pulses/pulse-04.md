@@ -2,15 +2,15 @@
 
 ## Objective
 
-Make the completed `crop status` contract discoverable for downstream consumers
+Make the completed `mdcrop status` contract discoverable for downstream consumers
 that need generated status pages, machine-readable summaries, CI gates, and
 deterministic examples.
 
 ## Scout commands
 
 ```powershell
-rg "crop status|crop.corpus-status.v1|strict-on|status-root" README.md docs context\waves
-cargo test -p crop-cli status -- --test-threads=1
+rg "mdcrop status|mdcrop.corpus-status.v1|strict-on|status-root" README.md docs context\waves
+cargo test -p mdcrop-cli status -- --test-threads=1
 ```
 
 ## Implementation checklist
@@ -28,9 +28,9 @@ cargo test -p crop-cli status -- --test-threads=1
 
 ```powershell
 cargo fmt
-cargo test -p crop-cli status -- --test-threads=1
+cargo test -p mdcrop-cli status -- --test-threads=1
 cargo test --workspace
-cargo run -p crop-cli -- status --root examples\mdloom-fixture\src --format json --output target\crop-status-smoke.json
+cargo run -p mdcrop-cli -- status --root examples\mdloom-fixture\src --format json --output target\mdcrop-status-smoke.json
 git diff --check
 ```
 

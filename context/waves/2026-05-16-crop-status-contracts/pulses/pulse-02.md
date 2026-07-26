@@ -8,8 +8,8 @@ the existing default that fails on every corpus-health issue.
 ## Scout commands
 
 ```powershell
-rg "strict|strict_pass|issue_count|orphan|duplicate" crates\crop-cli\src\status.rs crates\crop-cli\src\main.rs docs README.md
-cargo test -p crop-cli status -- --test-threads=1
+rg "strict|strict_pass|issue_count|orphan|duplicate" crates\mdcrop-cli\src\status.rs crates\mdcrop-cli\src\main.rs docs README.md
+cargo test -p mdcrop-cli status -- --test-threads=1
 ```
 
 ## Implementation checklist
@@ -20,7 +20,7 @@ cargo test -p crop-cli status -- --test-threads=1
 - [x] Reject `--strict-on` without `--strict` so policy flags cannot silently
       become no-ops.
 - [x] Include selected policy names and strict issue totals in
-      `crop.corpus-status.v1`.
+      `mdcrop.corpus-status.v1`.
 - [x] Add positive and negative focused tests for selected gates.
 - [x] Update README/spec/product/wave documentation.
 
@@ -28,9 +28,9 @@ cargo test -p crop-cli status -- --test-threads=1
 
 ```powershell
 cargo fmt
-cargo test -p crop-cli status -- --test-threads=1
+cargo test -p mdcrop-cli status -- --test-threads=1
 cargo test --workspace
-cargo run -p crop-cli -- status --root examples\mdloom-fixture\src --format json --strict --strict-on duplicate-anchors --output target\crop-status-policy-smoke.json
+cargo run -p mdcrop-cli -- status --root examples\mdloom-fixture\src --format json --strict --strict-on duplicate-anchors --output target\mdcrop-status-policy-smoke.json
 git diff --check
 ```
 

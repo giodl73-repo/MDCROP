@@ -1,5 +1,5 @@
 {
-  "schema_version": "crop.competitor-results.v1",
+  "schema_version": "mdcrop.competitor-results.v1",
   "case": "cross-link-chain",
   "token_budget": 160,
   "method": {

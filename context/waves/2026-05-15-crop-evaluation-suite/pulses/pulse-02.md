@@ -16,13 +16,13 @@ services.
 - [x] Keep `score-top-k` as the rank-only baseline.
 - [x] Ensure every method uses the same token budget and tie-breaking contract.
 - [x] Add tests where lexical/hybrid win or tie where graph structure is irrelevant,
-  so the suite is not biased to CROP-only wins.
+  so the suite is not biased to MDCROP-only wins.
 
 ## Scout commands
 
 ```powershell
-git -C C:\src\CROP --no-pager status --short --branch
-rg "EvalMethod|score_top_k_selection|task_terms" C:\src\CROP\crates\crop-core\src\lib.rs -n
+git -C C:\src\MDCROP --no-pager status --short --branch
+rg "EvalMethod|score_top_k_selection|task_terms" C:\src\MDCROP\crates\mdcrop-core\src\lib.rs -n
 cargo test --workspace
 ```
 
@@ -31,7 +31,7 @@ cargo test --workspace
 ```powershell
 cargo fmt
 cargo test --workspace
-cargo run -p crop-cli -- eval --case missing-bridge --method lexical-top-k --budget 160
-cargo run -p crop-cli -- eval --case missing-bridge --method hybrid-top-k --budget 160
+cargo run -p mdcrop-cli -- eval --case missing-bridge --method lexical-top-k --budget 160
+cargo run -p mdcrop-cli -- eval --case missing-bridge --method hybrid-top-k --budget 160
 git diff --check
 ```

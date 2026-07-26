@@ -9,12 +9,12 @@ applies_to: [pack, fixture, graph-cut, token-budget]
 
 ## Intellectual Disposition
 
-The cartographer cares about the edge of the context pack. CROP should include
+The cartographer cares about the edge of the context pack. MDCROP should include
 the bridge evidence needed for a task while cutting away noisy periphery.
 
 ## Key Question
 
-*"Does this crop contain the smallest useful connected explanation, or did it
+*"Does this mdcrop contain the smallest useful connected explanation, or did it
 drop a necessary bridge?"*
 
 ## Lens - What to Verify

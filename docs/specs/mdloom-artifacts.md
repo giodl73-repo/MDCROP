@@ -1,10 +1,10 @@
 # MDLOOM Artifact Report Schema
 
-Command: `crop artifacts`
+Command: `mdcrop artifacts`
 
-Schema version: `crop.mdloom-artifacts.v1`
+Schema version: `mdcrop.mdloom-artifacts.v1`
 
-Default output is JSON. `crop artifacts --format markdown` renders the same
+Default output is JSON. `mdcrop artifacts --format markdown` renders the same
 report as a README/status-page table with source, output, target, status,
 existence, stale, cache, directive, and diagnostic columns.
 

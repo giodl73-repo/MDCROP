@@ -1,5 +1,5 @@
 target/
-.crop/
+.mdcrop/
 .cargo/config.toml
 *.tmp
 *.log

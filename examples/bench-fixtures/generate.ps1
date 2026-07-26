@@ -82,8 +82,8 @@ function New-Fixture {
         }
         $intro = "# $title`n`n$focus. This source links to [next]($next), [previous]($prev), and [cluster hub]($hub)."
         $evidence = "## Evidence`n`nThe evidence paragraph for $title repeats the task vocabulary when relevant: $focus."
-        $details = "## Details`n`nThe details paragraph gives CROP another local unit with stable source identity, section shape, and linkable provenance."
-        $handoff = "## Handoff`n`nThe handoff paragraph describes how a selected crop should preserve enough context for an AI reader without carrying the whole corpus."
+        $details = "## Details`n`nThe details paragraph gives MDCROP another local unit with stable source identity, section shape, and linkable provenance."
+        $handoff = "## Handoff`n`nThe handoff paragraph describes how a selected mdcrop should preserve enough context for an AI reader without carrying the whole corpus."
         $markdown = @($frontmatter, $intro, $evidence, $details, $handoff) -join "`n`n"
 
         [System.IO.File]::WriteAllText((Join-Path $mdRoot "$topic.md"), $markdown, $utf8NoBom)
@@ -123,7 +123,7 @@ function New-Fixture {
     }
 
     $manifest = [ordered]@{
-        schema_version = "crop.bench-fixture.v1"
+        schema_version = "mdcrop.bench-fixture.v1"
         name = $Name
         document_count = $Count
         task = $task

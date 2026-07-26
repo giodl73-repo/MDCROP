@@ -1,5 +1,5 @@
 {
-  "schema_version": "crop.corpus-status.v1",
+  "schema_version": "mdcrop.corpus-status.v1",
   "title": "Corpus Status",
   "input": "examples\\mdloom-fixture\\src",
   "issue_count": 3,

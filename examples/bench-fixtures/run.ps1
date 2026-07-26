@@ -50,7 +50,7 @@ try {
                 quality_score = [math]::Round((($measurements | Measure-Object quality_score -Average).Average), 6)
                 ingest_ms_avg = [math]::Round((($measurements | ForEach-Object { $_.timings.ingest_ms } | Measure-Object -Average).Average), 3)
                 score_ms_avg = [math]::Round((($measurements | ForEach-Object { $_.timings.score_ms } | Measure-Object -Average).Average), 3)
-                crop_ms_avg = [math]::Round((($measurements | ForEach-Object { $_.timings.crop_ms } | Measure-Object -Average).Average), 3)
+                mdcrop_ms_avg = [math]::Round((($measurements | ForEach-Object { $_.timings.mdcrop_ms } | Measure-Object -Average).Average), 3)
                 total_ms_avg = [math]::Round((($measurements | ForEach-Object { $_.timings.total_ms } | Measure-Object -Average).Average), 3)
                 total_ms_min = ($measurements | ForEach-Object { $_.timings.total_ms } | Measure-Object -Minimum).Minimum
                 total_ms_max = ($measurements | ForEach-Object { $_.timings.total_ms } | Measure-Object -Maximum).Maximum

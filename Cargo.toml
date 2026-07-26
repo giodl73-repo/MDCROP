@@ -1,15 +1,17 @@
 [workspace]
 members = [
-    "crates/crop-core",
-    "crates/crop-cli",
+    "crates/mdcrop-core",
+    "crates/mdcrop-cli",
 ]
 resolver = "2"
 
 [workspace.package]
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Gio Della-Libera"]
 license = "MIT"
+repository = "https://github.com/giodl73-repo/MDCROP"
+rust-version = "1.82"
 
 [workspace.dependencies]
 anyhow = "1"

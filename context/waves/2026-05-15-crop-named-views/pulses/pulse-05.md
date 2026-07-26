@@ -4,7 +4,7 @@
 
 ```powershell
 Get-ChildItem examples\views
-cargo run -p crop-cli -- view --list --dir examples\views
+cargo run -p mdcrop-cli -- view --list --dir examples\views
 ```
 
 ## Decision
@@ -29,10 +29,10 @@ operator documentation.
 ```powershell
 cargo fmt
 cargo test --workspace
-cargo run -q -p crop-cli -- view --list --dir examples\views
-cargo run -q -p crop-cli -- view --file examples\views\whole-repo-view.json --query "prefix cache" -e md
-cargo run -q -p crop-cli -- view --file examples\views\troubleshooting-view.json --query "diagnose failing view" -e md -e rs
-cargo run -q -p crop-cli -- view --file examples\views\maxim-computing-view.json --query "computing systems" -e md
-cargo run -q -p crop-cli -- view --file examples\views\resonance-theory-view.json --query "theory context" -e md -e tex
+cargo run -q -p mdcrop-cli -- view --list --dir examples\views
+cargo run -q -p mdcrop-cli -- view --file examples\views\whole-repo-view.json --query "prefix cache" -e md
+cargo run -q -p mdcrop-cli -- view --file examples\views\troubleshooting-view.json --query "diagnose failing view" -e md -e rs
+cargo run -q -p mdcrop-cli -- view --file examples\views\maxim-computing-view.json --query "computing systems" -e md
+cargo run -q -p mdcrop-cli -- view --file examples\views\resonance-theory-view.json --query "theory context" -e md -e tex
 git diff --check
 ```

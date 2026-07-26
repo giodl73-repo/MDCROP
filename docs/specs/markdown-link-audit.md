@@ -1,10 +1,10 @@
 # Markdown Link Audit Schema
 
-Command: `crop links`
+Command: `mdcrop links`
 
-Schema version: `crop.markdown-link-audit.v1`
+Schema version: `mdcrop.markdown-link-audit.v1`
 
-Default output is JSON. `crop links --format markdown` renders the same report
+Default output is JSON. `mdcrop links --format markdown` renders the same report
 as a Markdown table for generated status pages; it does not change the JSON
 schema contract.
 
@@ -20,7 +20,7 @@ schema contract.
 | `broken_count` | number | Links that failed resolution. |
 | `links` | array | Link rows with `source`, `target`, `status`, optional `resolved_source`, optional `error`. |
 
-Path fields use CROP source IDs with `/` separators where possible. External
+Path fields use MDCROP source IDs with `/` separators where possible. External
 HTTP links are intentionally ignored.
 
 Golden fixture: `examples/mdloom-fixture/golden/links.json`.

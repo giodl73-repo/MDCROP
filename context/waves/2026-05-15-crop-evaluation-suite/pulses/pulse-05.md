@@ -18,7 +18,7 @@ vendor lock-in.
 - Add an import path for saved competitor results so vector/search systems can
   be evaluated offline against the same labels. **Done** via
   `eval_competitor_json`, `eval_competitor_results`, and
-  `crop eval-import --input`.
+  `mdcrop eval-import --input`.
 - Document candidate competitors: Qdrant/Chroma for vector, Lucene/Tantivy for
   lexical, LlamaIndex/LangChain-style retrievers for RAG orchestration, and
   GraphRAG/Neo4j-style graph systems for graph comparison. **Done** in
@@ -28,8 +28,8 @@ vendor lock-in.
 ## Scout commands
 
 ```powershell
-git -C C:\src\CROP --no-pager status --short --branch
-rg "EvalMethod|EvalReport" C:\src\CROP\crates -n
+git -C C:\src\MDCROP --no-pager status --short --branch
+rg "EvalMethod|EvalReport" C:\src\MDCROP\crates -n
 ```
 
 ## Validation
@@ -43,6 +43,6 @@ git diff --check
 ## Outcome
 
 External systems can now export saved fixture selections using
-`crop.competitor-results.v1`; CROP validates selected unit IDs, rejects duplicate
+`mdcrop.competitor-results.v1`; MDCROP validates selected unit IDs, rejects duplicate
 or unknown units, and scores the imported results with the same metric contract
 used by local fixture methods.

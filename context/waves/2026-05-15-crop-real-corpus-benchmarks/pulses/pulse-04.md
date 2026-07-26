@@ -11,7 +11,7 @@ repeated runs have a quick suite-level performance and quality readout.
 
 ## Deliverables
 
-- Add `BenchAggregate` to `crop.bench-report.v1`.
+- Add `BenchAggregate` to `mdcrop.bench-report.v1`.
 - Include corpus totals, selected-token totals, mean quality, mean stage timings,
   and max total runtime.
 - Keep per-case benchmark rows unchanged for detailed inspection.
@@ -21,8 +21,8 @@ repeated runs have a quick suite-level performance and quality readout.
 ## Scout commands
 
 ```powershell
-git -C C:\src\CROP --no-pager status --short --branch
-rg "BenchManifestReport|BenchAggregate|bench_manifest" C:\src\CROP\crates -n
+git -C C:\src\MDCROP --no-pager status --short --branch
+rg "BenchManifestReport|BenchAggregate|bench_manifest" C:\src\MDCROP\crates -n
 ```
 
 ## Validation
@@ -30,13 +30,13 @@ rg "BenchManifestReport|BenchAggregate|bench_manifest" C:\src\CROP\crates -n
 ```powershell
 cargo fmt
 cargo test --workspace
-cargo run -p crop-cli -- bench --manifest benchmark-manifest.json
+cargo run -p mdcrop-cli -- bench --manifest benchmark-manifest.json
 git diff --check
 ```
 
 ## Outcome
 
-Manifest benchmark output now contains an `aggregate` block with method `crop`,
+Manifest benchmark output now contains an `aggregate` block with method `mdcrop`,
 case count, total corpus/selection counts, mean selected size, mean quality, mean
 stage timings, and max total runtime. This keeps detailed rows while making the
 suite-level result easy to compare across local runs.

@@ -16,6 +16,6 @@ supported.
 
 ## Scope
 
-CROP processes local repositories and document trees. Reports should identify
+MDCROP processes local repositories and document trees. Reports should identify
 whether the issue affects path handling, unintended file disclosure, generated
 artifact integrity, dependency execution, or untrusted input parsing.

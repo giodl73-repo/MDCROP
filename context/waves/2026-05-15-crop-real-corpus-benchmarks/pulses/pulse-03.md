@@ -7,8 +7,8 @@ Done.
 ## Goal
 
 Give external retrieval systems concrete offline JSON examples they can copy,
-fill, and score through `crop eval-import` without adding hosted dependencies to
-CROP.
+fill, and score through `mdcrop eval-import` without adding hosted dependencies to
+MDCROP.
 
 ## Deliverables
 
@@ -16,13 +16,13 @@ CROP.
   graph competitor classes.
 - Keep examples fixture-based and local-only.
 - Add unit coverage that parses and scores every checked example.
-- Document how to run all examples through `crop eval-import`.
+- Document how to run all examples through `mdcrop eval-import`.
 
 ## Scout commands
 
 ```powershell
-git -C C:\src\CROP --no-pager status --short --branch
-rg "CompetitorClass|eval_competitor_json|eval-import" C:\src\CROP -n
+git -C C:\src\MDCROP --no-pager status --short --branch
+rg "CompetitorClass|eval_competitor_json|eval-import" C:\src\MDCROP -n
 ```
 
 ## Validation
@@ -30,7 +30,7 @@ rg "CompetitorClass|eval_competitor_json|eval-import" C:\src\CROP -n
 ```powershell
 cargo fmt
 cargo test --workspace
-cargo run -p crop-cli -- eval-import --input examples\competitors\qdrant-vector.missing-bridge.json
+cargo run -p mdcrop-cli -- eval-import --input examples\competitors\qdrant-vector.missing-bridge.json
 git diff --check
 ```
 
@@ -39,5 +39,5 @@ git diff --check
 `examples/competitors/` now contains five valid offline competitor exports:
 Qdrant-style vector, Tantivy/Lucene-style lexical, hybrid reranker,
 LlamaIndex-style RAG orchestration, and GraphRAG/Neo4j-style graph retrieval.
-Each uses the same `crop.competitor-results.v1` schema and is scoreable through
-`crop eval-import`.
+Each uses the same `mdcrop.competitor-results.v1` schema and is scoreable through
+`mdcrop eval-import`.

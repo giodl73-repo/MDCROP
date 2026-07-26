@@ -23,12 +23,12 @@ pub use mdloom_artifacts::{
     MdloomArtifactRecord, MdloomArtifactReport, MdloomArtifactReportEntry,
 };
 
-pub const COMPETITOR_RESULTS_SCHEMA: &str = "crop.competitor-results.v1";
-pub const BENCH_MANIFEST_SCHEMA: &str = "crop.bench-manifest.v1";
-pub const CROP_VIEW_SCHEMA: &str = "crop.view.v1";
+pub const COMPETITOR_RESULTS_SCHEMA: &str = "mdcrop.competitor-results.v1";
+pub const BENCH_MANIFEST_SCHEMA: &str = "mdcrop.bench-manifest.v1";
+pub const MDCROP_VIEW_SCHEMA: &str = "mdcrop.view.v1";
 
 #[derive(Debug, Error)]
-pub enum CropError {
+pub enum MdcropError {
     #[error("[INPUT] evidence graph must contain at least one unit")]
     EmptyGraph,
     #[error("[INPUT] seed unit {seed} is out of bounds for graph with {node_count} units")]
@@ -94,9 +94,9 @@ pub enum CropError {
     UnsupportedBenchManifestSchema { schema_version: String },
     #[error("[BENCH] benchmark manifest must contain at least one case")]
     EmptyBenchManifest,
-    #[error("[VIEW] failed to parse crop view: {0}")]
+    #[error("[VIEW] failed to parse mdcrop view: {0}")]
     ViewImport(serde_json::Error),
-    #[error("[VIEW] unsupported crop view schema: {schema_version}")]
+    #[error("[VIEW] unsupported mdcrop view schema: {schema_version}")]
     UnsupportedViewSchema { schema_version: String },
     #[error("[VIEW] invalid frontmatter query: {query}")]
     InvalidFrontmatterQuery { query: String },
@@ -123,13 +123,13 @@ pub struct EvidenceGraph {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct CropOptions {
+pub struct MdcropOptions {
     pub seed: usize,
     pub token_budget: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct CropUnit {
+pub struct MdcropUnit {
     pub id: String,
     pub source_id: String,
     pub content_hash: String,
@@ -138,7 +138,7 @@ pub struct CropUnit {
     pub metadata: BTreeMap<String, String>,
     pub relevance: f64,
     pub token_estimate: usize,
-    pub reason: CropReason,
+    pub reason: MdcropReason,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -163,7 +163,7 @@ pub struct IngestOptions {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum CropReason {
+pub enum MdcropReason {
     Seed,
     BridgeConnector,
     ConnectorTarget,
@@ -171,8 +171,8 @@ pub enum CropReason {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct CropPack {
-    pub units: Vec<CropUnit>,
+pub struct MdcropPack {
+    pub units: Vec<MdcropUnit>,
     pub representative_unit_id: String,
     pub token_estimate: usize,
     pub boundary_cut_edges: usize,
@@ -219,7 +219,7 @@ pub struct PrefixCachedPack {
     pub cache_key: String,
     pub prefix_hash: String,
     pub prefix: PrefixBlock,
-    pub body: CropPack,
+    pub body: MdcropPack,
     pub task_tail: TaskTail,
 }
 
@@ -227,7 +227,7 @@ pub struct PrefixCachedPack {
 pub struct BenchTimings {
     pub ingest_ms: u64,
     pub score_ms: u64,
-    pub crop_ms: u64,
+    pub mdcrop_ms: u64,
     pub total_ms: u64,
 }
 
@@ -286,7 +286,7 @@ pub struct BenchAggregate {
     pub mean_quality_score: f64,
     pub mean_ingest_ms: f64,
     pub mean_score_ms: f64,
-    pub mean_crop_ms: f64,
+    pub mean_mdcrop_ms: f64,
     pub mean_total_ms: f64,
     pub max_total_ms: u64,
 }
@@ -300,7 +300,7 @@ pub struct BenchManifestReport {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct CropView {
+pub struct MdcropView {
     pub schema_version: String,
     pub name: String,
     pub root: String,
@@ -316,25 +316,25 @@ pub struct CropView {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct CropViewRun {
+pub struct MdcropViewRun {
     pub schema_version: String,
     pub name: String,
     pub root: String,
     pub task: String,
     pub token_budget: usize,
     pub seed: usize,
-    pub pack: CropPack,
+    pub pack: MdcropPack,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct CropViewPrefixCachedRun {
+pub struct MdcropViewPrefixCachedRun {
     pub schema_version: String,
     pub name: String,
     pub cache: PrefixCachedPack,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct CropViewInspect {
+pub struct MdcropViewInspect {
     pub schema_version: String,
     pub name: String,
     pub root: String,
@@ -352,17 +352,17 @@ pub struct CropViewInspect {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct CropViewStoreInspectEntry {
+pub struct MdcropViewStoreInspectEntry {
     pub file: String,
     pub status: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub inspect: Option<CropViewInspect>,
+    pub inspect: Option<MdcropViewInspect>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct CropViewStoreInspect {
+pub struct MdcropViewStoreInspect {
     pub schema_version: String,
     pub store: String,
     pub view_count: usize,
@@ -371,7 +371,7 @@ pub struct CropViewStoreInspect {
     pub total_supported_source_count: usize,
     pub max_supported_source_count: usize,
     pub aggregate_extension_counts: BTreeMap<String, usize>,
-    pub views: Vec<CropViewStoreInspectEntry>,
+    pub views: Vec<MdcropViewStoreInspectEntry>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -504,7 +504,7 @@ pub struct MarkdownHeadingInventory {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct CropViewSummary {
+pub struct MdcropViewSummary {
     pub file: String,
     pub name: String,
     pub root: String,
@@ -518,11 +518,11 @@ pub struct CropViewSummary {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct CropViewList {
+pub struct MdcropViewList {
     pub schema_version: String,
     pub store: String,
     pub view_count: usize,
-    pub views: Vec<CropViewSummary>,
+    pub views: Vec<MdcropViewSummary>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -538,7 +538,7 @@ pub enum EvalCase {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum EvalMethod {
-    Crop,
+    Mdcrop,
     ScoreTopK,
     LexicalTopK,
     HybridTopK,
@@ -671,7 +671,7 @@ pub fn fixture_graph() -> EvidenceGraph {
             unit_with_source(
                 "stale-noise",
                 "fixture:old",
-                "Old noisy note that should stay outside the crop.",
+                "Old noisy note that should stay outside the mdcrop.",
                 0.9,
                 40,
             ),
@@ -684,16 +684,16 @@ pub fn eval_fixture(
     case: EvalCase,
     method: EvalMethod,
     token_budget: usize,
-) -> Result<EvalReport, CropError> {
+) -> Result<EvalReport, MdcropError> {
     if token_budget == 0 {
-        return Err(CropError::NonPositiveBudget);
+        return Err(MdcropError::NonPositiveBudget);
     }
     eval_case(fixture_for_case(case), method, token_budget)
 }
 
-pub fn eval_suite(token_budget: usize) -> Result<EvalSuiteReport, CropError> {
+pub fn eval_suite(token_budget: usize) -> Result<EvalSuiteReport, MdcropError> {
     if token_budget == 0 {
-        return Err(CropError::NonPositiveBudget);
+        return Err(MdcropError::NonPositiveBudget);
     }
     let cases = all_eval_cases();
     let methods = all_eval_methods();
@@ -716,19 +716,19 @@ pub fn eval_suite(token_budget: usize) -> Result<EvalSuiteReport, CropError> {
     })
 }
 
-pub fn eval_competitor_json(json: &str) -> Result<CompetitorEvalReport, CropError> {
-    let input = serde_json::from_str(json).map_err(CropError::CompetitorImport)?;
+pub fn eval_competitor_json(json: &str) -> Result<CompetitorEvalReport, MdcropError> {
+    let input = serde_json::from_str(json).map_err(MdcropError::CompetitorImport)?;
     eval_competitor_results(input)
 }
 
 pub fn eval_competitor_results(
     input: CompetitorEvalInput,
-) -> Result<CompetitorEvalReport, CropError> {
+) -> Result<CompetitorEvalReport, MdcropError> {
     if input.token_budget == 0 {
-        return Err(CropError::NonPositiveBudget);
+        return Err(MdcropError::NonPositiveBudget);
     }
     if input.schema_version != COMPETITOR_RESULTS_SCHEMA {
-        return Err(CropError::UnsupportedCompetitorSchema {
+        return Err(MdcropError::UnsupportedCompetitorSchema {
             schema_version: input.schema_version,
         });
     }
@@ -773,7 +773,7 @@ pub fn all_eval_cases() -> Vec<EvalCase> {
 
 pub fn all_eval_methods() -> Vec<EvalMethod> {
     vec![
-        EvalMethod::Crop,
+        EvalMethod::Mdcrop,
         EvalMethod::ScoreTopK,
         EvalMethod::LexicalTopK,
         EvalMethod::HybridTopK,
@@ -782,16 +782,16 @@ pub fn all_eval_methods() -> Vec<EvalMethod> {
 
 pub fn prefix_cached_pack(
     ingested: &IngestedEvidence,
-    body: CropPack,
+    body: MdcropPack,
     task: impl Into<String>,
-    options: CropOptions,
+    options: MdcropOptions,
     profile: PrefixCacheProfile,
-) -> Result<PrefixCachedPack, CropError> {
+) -> Result<PrefixCachedPack, MdcropError> {
     let prefix = prefix_block(ingested, profile);
     let prefix_bytes = serde_json::to_vec(&prefix)?;
     let prefix_hash = sha256_hex(&prefix_bytes);
     let cache_key = format!(
-        "crop-prefix:{}:{}",
+        "mdcrop-prefix:{}:{}",
         prefix_profile_name(profile),
         prefix_hash.trim_start_matches("sha256:")
     );
@@ -811,10 +811,10 @@ pub fn prefix_cached_pack(
 pub fn bench_pack(
     root: impl AsRef<Path>,
     task: &str,
-    options: CropOptions,
-) -> Result<BenchReport, CropError> {
+    options: MdcropOptions,
+) -> Result<BenchReport, MdcropError> {
     if options.token_budget == 0 {
-        return Err(CropError::NonPositiveBudget);
+        return Err(MdcropError::NonPositiveBudget);
     }
 
     let total_start = Instant::now();
@@ -827,13 +827,13 @@ pub fn bench_pack(
     score_graph_for_task(&mut ingested.graph, task);
     let score_ms = elapsed_ms(score_start);
 
-    let crop_start = Instant::now();
-    let pack = crop_context(&ingested.graph, options.clone())?;
-    let crop_ms = elapsed_ms(crop_start);
+    let mdcrop_start = Instant::now();
+    let pack = mdcrop_context(&ingested.graph, options.clone())?;
+    let mdcrop_ms = elapsed_ms(mdcrop_start);
     let total_ms = elapsed_ms(total_start);
 
     Ok(BenchReport {
-        schema_version: "crop.bench.v1".to_string(),
+        schema_version: "mdcrop.bench.v1".to_string(),
         root: ingested.report.root,
         task: task.to_string(),
         token_budget: options.token_budget,
@@ -850,7 +850,7 @@ pub fn bench_pack(
         timings: BenchTimings {
             ingest_ms,
             score_ms,
-            crop_ms,
+            mdcrop_ms,
             total_ms,
         },
     })
@@ -859,22 +859,22 @@ pub fn bench_pack(
 pub fn bench_manifest_json(
     json: &str,
     base_dir: impl AsRef<Path>,
-) -> Result<BenchManifestReport, CropError> {
-    let manifest = serde_json::from_str(json).map_err(CropError::BenchManifestImport)?;
+) -> Result<BenchManifestReport, MdcropError> {
+    let manifest = serde_json::from_str(json).map_err(MdcropError::BenchManifestImport)?;
     bench_manifest(manifest, base_dir)
 }
 
 pub fn bench_manifest(
     manifest: BenchManifest,
     base_dir: impl AsRef<Path>,
-) -> Result<BenchManifestReport, CropError> {
+) -> Result<BenchManifestReport, MdcropError> {
     if manifest.schema_version != BENCH_MANIFEST_SCHEMA {
-        return Err(CropError::UnsupportedBenchManifestSchema {
+        return Err(MdcropError::UnsupportedBenchManifestSchema {
             schema_version: manifest.schema_version,
         });
     }
     if manifest.cases.is_empty() {
-        return Err(CropError::EmptyBenchManifest);
+        return Err(MdcropError::EmptyBenchManifest);
     }
 
     let base_dir = base_dir.as_ref();
@@ -884,7 +884,7 @@ pub fn bench_manifest(
         let report = bench_pack(
             root,
             &case.task,
-            CropOptions {
+            MdcropOptions {
                 seed: case.seed,
                 token_budget: case.token_budget,
             },
@@ -897,23 +897,23 @@ pub fn bench_manifest(
     }
 
     Ok(BenchManifestReport {
-        schema_version: "crop.bench-report.v1".to_string(),
+        schema_version: "mdcrop.bench-report.v1".to_string(),
         case_count: cases.len(),
         aggregate: aggregate_bench_cases(&cases),
         cases,
     })
 }
 
-pub fn run_view_json(json: &str, base_dir: impl AsRef<Path>) -> Result<CropViewRun, CropError> {
-    let view = serde_json::from_str(json).map_err(CropError::ViewImport)?;
+pub fn run_view_json(json: &str, base_dir: impl AsRef<Path>) -> Result<MdcropViewRun, MdcropError> {
+    let view = serde_json::from_str(json).map_err(MdcropError::ViewImport)?;
     run_view(view, base_dir)
 }
 
 pub fn run_view_mdport_json(
     json: &str,
     base_dir: impl AsRef<Path>,
-) -> Result<MdportDocument, CropError> {
-    let view = serde_json::from_str(json).map_err(CropError::ViewImport)?;
+) -> Result<MdportDocument, MdcropError> {
+    let view = serde_json::from_str(json).map_err(MdcropError::ViewImport)?;
     run_view_mdport(view, base_dir)
 }
 
@@ -921,38 +921,38 @@ pub fn run_view_prefix_cached_json(
     json: &str,
     base_dir: impl AsRef<Path>,
     profile: PrefixCacheProfile,
-) -> Result<CropViewPrefixCachedRun, CropError> {
-    let view = serde_json::from_str(json).map_err(CropError::ViewImport)?;
+) -> Result<MdcropViewPrefixCachedRun, MdcropError> {
+    let view = serde_json::from_str(json).map_err(MdcropError::ViewImport)?;
     run_view_prefix_cached(view, base_dir, profile)
 }
 
 pub fn inspect_view_json(
     json: &str,
     base_dir: impl AsRef<Path>,
-) -> Result<CropViewInspect, CropError> {
-    let view = serde_json::from_str(json).map_err(CropError::ViewImport)?;
+) -> Result<MdcropViewInspect, MdcropError> {
+    let view = serde_json::from_str(json).map_err(MdcropError::ViewImport)?;
     inspect_view(view, base_dir)
 }
 
 pub fn inspect_view(
-    view: CropView,
+    view: MdcropView,
     base_dir: impl AsRef<Path>,
-) -> Result<CropViewInspect, CropError> {
+) -> Result<MdcropViewInspect, MdcropError> {
     validate_view(&view)?;
     let root = manifest_root(base_dir.as_ref(), &view.root);
     if !root.exists() {
-        return Err(CropError::RootDoesNotExist {
+        return Err(MdcropError::RootDoesNotExist {
             path: root.display().to_string(),
         });
     }
-    let resolved_root = fs::canonicalize(&root).map_err(|source| CropError::InspectPath {
+    let resolved_root = fs::canonicalize(&root).map_err(|source| MdcropError::InspectPath {
         path: root.display().to_string(),
         source,
     })?;
     let ingest_options = view_ingest_options(&view);
     let files = supported_files(&resolved_root, &ingest_options)?;
     if files.is_empty() {
-        return Err(CropError::NoSupportedFiles {
+        return Err(MdcropError::NoSupportedFiles {
             path: resolved_root.display().to_string(),
         });
     }
@@ -963,8 +963,8 @@ pub fn inspect_view(
         .collect::<Vec<_>>();
     let extension_counts = extension_counts(&files);
 
-    Ok(CropViewInspect {
-        schema_version: "crop.view-inspect.v1".to_string(),
+    Ok(MdcropViewInspect {
+        schema_version: "mdcrop.view-inspect.v1".to_string(),
         name: view.name,
         root: view.root,
         resolved_root: display_path(&resolved_root),
@@ -980,10 +980,10 @@ pub fn inspect_view(
     })
 }
 
-pub fn inspect_view_store(store: impl AsRef<Path>) -> Result<CropViewStoreInspect, CropError> {
+pub fn inspect_view_store(store: impl AsRef<Path>) -> Result<MdcropViewStoreInspect, MdcropError> {
     let store = store.as_ref();
     if !store.exists() {
-        return Err(CropError::RootDoesNotExist {
+        return Err(MdcropError::RootDoesNotExist {
             path: store.display().to_string(),
         });
     }
@@ -998,12 +998,12 @@ pub fn inspect_view_store(store: impl AsRef<Path>) -> Result<CropViewStoreInspec
         let json = match fs::read_to_string(&path) {
             Ok(json) => json,
             Err(source) => {
-                views.push(CropViewStoreInspectEntry {
+                views.push(MdcropViewStoreInspectEntry {
                     file,
                     status: "failed".to_string(),
                     inspect: None,
                     error: Some(
-                        CropError::ReadFile {
+                        MdcropError::ReadFile {
                             path: path.display().to_string(),
                             source,
                         }
@@ -1015,13 +1015,13 @@ pub fn inspect_view_store(store: impl AsRef<Path>) -> Result<CropViewStoreInspec
         };
         let base_dir = path.parent().unwrap_or(store);
         match inspect_view_json(&json, base_dir) {
-            Ok(inspect) => views.push(CropViewStoreInspectEntry {
+            Ok(inspect) => views.push(MdcropViewStoreInspectEntry {
                 file,
                 status: "ok".to_string(),
                 inspect: Some(inspect),
                 error: None,
             }),
-            Err(error) => views.push(CropViewStoreInspectEntry {
+            Err(error) => views.push(MdcropViewStoreInspectEntry {
                 file,
                 status: "failed".to_string(),
                 inspect: None,
@@ -1047,8 +1047,8 @@ pub fn inspect_view_store(store: impl AsRef<Path>) -> Result<CropViewStoreInspec
                 .or_insert(0) += count;
         }
     }
-    Ok(CropViewStoreInspect {
-        schema_version: "crop.view-store-inspect.v1".to_string(),
+    Ok(MdcropViewStoreInspect {
+        schema_version: "mdcrop.view-store-inspect.v1".to_string(),
         store: store.display().to_string(),
         view_count: views.len(),
         ok_count,
@@ -1063,8 +1063,8 @@ pub fn inspect_view_store(store: impl AsRef<Path>) -> Result<CropViewStoreInspec
 pub fn markdown_index_for_view_json(
     json: &str,
     base_dir: impl AsRef<Path>,
-) -> Result<String, CropError> {
-    let view: CropView = serde_json::from_str(json).map_err(CropError::ViewImport)?;
+) -> Result<String, MdcropError> {
+    let view: MdcropView = serde_json::from_str(json).map_err(MdcropError::ViewImport)?;
     validate_view(&view)?;
     let root = manifest_root(base_dir.as_ref(), &view.root);
     markdown_index(root, &view.name, &view_ingest_options(&view))
@@ -1074,7 +1074,7 @@ pub fn markdown_index(
     root: impl AsRef<Path>,
     title: &str,
     options: &IngestOptions,
-) -> Result<String, CropError> {
+) -> Result<String, MdcropError> {
     let index = markdown_index_report(root, title, options)?;
     Ok(render_markdown_index(&index))
 }
@@ -1082,8 +1082,8 @@ pub fn markdown_index(
 pub fn markdown_catalog_for_view_json(
     json: &str,
     base_dir: impl AsRef<Path>,
-) -> Result<String, CropError> {
-    let view: CropView = serde_json::from_str(json).map_err(CropError::ViewImport)?;
+) -> Result<String, MdcropError> {
+    let view: MdcropView = serde_json::from_str(json).map_err(MdcropError::ViewImport)?;
     validate_view(&view)?;
     let root = manifest_root(base_dir.as_ref(), &view.root);
     markdown_catalog(root, &view.name, &view_ingest_options(&view))
@@ -1093,7 +1093,7 @@ pub fn markdown_catalog(
     root: impl AsRef<Path>,
     title: &str,
     options: &IngestOptions,
-) -> Result<String, CropError> {
+) -> Result<String, MdcropError> {
     let catalog = markdown_catalog_report(root, title, options)?;
     Ok(render_markdown_catalog(&catalog))
 }
@@ -1102,7 +1102,7 @@ pub fn markdown_catalog_report(
     root: impl AsRef<Path>,
     title: &str,
     options: &IngestOptions,
-) -> Result<MarkdownCatalog, CropError> {
+) -> Result<MarkdownCatalog, MdcropError> {
     let index = markdown_index_report(root.as_ref(), title, options)?;
     let backlinks = markdown_backlinks(root.as_ref(), options)?;
     let frontmatter = markdown_frontmatter_inventory(root.as_ref(), options)?;
@@ -1157,30 +1157,30 @@ pub fn markdown_index_report(
     root: impl AsRef<Path>,
     title: &str,
     options: &IngestOptions,
-) -> Result<MarkdownIndex, CropError> {
+) -> Result<MarkdownIndex, MdcropError> {
     let root = root.as_ref();
     if !root.exists() {
-        return Err(CropError::RootDoesNotExist {
+        return Err(MdcropError::RootDoesNotExist {
             path: root.display().to_string(),
         });
     }
-    let resolved_root = fs::canonicalize(root).map_err(|source| CropError::InspectPath {
+    let resolved_root = fs::canonicalize(root).map_err(|source| MdcropError::InspectPath {
         path: root.display().to_string(),
         source,
     })?;
     let files = supported_files(&resolved_root, options)?;
     if files.is_empty() {
-        return Err(CropError::NoSupportedFiles {
+        return Err(MdcropError::NoSupportedFiles {
             path: resolved_root.display().to_string(),
         });
     }
     let mut entries = Vec::new();
     for file in &files {
-        let bytes = fs::read(file).map_err(|source| CropError::ReadFile {
+        let bytes = fs::read(file).map_err(|source| MdcropError::ReadFile {
             path: file.display().to_string(),
             source,
         })?;
-        let text = String::from_utf8(bytes).map_err(|_| CropError::NonUtf8File {
+        let text = String::from_utf8(bytes).map_err(|_| MdcropError::NonUtf8File {
             path: file.display().to_string(),
         })?;
         let path = source_id(&resolved_root, file);
@@ -1218,8 +1218,8 @@ pub fn markdown_index_report(
 pub fn markdown_link_audit_for_view_json(
     json: &str,
     base_dir: impl AsRef<Path>,
-) -> Result<MarkdownLinkAudit, CropError> {
-    let view: CropView = serde_json::from_str(json).map_err(CropError::ViewImport)?;
+) -> Result<MarkdownLinkAudit, MdcropError> {
+    let view: MdcropView = serde_json::from_str(json).map_err(MdcropError::ViewImport)?;
     validate_view(&view)?;
     let root = manifest_root(base_dir.as_ref(), &view.root);
     markdown_link_audit(root, &view_ingest_options(&view))
@@ -1228,20 +1228,20 @@ pub fn markdown_link_audit_for_view_json(
 pub fn markdown_link_audit(
     root: impl AsRef<Path>,
     options: &IngestOptions,
-) -> Result<MarkdownLinkAudit, CropError> {
+) -> Result<MarkdownLinkAudit, MdcropError> {
     let root = root.as_ref();
     if !root.exists() {
-        return Err(CropError::RootDoesNotExist {
+        return Err(MdcropError::RootDoesNotExist {
             path: root.display().to_string(),
         });
     }
-    let resolved_root = fs::canonicalize(root).map_err(|source| CropError::InspectPath {
+    let resolved_root = fs::canonicalize(root).map_err(|source| MdcropError::InspectPath {
         path: root.display().to_string(),
         source,
     })?;
     let files = supported_files(&resolved_root, options)?;
     if files.is_empty() {
-        return Err(CropError::NoSupportedFiles {
+        return Err(MdcropError::NoSupportedFiles {
             path: resolved_root.display().to_string(),
         });
     }
@@ -1251,11 +1251,11 @@ pub fn markdown_link_audit(
         if !is_markdown_file(file) {
             continue;
         }
-        let bytes = fs::read(file).map_err(|source| CropError::ReadFile {
+        let bytes = fs::read(file).map_err(|source| MdcropError::ReadFile {
             path: file.display().to_string(),
             source,
         })?;
-        let text = String::from_utf8(bytes).map_err(|_| CropError::NonUtf8File {
+        let text = String::from_utf8(bytes).map_err(|_| MdcropError::NonUtf8File {
             path: file.display().to_string(),
         })?;
         let Some(parent) = file.parent() else {
@@ -1275,7 +1275,7 @@ pub fn markdown_link_audit(
     let ok_count = links.iter().filter(|link| link.status == "ok").count();
     let broken_count = links.len().saturating_sub(ok_count);
     Ok(MarkdownLinkAudit {
-        schema_version: "crop.markdown-link-audit.v1".to_string(),
+        schema_version: "mdcrop.markdown-link-audit.v1".to_string(),
         root: display_path(&resolved_root),
         source_count: files.len(),
         link_count: links.len(),
@@ -1311,8 +1311,8 @@ pub fn render_markdown_link_audit(audit: &MarkdownLinkAudit) -> String {
 pub fn markdown_backlinks_for_view_json(
     json: &str,
     base_dir: impl AsRef<Path>,
-) -> Result<MarkdownBacklinkReport, CropError> {
-    let view: CropView = serde_json::from_str(json).map_err(CropError::ViewImport)?;
+) -> Result<MarkdownBacklinkReport, MdcropError> {
+    let view: MdcropView = serde_json::from_str(json).map_err(MdcropError::ViewImport)?;
     validate_view(&view)?;
     let root = manifest_root(base_dir.as_ref(), &view.root);
     markdown_backlinks(root, &view_ingest_options(&view))
@@ -1321,20 +1321,20 @@ pub fn markdown_backlinks_for_view_json(
 pub fn markdown_backlinks(
     root: impl AsRef<Path>,
     options: &IngestOptions,
-) -> Result<MarkdownBacklinkReport, CropError> {
+) -> Result<MarkdownBacklinkReport, MdcropError> {
     let root = root.as_ref();
     if !root.exists() {
-        return Err(CropError::RootDoesNotExist {
+        return Err(MdcropError::RootDoesNotExist {
             path: root.display().to_string(),
         });
     }
-    let resolved_root = fs::canonicalize(root).map_err(|source| CropError::InspectPath {
+    let resolved_root = fs::canonicalize(root).map_err(|source| MdcropError::InspectPath {
         path: root.display().to_string(),
         source,
     })?;
     let files = supported_files(&resolved_root, options)?;
     if files.is_empty() {
-        return Err(CropError::NoSupportedFiles {
+        return Err(MdcropError::NoSupportedFiles {
             path: resolved_root.display().to_string(),
         });
     }
@@ -1364,7 +1364,7 @@ pub fn markdown_backlinks(
 
     let mut pages = Vec::new();
     for file in files.iter().filter(|file| is_markdown_file(file)) {
-        let text = fs::read_to_string(file).map_err(|source| CropError::ReadFile {
+        let text = fs::read_to_string(file).map_err(|source| MdcropError::ReadFile {
             path: file.display().to_string(),
             source,
         })?;
@@ -1390,7 +1390,7 @@ pub fn markdown_backlinks(
 
     let orphan_count = pages.iter().filter(|page| page.orphan).count();
     Ok(MarkdownBacklinkReport {
-        schema_version: "crop.markdown-backlinks.v1".to_string(),
+        schema_version: "mdcrop.markdown-backlinks.v1".to_string(),
         root: display_path(&resolved_root),
         source_count: pages.len(),
         ok_link_count: ok_links.len(),
@@ -1432,8 +1432,8 @@ pub fn render_markdown_backlinks(report: &MarkdownBacklinkReport) -> String {
 pub fn markdown_frontmatter_inventory_for_view_json(
     json: &str,
     base_dir: impl AsRef<Path>,
-) -> Result<MarkdownFrontmatterInventory, CropError> {
-    let view: CropView = serde_json::from_str(json).map_err(CropError::ViewImport)?;
+) -> Result<MarkdownFrontmatterInventory, MdcropError> {
+    let view: MdcropView = serde_json::from_str(json).map_err(MdcropError::ViewImport)?;
     validate_view(&view)?;
     let root = manifest_root(base_dir.as_ref(), &view.root);
     markdown_frontmatter_inventory(root, &view_ingest_options(&view))
@@ -1442,20 +1442,20 @@ pub fn markdown_frontmatter_inventory_for_view_json(
 pub fn markdown_frontmatter_inventory(
     root: impl AsRef<Path>,
     options: &IngestOptions,
-) -> Result<MarkdownFrontmatterInventory, CropError> {
+) -> Result<MarkdownFrontmatterInventory, MdcropError> {
     let root = root.as_ref();
     if !root.exists() {
-        return Err(CropError::RootDoesNotExist {
+        return Err(MdcropError::RootDoesNotExist {
             path: root.display().to_string(),
         });
     }
-    let resolved_root = fs::canonicalize(root).map_err(|source| CropError::InspectPath {
+    let resolved_root = fs::canonicalize(root).map_err(|source| MdcropError::InspectPath {
         path: root.display().to_string(),
         source,
     })?;
     let files = supported_files(&resolved_root, options)?;
     if files.is_empty() {
-        return Err(CropError::NoSupportedFiles {
+        return Err(MdcropError::NoSupportedFiles {
             path: resolved_root.display().to_string(),
         });
     }
@@ -1463,7 +1463,7 @@ pub fn markdown_frontmatter_inventory(
     let mut pages = Vec::new();
     let mut key_counts = BTreeMap::new();
     for file in files.iter().filter(|file| is_markdown_file(file)) {
-        let text = fs::read_to_string(file).map_err(|source| CropError::ReadFile {
+        let text = fs::read_to_string(file).map_err(|source| MdcropError::ReadFile {
             path: file.display().to_string(),
             source,
         })?;
@@ -1485,7 +1485,7 @@ pub fn markdown_frontmatter_inventory(
     }
 
     Ok(MarkdownFrontmatterInventory {
-        schema_version: "crop.markdown-frontmatter.v1".to_string(),
+        schema_version: "mdcrop.markdown-frontmatter.v1".to_string(),
         root: display_path(&resolved_root),
         source_count: files.iter().filter(|file| is_markdown_file(file)).count(),
         page_count: pages.len(),
@@ -1544,8 +1544,8 @@ pub fn render_markdown_frontmatter_inventory(inventory: &MarkdownFrontmatterInve
 pub fn markdown_heading_inventory_for_view_json(
     json: &str,
     base_dir: impl AsRef<Path>,
-) -> Result<MarkdownHeadingInventory, CropError> {
-    let view: CropView = serde_json::from_str(json).map_err(CropError::ViewImport)?;
+) -> Result<MarkdownHeadingInventory, MdcropError> {
+    let view: MdcropView = serde_json::from_str(json).map_err(MdcropError::ViewImport)?;
     validate_view(&view)?;
     let root = manifest_root(base_dir.as_ref(), &view.root);
     markdown_heading_inventory(root, &view_ingest_options(&view))
@@ -1554,20 +1554,20 @@ pub fn markdown_heading_inventory_for_view_json(
 pub fn markdown_heading_inventory(
     root: impl AsRef<Path>,
     options: &IngestOptions,
-) -> Result<MarkdownHeadingInventory, CropError> {
+) -> Result<MarkdownHeadingInventory, MdcropError> {
     let root = root.as_ref();
     if !root.exists() {
-        return Err(CropError::RootDoesNotExist {
+        return Err(MdcropError::RootDoesNotExist {
             path: root.display().to_string(),
         });
     }
-    let resolved_root = fs::canonicalize(root).map_err(|source| CropError::InspectPath {
+    let resolved_root = fs::canonicalize(root).map_err(|source| MdcropError::InspectPath {
         path: root.display().to_string(),
         source,
     })?;
     let files = supported_files(&resolved_root, options)?;
     if files.is_empty() {
-        return Err(CropError::NoSupportedFiles {
+        return Err(MdcropError::NoSupportedFiles {
             path: resolved_root.display().to_string(),
         });
     }
@@ -1577,7 +1577,7 @@ pub fn markdown_heading_inventory(
         if !is_markdown_file(file) {
             continue;
         }
-        let text = fs::read_to_string(file).map_err(|source| CropError::ReadFile {
+        let text = fs::read_to_string(file).map_err(|source| MdcropError::ReadFile {
             path: file.display().to_string(),
             source,
         })?;
@@ -1600,7 +1600,7 @@ pub fn markdown_heading_inventory(
 
     let duplicate_anchors = duplicate_heading_anchors(&headings);
     Ok(MarkdownHeadingInventory {
-        schema_version: "crop.markdown-heading-inventory.v1".to_string(),
+        schema_version: "mdcrop.markdown-heading-inventory.v1".to_string(),
         root: display_path(&resolved_root),
         source_count: files.len(),
         heading_count: headings.len(),
@@ -1646,13 +1646,16 @@ pub fn render_markdown_heading_inventory(inventory: &MarkdownHeadingInventory) -
     markdown
 }
 
-pub fn run_view(view: CropView, base_dir: impl AsRef<Path>) -> Result<CropViewRun, CropError> {
+pub fn run_view(
+    view: MdcropView,
+    base_dir: impl AsRef<Path>,
+) -> Result<MdcropViewRun, MdcropError> {
     validate_view(&view)?;
     let root_label = view.root.clone();
     let (_, pack) = run_view_pack(&view, base_dir)?;
 
-    Ok(CropViewRun {
-        schema_version: "crop.view-run.v1".to_string(),
+    Ok(MdcropViewRun {
+        schema_version: "mdcrop.view-run.v1".to_string(),
         name: view.name,
         root: root_label,
         task: view.task,
@@ -1663,46 +1666,46 @@ pub fn run_view(view: CropView, base_dir: impl AsRef<Path>) -> Result<CropViewRu
 }
 
 pub fn run_view_mdport(
-    view: CropView,
+    view: MdcropView,
     base_dir: impl AsRef<Path>,
-) -> Result<MdportDocument, CropError> {
+) -> Result<MdportDocument, MdcropError> {
     let run = run_view(view, base_dir)?;
     Ok(mdport_document_from_view_run(&run))
 }
 
 pub fn run_view_prefix_cached(
-    view: CropView,
+    view: MdcropView,
     base_dir: impl AsRef<Path>,
     profile: PrefixCacheProfile,
-) -> Result<CropViewPrefixCachedRun, CropError> {
+) -> Result<MdcropViewPrefixCachedRun, MdcropError> {
     validate_view(&view)?;
     let name = view.name.clone();
     let task = view.task.clone();
-    let options = CropOptions {
+    let options = MdcropOptions {
         seed: view.seed,
         token_budget: view.token_budget,
     };
     let (ingested, pack) = run_view_pack(&view, base_dir)?;
     let cache = prefix_cached_pack(&ingested, pack, task, options, profile)?;
 
-    Ok(CropViewPrefixCachedRun {
-        schema_version: "crop.view-prefix-cache.v1".to_string(),
+    Ok(MdcropViewPrefixCachedRun {
+        schema_version: "mdcrop.view-prefix-cache.v1".to_string(),
         name,
         cache,
     })
 }
 
 fn run_view_pack(
-    view: &CropView,
+    view: &MdcropView,
     base_dir: impl AsRef<Path>,
-) -> Result<(IngestedEvidence, CropPack), CropError> {
+) -> Result<(IngestedEvidence, MdcropPack), MdcropError> {
     let root = manifest_root(base_dir.as_ref(), &view.root);
     let ingest_options = view_ingest_options(view);
     let mut ingested = ingest_path_with_options(root, &ingest_options)?;
     score_graph_for_task(&mut ingested.graph, &view.task);
-    let pack = crop_context(
+    let pack = mdcrop_context(
         &ingested.graph,
-        CropOptions {
+        MdcropOptions {
             seed: view.seed,
             token_budget: view.token_budget,
         },
@@ -1711,7 +1714,7 @@ fn run_view_pack(
     Ok((ingested, pack))
 }
 
-fn view_ingest_options(view: &CropView) -> IngestOptions {
+fn view_ingest_options(view: &MdcropView) -> IngestOptions {
     IngestOptions {
         include_extensions: view.include_extensions.clone(),
         exclude_dirs: view.exclude_dirs.clone(),
@@ -1719,22 +1722,22 @@ fn view_ingest_options(view: &CropView) -> IngestOptions {
     }
 }
 
-fn validate_view(view: &CropView) -> Result<(), CropError> {
-    if view.schema_version != CROP_VIEW_SCHEMA {
-        return Err(CropError::UnsupportedViewSchema {
+fn validate_view(view: &MdcropView) -> Result<(), MdcropError> {
+    if view.schema_version != MDCROP_VIEW_SCHEMA {
+        return Err(MdcropError::UnsupportedViewSchema {
             schema_version: view.schema_version.clone(),
         });
     }
     if view.token_budget == 0 {
-        return Err(CropError::NonPositiveBudget);
+        return Err(MdcropError::NonPositiveBudget);
     }
     Ok(())
 }
 
-pub fn list_views(store: impl AsRef<Path>) -> Result<CropViewList, CropError> {
+pub fn list_views(store: impl AsRef<Path>) -> Result<MdcropViewList, MdcropError> {
     let store = store.as_ref();
     if !store.exists() {
-        return Err(CropError::RootDoesNotExist {
+        return Err(MdcropError::RootDoesNotExist {
             path: store.display().to_string(),
         });
     }
@@ -1743,17 +1746,17 @@ pub fn list_views(store: impl AsRef<Path>) -> Result<CropViewList, CropError> {
 
     let mut views = Vec::new();
     for path in entries {
-        let json = fs::read_to_string(&path).map_err(|source| CropError::ReadFile {
+        let json = fs::read_to_string(&path).map_err(|source| MdcropError::ReadFile {
             path: path.display().to_string(),
             source,
         })?;
-        let view: CropView = serde_json::from_str(&json).map_err(CropError::ViewImport)?;
-        if view.schema_version != CROP_VIEW_SCHEMA {
-            return Err(CropError::UnsupportedViewSchema {
+        let view: MdcropView = serde_json::from_str(&json).map_err(MdcropError::ViewImport)?;
+        if view.schema_version != MDCROP_VIEW_SCHEMA {
+            return Err(MdcropError::UnsupportedViewSchema {
                 schema_version: view.schema_version,
             });
         }
-        views.push(CropViewSummary {
+        views.push(MdcropViewSummary {
             file: path
                 .file_name()
                 .map(|name| name.to_string_lossy().to_string())
@@ -1769,22 +1772,22 @@ pub fn list_views(store: impl AsRef<Path>) -> Result<CropViewList, CropError> {
         });
     }
 
-    Ok(CropViewList {
-        schema_version: "crop.view-list.v1".to_string(),
+    Ok(MdcropViewList {
+        schema_version: "mdcrop.view-list.v1".to_string(),
         store: store.display().to_string(),
         view_count: views.len(),
         views,
     })
 }
 
-fn view_store_json_entries(store: &Path) -> Result<Vec<PathBuf>, CropError> {
+fn view_store_json_entries(store: &Path) -> Result<Vec<PathBuf>, MdcropError> {
     let mut entries = fs::read_dir(store)
-        .map_err(|source| CropError::InspectPath {
+        .map_err(|source| MdcropError::InspectPath {
             path: store.display().to_string(),
             source,
         })?
         .collect::<Result<Vec<_>, _>>()
-        .map_err(|source| CropError::InspectPath {
+        .map_err(|source| MdcropError::InspectPath {
             path: store.display().to_string(),
             source,
         })?;
@@ -1796,24 +1799,24 @@ fn view_store_json_entries(store: &Path) -> Result<Vec<PathBuf>, CropError> {
         .collect())
 }
 
-pub fn ingest_path(root: impl AsRef<Path>) -> Result<IngestedEvidence, CropError> {
+pub fn ingest_path(root: impl AsRef<Path>) -> Result<IngestedEvidence, MdcropError> {
     ingest_path_with_options(root, &IngestOptions::default())
 }
 
 pub fn ingest_path_with_options(
     root: impl AsRef<Path>,
     options: &IngestOptions,
-) -> Result<IngestedEvidence, CropError> {
+) -> Result<IngestedEvidence, MdcropError> {
     let root = root.as_ref();
     if !root.exists() {
-        return Err(CropError::RootDoesNotExist {
+        return Err(MdcropError::RootDoesNotExist {
             path: root.display().to_string(),
         });
     }
 
     let files = supported_files(root, options)?;
     if files.is_empty() {
-        return Err(CropError::NoSupportedFiles {
+        return Err(MdcropError::NoSupportedFiles {
             path: root.display().to_string(),
         });
     }
@@ -1824,11 +1827,11 @@ pub fn ingest_path_with_options(
     let mut source_links = BTreeMap::<String, Vec<String>>::new();
 
     for file in &files {
-        let bytes = fs::read(file).map_err(|source| CropError::ReadFile {
+        let bytes = fs::read(file).map_err(|source| MdcropError::ReadFile {
             path: file.display().to_string(),
             source,
         })?;
-        let text = String::from_utf8(bytes).map_err(|_| CropError::NonUtf8File {
+        let text = String::from_utf8(bytes).map_err(|_| MdcropError::NonUtf8File {
             path: file.display().to_string(),
         })?;
         let source_id = source_id(root, file);
@@ -1910,7 +1913,7 @@ pub fn ingest_path_with_options(
     })
 }
 
-fn mdport_document_from_view_run(run: &CropViewRun) -> MdportDocument {
+fn mdport_document_from_view_run(run: &MdcropViewRun) -> MdportDocument {
     let refs = run
         .pack
         .units
@@ -2023,13 +2026,16 @@ pub fn score_graph_for_task(graph: &mut EvidenceGraph, task: &str) {
     }
 }
 
-pub fn crop_context(graph: &EvidenceGraph, options: CropOptions) -> Result<CropPack, CropError> {
+pub fn mdcrop_context(
+    graph: &EvidenceGraph,
+    options: MdcropOptions,
+) -> Result<MdcropPack, MdcropError> {
     validate_graph(graph)?;
     if options.token_budget == 0 {
-        return Err(CropError::NonPositiveBudget);
+        return Err(MdcropError::NonPositiveBudget);
     }
     if options.seed >= graph.units.len() {
-        return Err(CropError::SeedOutOfBounds {
+        return Err(MdcropError::SeedOutOfBounds {
             seed: options.seed,
             node_count: graph.units.len(),
         });
@@ -2039,11 +2045,11 @@ pub fn crop_context(graph: &EvidenceGraph, options: CropOptions) -> Result<CropP
     selected[options.seed] = true;
     let mut token_estimate = graph.units[options.seed].token_estimate;
     let mut reasons = vec![None; graph.units.len()];
-    reasons[options.seed] = Some(CropReason::Seed);
+    reasons[options.seed] = Some(MdcropReason::Seed);
 
     if let Some(target) = highest_relevance_target(graph, options.seed) {
         if let Some(path) = shortest_connector_path(&graph.adjacency, &[options.seed], &[target])
-            .map_err(|err| CropError::EdgeCut(err.to_string()))?
+            .map_err(|err| MdcropError::EdgeCut(err.to_string()))?
         {
             let path_token_estimate = path
                 .nodes
@@ -2055,11 +2061,11 @@ pub fn crop_context(graph: &EvidenceGraph, options: CropOptions) -> Result<CropP
             if token_estimate + path_token_estimate <= options.token_budget {
                 for &node in &path.bridge_nodes {
                     selected[node] = true;
-                    reasons[node] = Some(CropReason::BridgeConnector);
+                    reasons[node] = Some(MdcropReason::BridgeConnector);
                 }
                 if path.target != options.seed {
                     selected[path.target] = true;
-                    reasons[path.target] = Some(CropReason::ConnectorTarget);
+                    reasons[path.target] = Some(MdcropReason::ConnectorTarget);
                 }
                 token_estimate += path_token_estimate;
             }
@@ -2090,20 +2096,20 @@ pub fn crop_context(graph: &EvidenceGraph, options: CropOptions) -> Result<CropP
         for packed_index in packed.selected_indices {
             let neighbor = neighbor_candidates[packed_index];
             selected[neighbor] = true;
-            reasons[neighbor] = Some(CropReason::RelevantNeighbor);
+            reasons[neighbor] = Some(MdcropReason::RelevantNeighbor);
             token_estimate += graph.units[neighbor].token_estimate;
         }
     }
 
     let boundary_metrics = undirected_boundary_metrics(&graph.adjacency, &selected)
-        .map_err(|err| CropError::EdgeCut(err.to_string()))?;
+        .map_err(|err| MdcropError::EdgeCut(err.to_string()))?;
 
     let mut units = Vec::new();
     let mut relevance = Vec::new();
     for (index, unit) in graph.units.iter().enumerate() {
         if selected[index] {
             relevance.push(unit.relevance);
-            units.push(CropUnit {
+            units.push(MdcropUnit {
                 id: unit.id.clone(),
                 source_id: unit.source_id.clone(),
                 content_hash: unit.content_hash.clone(),
@@ -2111,7 +2117,7 @@ pub fn crop_context(graph: &EvidenceGraph, options: CropOptions) -> Result<CropP
                 metadata: unit.metadata.clone(),
                 relevance: unit.relevance,
                 token_estimate: unit.token_estimate,
-                reason: reasons[index].expect("selected crop unit has reason"),
+                reason: reasons[index].expect("selected mdcrop unit has reason"),
             });
         }
     }
@@ -2122,10 +2128,10 @@ pub fn crop_context(graph: &EvidenceGraph, options: CropOptions) -> Result<CropP
         .filter_map(|(index, is_selected)| is_selected.then_some(index))
         .collect::<Vec<_>>();
     let cluster_summary = undirected_cluster_summaries(&graph.adjacency, &[selected_indices])
-        .map_err(|err| CropError::Cluster(err.to_string()))?
+        .map_err(|err| MdcropError::Cluster(err.to_string()))?
         .into_iter()
         .next()
-        .expect("selected crop always includes seed");
+        .expect("selected mdcrop always includes seed");
     let representative_unit_id = graph.units[cluster_summary.representative_node].id.clone();
 
     let relevance_mean = summary_stats(&relevance)?.mean;
@@ -2133,7 +2139,7 @@ pub fn crop_context(graph: &EvidenceGraph, options: CropOptions) -> Result<CropP
         &[relevance_mean, 1.0 - boundary_metrics.conductance],
         &[0.8, 0.2],
     )?;
-    Ok(CropPack {
+    Ok(MdcropPack {
         units,
         representative_unit_id,
         token_estimate,
@@ -2160,9 +2166,9 @@ fn prefix_block(ingested: &IngestedEvidence, profile: PrefixCacheProfile) -> Pre
     }
 
     PrefixBlock {
-        schema_version: "crop.prefix.v1".to_string(),
+        schema_version: "mdcrop.prefix.v1".to_string(),
         profile,
-        engine: format!("crop-core/{}", env!("CARGO_PKG_VERSION")),
+        engine: format!("mdcrop-core/{}", env!("CARGO_PKG_VERSION")),
         root: ingested.report.root.clone(),
         source_count: ingested.report.source_count,
         unit_count: ingested.report.unit_count,
@@ -2199,7 +2205,7 @@ fn aggregate_method(method: EvalMethod, rows: &[EvalReport]) -> EvalAggregate {
 fn aggregate_bench_cases(cases: &[BenchManifestCaseReport]) -> BenchAggregate {
     let case_count = cases.len();
     BenchAggregate {
-        method: "crop".to_string(),
+        method: "mdcrop".to_string(),
         case_count,
         total_source_count: cases
             .iter()
@@ -2226,7 +2232,7 @@ fn aggregate_bench_cases(cases: &[BenchManifestCaseReport]) -> BenchAggregate {
         mean_quality_score: mean_bench_by(cases, |case| case.report.quality_score),
         mean_ingest_ms: mean_bench_by(cases, |case| case.report.timings.ingest_ms as f64),
         mean_score_ms: mean_bench_by(cases, |case| case.report.timings.score_ms as f64),
-        mean_crop_ms: mean_bench_by(cases, |case| case.report.timings.crop_ms as f64),
+        mean_mdcrop_ms: mean_bench_by(cases, |case| case.report.timings.mdcrop_ms as f64),
         mean_total_ms: mean_bench_by(cases, |case| case.report.timings.total_ms as f64),
         max_total_ms: cases
             .iter()
@@ -2382,51 +2388,53 @@ fn eval_case(
     fixture: EvalFixture,
     method: EvalMethod,
     token_budget: usize,
-) -> Result<EvalReport, CropError> {
+) -> Result<EvalReport, MdcropError> {
     let graph = &fixture.graph;
-    let crop_pack;
+    let mdcrop_pack;
     let selected = match method {
-        EvalMethod::Crop => {
-            crop_pack = Some(crop_context(
+        EvalMethod::Mdcrop => {
+            mdcrop_pack = Some(mdcrop_context(
                 graph,
-                CropOptions {
+                MdcropOptions {
                     seed: 0,
                     token_budget,
                 },
             )?);
-            crop_pack
+            mdcrop_pack
                 .as_ref()
-                .expect("crop pack exists")
+                .expect("mdcrop pack exists")
                 .units
                 .iter()
                 .map(|unit| unit.id.clone())
                 .collect::<Vec<_>>()
         }
         EvalMethod::ScoreTopK => {
-            crop_pack = None;
+            mdcrop_pack = None;
             score_top_k_selection(graph, token_budget)
         }
         EvalMethod::LexicalTopK => {
-            crop_pack = None;
+            mdcrop_pack = None;
             lexical_top_k_selection(graph, fixture.task, token_budget)
         }
         EvalMethod::HybridTopK => {
-            crop_pack = None;
+            mdcrop_pack = None;
             hybrid_top_k_selection(graph, fixture.task, token_budget)
         }
     };
-    eval_selected_units(&fixture, &selected, token_budget, crop_pack.as_ref()).map(|mut report| {
-        report.method = method;
-        report
-    })
+    eval_selected_units(&fixture, &selected, token_budget, mdcrop_pack.as_ref()).map(
+        |mut report| {
+            report.method = method;
+            report
+        },
+    )
 }
 
 fn eval_selected_units(
     fixture: &EvalFixture,
     selected: &[String],
     token_budget: usize,
-    crop_pack: Option<&CropPack>,
-) -> Result<EvalReport, CropError> {
+    mdcrop_pack: Option<&MdcropPack>,
+) -> Result<EvalReport, MdcropError> {
     let selected_set = selected.iter().cloned().collect::<BTreeSet<_>>();
     let token_estimate = fixture
         .graph
@@ -2470,7 +2478,7 @@ fn eval_selected_units(
             .sum::<usize>() as f64
             / token_estimate as f64
     };
-    let quality_score = crop_pack
+    let quality_score = mdcrop_pack
         .as_ref()
         .map(|pack| pack.quality_score)
         .unwrap_or(gold_recall - noise_rate);
@@ -2494,7 +2502,7 @@ fn eval_selected_units(
 fn validate_competitor_selection(
     graph: &EvidenceGraph,
     selected_units: &[CompetitorSelectedUnit],
-) -> Result<Vec<String>, CropError> {
+) -> Result<Vec<String>, MdcropError> {
     let known = graph
         .units
         .iter()
@@ -2504,12 +2512,12 @@ fn validate_competitor_selection(
     let mut selected = Vec::new();
     for unit in selected_units {
         if !known.contains(unit.unit_id.as_str()) {
-            return Err(CropError::UnknownCompetitorUnit {
+            return Err(MdcropError::UnknownCompetitorUnit {
                 unit_id: unit.unit_id.clone(),
             });
         }
         if !seen.insert(unit.unit_id.clone()) {
-            return Err(CropError::DuplicateCompetitorUnit {
+            return Err(MdcropError::DuplicateCompetitorUnit {
                 unit_id: unit.unit_id.clone(),
             });
         }
@@ -2586,7 +2594,7 @@ fn source_coverage(graph: &EvidenceGraph, selected: &BTreeSet<String>, gold: &[&
     selected_gold_sources.len() as f64 / gold_sources.len() as f64
 }
 
-fn supported_files(root: &Path, options: &IngestOptions) -> Result<Vec<PathBuf>, CropError> {
+fn supported_files(root: &Path, options: &IngestOptions) -> Result<Vec<PathBuf>, MdcropError> {
     let mut files = Vec::new();
     collect_supported_files(root, &mut files, options)?;
     files.sort();
@@ -2606,8 +2614,8 @@ fn collect_supported_files(
     path: &Path,
     files: &mut Vec<PathBuf>,
     options: &IngestOptions,
-) -> Result<(), CropError> {
-    let metadata = fs::metadata(path).map_err(|source| CropError::InspectPath {
+) -> Result<(), MdcropError> {
+    let metadata = fs::metadata(path).map_err(|source| MdcropError::InspectPath {
         path: path.display().to_string(),
         source,
     })?;
@@ -2622,12 +2630,12 @@ fn collect_supported_files(
             return Ok(());
         }
         let mut children = fs::read_dir(path)
-            .map_err(|source| CropError::InspectPath {
+            .map_err(|source| MdcropError::InspectPath {
                 path: path.display().to_string(),
                 source,
             })?
             .collect::<Result<Vec<_>, _>>()
-            .map_err(|source| CropError::InspectPath {
+            .map_err(|source| MdcropError::InspectPath {
                 path: path.display().to_string(),
                 source,
             })?;
@@ -2647,7 +2655,7 @@ fn is_ignored_dir(path: &Path, options: &IngestOptions) -> bool {
         || options.exclude_dirs.iter().any(|excluded| excluded == name)
 }
 
-fn is_supported_file(path: &Path, options: &IngestOptions) -> Result<bool, CropError> {
+fn is_supported_file(path: &Path, options: &IngestOptions) -> Result<bool, MdcropError> {
     let extension = path
         .extension()
         .and_then(|extension| extension.to_str())
@@ -2818,14 +2826,14 @@ fn strip_markdown_frontmatter(text: &str) -> &str {
 fn markdown_file_matches_frontmatter_query(
     path: &Path,
     options: &IngestOptions,
-) -> Result<bool, CropError> {
+) -> Result<bool, MdcropError> {
     let Some(query) = &options.frontmatter_query else {
         return Ok(true);
     };
     if !is_markdown_file(path) {
         return Ok(false);
     }
-    let text = fs::read_to_string(path).map_err(|source| CropError::ReadFile {
+    let text = fs::read_to_string(path).map_err(|source| MdcropError::ReadFile {
         path: path.display().to_string(),
         source,
     })?;
@@ -2836,8 +2844,8 @@ fn markdown_file_matches_frontmatter_query(
 fn frontmatter_query_matches(
     fields: &BTreeMap<String, String>,
     query: &str,
-) -> Result<bool, CropError> {
-    let parsed = slice_core::parse(query).map_err(|_| CropError::InvalidFrontmatterQuery {
+) -> Result<bool, MdcropError> {
+    let parsed = slice_core::parse(query).map_err(|_| MdcropError::InvalidFrontmatterQuery {
         query: query.to_string(),
     })?;
     let mut catalog = FieldCatalog::new();
@@ -2847,7 +2855,7 @@ fn frontmatter_query_matches(
             Operator::Eq | Operator::Ne => ValueType::String,
             Operator::Has => ValueType::Any,
             Operator::Contains | Operator::Gt | Operator::Ge | Operator::Lt | Operator::Le => {
-                return Err(CropError::InvalidFrontmatterQuery {
+                return Err(MdcropError::InvalidFrontmatterQuery {
                     query: query.to_string(),
                 });
             }
@@ -2855,7 +2863,7 @@ fn frontmatter_query_matches(
         catalog.insert(path, value_type);
     }
     let selector =
-        slice_core::compile(query, &catalog).map_err(|_| CropError::InvalidFrontmatterQuery {
+        slice_core::compile(query, &catalog).map_err(|_| MdcropError::InvalidFrontmatterQuery {
             query: query.to_string(),
         })?;
     Ok(selector.matches(&materialize_frontmatter_query_row(
@@ -3218,26 +3226,26 @@ fn relevance_score(unit: &EvidenceUnit, terms: &BTreeSet<String>) -> f64 {
     (matches as f64 / terms.len() as f64).clamp(0.0, 1.0)
 }
 
-fn validate_graph(graph: &EvidenceGraph) -> Result<(), CropError> {
+fn validate_graph(graph: &EvidenceGraph) -> Result<(), MdcropError> {
     if graph.units.is_empty() {
-        return Err(CropError::EmptyGraph);
+        return Err(MdcropError::EmptyGraph);
     }
     if graph.adjacency.len() != graph.units.len() {
-        return Err(CropError::AdjacencyLengthMismatch {
+        return Err(MdcropError::AdjacencyLengthMismatch {
             adjacency_len: graph.adjacency.len(),
             unit_count: graph.units.len(),
         });
     }
     for (index, unit) in graph.units.iter().enumerate() {
         if !unit.relevance.is_finite() {
-            return Err(CropError::NonFiniteRelevance {
+            return Err(MdcropError::NonFiniteRelevance {
                 unit: index,
                 score: unit.relevance,
             });
         }
         for &neighbor in &graph.adjacency[index] {
             if neighbor >= graph.units.len() {
-                return Err(CropError::NeighborOutOfBounds {
+                return Err(MdcropError::NeighborOutOfBounds {
                     unit: index,
                     neighbor,
                     node_count: graph.units.len(),
@@ -3267,7 +3275,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn crops_seed_neighborhood_with_boundary_metric() {
+    fn mdcrops_seed_neighborhood_with_boundary_metric() {
         let graph = EvidenceGraph {
             units: vec![
                 unit("seed", 1.0, 80),
@@ -3278,9 +3286,9 @@ mod tests {
             adjacency: vec![vec![1, 3], vec![0, 2], vec![1], vec![0]],
         };
 
-        let pack = crop_context(
+        let pack = mdcrop_context(
             &graph,
-            CropOptions {
+            MdcropOptions {
                 seed: 0,
                 token_budget: 170,
             },
@@ -3305,9 +3313,9 @@ mod tests {
                 .map(|unit| unit.reason)
                 .collect::<Vec<_>>(),
             vec![
-                CropReason::Seed,
-                CropReason::BridgeConnector,
-                CropReason::ConnectorTarget
+                MdcropReason::Seed,
+                MdcropReason::BridgeConnector,
+                MdcropReason::ConnectorTarget
             ]
         );
     }
@@ -3320,14 +3328,14 @@ mod tests {
         };
 
         assert!(matches!(
-            crop_context(
+            mdcrop_context(
                 &graph,
-                CropOptions {
+                MdcropOptions {
                     seed: 0,
                     token_budget: 100
                 }
             ),
-            Err(CropError::NonFiniteRelevance { unit: 0, .. })
+            Err(MdcropError::NonFiniteRelevance { unit: 0, .. })
         ));
     }
 
@@ -3337,65 +3345,65 @@ mod tests {
     }
 
     #[test]
-    fn eval_missing_bridge_shows_crop_beats_score_top_k() {
-        let crop = eval_fixture(EvalCase::MissingBridge, EvalMethod::Crop, 160).unwrap();
+    fn eval_missing_bridge_shows_mdcrop_beats_score_top_k() {
+        let mdcrop = eval_fixture(EvalCase::MissingBridge, EvalMethod::Mdcrop, 160).unwrap();
         let top_k = eval_fixture(EvalCase::MissingBridge, EvalMethod::ScoreTopK, 160).unwrap();
 
         assert_eq!(
-            crop.selected_unit_ids,
+            mdcrop.selected_unit_ids,
             vec!["task-seed", "bridge-note", "target-note"]
         );
         assert_eq!(
             top_k.selected_unit_ids,
             vec!["stale-noise", "target-note", "task-seed"]
         );
-        assert_eq!(crop.gold_recall, 1.0);
-        assert_eq!(crop.bridge_recall, 1.0);
-        assert_eq!(crop.noise_rate, 0.0);
-        assert_eq!(crop.source_coverage, 1.0);
-        assert!((crop.budget_efficiency - (3.0 / 160.0)).abs() < 1e-12);
-        assert_eq!(crop.noise_token_share, 0.0);
-        assert!(top_k.gold_recall < crop.gold_recall);
+        assert_eq!(mdcrop.gold_recall, 1.0);
+        assert_eq!(mdcrop.bridge_recall, 1.0);
+        assert_eq!(mdcrop.noise_rate, 0.0);
+        assert_eq!(mdcrop.source_coverage, 1.0);
+        assert!((mdcrop.budget_efficiency - (3.0 / 160.0)).abs() < 1e-12);
+        assert_eq!(mdcrop.noise_token_share, 0.0);
+        assert!(top_k.gold_recall < mdcrop.gold_recall);
         assert_eq!(top_k.bridge_recall, 0.0);
         assert!(top_k.noise_rate > 0.0);
-        assert!(top_k.source_coverage < crop.source_coverage);
-        assert!(top_k.noise_token_share > crop.noise_token_share);
+        assert!(top_k.source_coverage < mdcrop.source_coverage);
+        assert!(top_k.noise_token_share > mdcrop.noise_token_share);
     }
 
     #[test]
-    fn eval_expanded_fixtures_show_distinct_crop_wins() {
+    fn eval_expanded_fixtures_show_distinct_mdcrop_wins() {
         for case in [
             EvalCase::NoisyPeriphery,
             EvalCase::StaleDuplicate,
             EvalCase::BudgetPacking,
             EvalCase::CrossLinkChain,
         ] {
-            let crop = eval_fixture(case, EvalMethod::Crop, 160).unwrap();
+            let mdcrop = eval_fixture(case, EvalMethod::Mdcrop, 160).unwrap();
             let top_k = eval_fixture(case, EvalMethod::ScoreTopK, 160).unwrap();
 
-            assert_eq!(crop.gold_recall, 1.0, "{case:?}");
-            assert_eq!(crop.noise_rate, 0.0, "{case:?}");
-            assert_eq!(crop.source_coverage, 1.0, "{case:?}");
-            assert_eq!(crop.noise_token_share, 0.0, "{case:?}");
+            assert_eq!(mdcrop.gold_recall, 1.0, "{case:?}");
+            assert_eq!(mdcrop.noise_rate, 0.0, "{case:?}");
+            assert_eq!(mdcrop.source_coverage, 1.0, "{case:?}");
+            assert_eq!(mdcrop.noise_token_share, 0.0, "{case:?}");
             assert!(
-                top_k.gold_recall < crop.gold_recall || top_k.noise_rate > crop.noise_rate,
+                top_k.gold_recall < mdcrop.gold_recall || top_k.noise_rate > mdcrop.noise_rate,
                 "{case:?}"
             );
-            assert!(top_k.noise_rate > crop.noise_rate, "{case:?}");
+            assert!(top_k.noise_rate > mdcrop.noise_rate, "{case:?}");
         }
     }
 
     #[test]
     fn eval_cross_link_chain_tracks_bridge_recall() {
-        let crop = eval_fixture(EvalCase::CrossLinkChain, EvalMethod::Crop, 160).unwrap();
+        let mdcrop = eval_fixture(EvalCase::CrossLinkChain, EvalMethod::Mdcrop, 160).unwrap();
         let top_k = eval_fixture(EvalCase::CrossLinkChain, EvalMethod::ScoreTopK, 160).unwrap();
 
         assert_eq!(
-            crop.selected_unit_ids,
+            mdcrop.selected_unit_ids,
             vec!["seed", "link-a", "link-b", "target"]
         );
-        assert_eq!(crop.bridge_recall, 1.0);
-        assert!(top_k.bridge_recall < crop.bridge_recall);
+        assert_eq!(mdcrop.bridge_recall, 1.0);
+        assert!(top_k.bridge_recall < mdcrop.bridge_recall);
     }
 
     #[test]
@@ -3443,9 +3451,9 @@ mod tests {
         assert_eq!(suite.rows.len(), suite.cases.len() * suite.methods.len());
         assert_eq!(suite.aggregates.len(), suite.methods.len());
         assert_eq!(suite.rows[0].case, EvalCase::MissingBridge);
-        assert_eq!(suite.rows[0].method, EvalMethod::Crop);
+        assert_eq!(suite.rows[0].method, EvalMethod::Mdcrop);
         assert_eq!(suite.rows[1].method, EvalMethod::ScoreTopK);
-        assert_eq!(suite.aggregates[0].method, EvalMethod::Crop);
+        assert_eq!(suite.aggregates[0].method, EvalMethod::Mdcrop);
         assert_eq!(suite.aggregates[0].case_count, suite.cases.len());
         assert!(suite.aggregates[0].mean_gold_recall > suite.aggregates[1].mean_gold_recall);
         assert!(suite.aggregates[0].mean_noise_rate < suite.aggregates[1].mean_noise_rate);
@@ -3474,7 +3482,7 @@ mod tests {
 
         let report = eval_competitor_results(input).unwrap();
 
-        assert_eq!(report.schema_version, "crop.competitor-results.v1");
+        assert_eq!(report.schema_version, "mdcrop.competitor-results.v1");
         assert_eq!(report.method.method_id, "qdrant-fixture");
         assert_eq!(
             report.selected_unit_ids,
@@ -3502,11 +3510,11 @@ mod tests {
         };
         assert!(matches!(
             eval_competitor_results(unknown),
-            Err(CropError::UnknownCompetitorUnit { .. })
+            Err(MdcropError::UnknownCompetitorUnit { .. })
         ));
 
         let unsupported = CompetitorEvalInput {
-            schema_version: "crop.competitor-results.v0".to_string(),
+            schema_version: "mdcrop.competitor-results.v0".to_string(),
             case: EvalCase::MissingBridge,
             token_budget: 160,
             method: competitor_method("bad-schema"),
@@ -3514,11 +3522,11 @@ mod tests {
         };
         assert!(matches!(
             eval_competitor_results(unsupported),
-            Err(CropError::UnsupportedCompetitorSchema { .. })
+            Err(MdcropError::UnsupportedCompetitorSchema { .. })
         ));
 
         let duplicate = r#"{
-          "schema_version": "crop.competitor-results.v1",
+          "schema_version": "mdcrop.competitor-results.v1",
           "case": "missing-bridge",
           "token_budget": 160,
           "method": {
@@ -3535,7 +3543,7 @@ mod tests {
         }"#;
         assert!(matches!(
             eval_competitor_json(duplicate),
-            Err(CropError::DuplicateCompetitorUnit { .. })
+            Err(MdcropError::DuplicateCompetitorUnit { .. })
         ));
     }
 
@@ -3562,7 +3570,7 @@ mod tests {
 
     #[test]
     fn ingests_markdown_links_and_scores_task_terms() {
-        let root = unique_temp_dir("crop-ingest");
+        let root = unique_temp_dir("mdcrop-ingest");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("index.md"),
@@ -3593,10 +3601,10 @@ mod tests {
 
     #[test]
     fn prefix_cache_key_is_stable_when_only_task_changes() {
-        let root = unique_temp_dir("crop-prefix");
+        let root = unique_temp_dir("mdcrop-prefix");
         fs::write(
             root.with_extension("md"),
-            "# Prefix Cache\n\nStable source body for repeated crops.",
+            "# Prefix Cache\n\nStable source body for repeated mdcrops.",
         )
         .unwrap();
         let path = root.with_extension("md");
@@ -3608,7 +3616,7 @@ mod tests {
         assert_eq!(first.cache_key, second.cache_key);
         assert_eq!(first.prefix, second.prefix);
         assert_ne!(first.task_tail.task, second.task_tail.task);
-        assert!(first.cache_key.starts_with("crop-prefix:generic:"));
+        assert!(first.cache_key.starts_with("mdcrop-prefix:generic:"));
         assert_eq!(first.prefix.sources.len(), 1);
 
         fs::remove_file(path).unwrap();
@@ -3616,7 +3624,7 @@ mod tests {
 
     #[test]
     fn prefix_cache_key_changes_when_source_content_changes() {
-        let path = unique_temp_dir("crop-prefix-change").with_extension("md");
+        let path = unique_temp_dir("mdcrop-prefix-change").with_extension("md");
         fs::write(&path, "Original source.").unwrap();
         let original = prefix_cached_pack_for_task(&path, "explain source");
 
@@ -3631,7 +3639,7 @@ mod tests {
 
     #[test]
     fn ingest_skips_git_and_target_directories() {
-        let root = unique_temp_dir("crop-ignore");
+        let root = unique_temp_dir("mdcrop-ignore");
         fs::create_dir_all(root.join(".git")).unwrap();
         fs::create_dir_all(root.join("target")).unwrap();
         fs::write(root.join("README.md"), "Visible context.").unwrap();
@@ -3651,7 +3659,7 @@ mod tests {
 
     #[test]
     fn bench_pack_reports_stage_timings_and_pack_summary() {
-        let root = unique_temp_dir("crop-bench");
+        let root = unique_temp_dir("mdcrop-bench");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("index.md"),
@@ -3660,35 +3668,35 @@ mod tests {
         .unwrap();
         fs::write(
             root.join("docs").join("target.md"),
-            "Target benchmark evidence explains graph crops.",
+            "Target benchmark evidence explains graph mdcrops.",
         )
         .unwrap();
 
         let report = bench_pack(
             &root,
-            "benchmark graph crops",
-            CropOptions {
+            "benchmark graph mdcrops",
+            MdcropOptions {
                 seed: 0,
                 token_budget: 160,
             },
         )
         .unwrap();
 
-        assert_eq!(report.schema_version, "crop.bench.v1");
+        assert_eq!(report.schema_version, "mdcrop.bench.v1");
         assert_eq!(report.source_count, 2);
         assert_eq!(report.unit_count, 3);
         assert!(report.edge_count >= 2);
         assert!(report.selected_unit_count > 0);
         assert!(report.selected_token_estimate <= 160);
         assert!(report.quality_score.is_finite());
-        assert!(report.timings.total_ms >= report.timings.crop_ms);
+        assert!(report.timings.total_ms >= report.timings.mdcrop_ms);
 
         fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
     fn bench_manifest_runs_named_views_relative_to_manifest_dir() {
-        let root = unique_temp_dir("crop-bench-manifest");
+        let root = unique_temp_dir("mdcrop-bench-manifest");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("index.md"),
@@ -3702,7 +3710,7 @@ mod tests {
         .unwrap();
 
         let manifest = r#"{
-          "schema_version": "crop.bench-manifest.v1",
+          "schema_version": "mdcrop.bench-manifest.v1",
           "cases": [
             {
               "id": "docs-view",
@@ -3715,7 +3723,7 @@ mod tests {
             {
               "id": "root-view",
               "root": ".",
-              "task": "benchmark graph crops",
+              "task": "benchmark graph mdcrops",
               "token_budget": 160,
               "seed": 0,
               "view": "whole-root"
@@ -3725,9 +3733,9 @@ mod tests {
 
         let report = bench_manifest_json(manifest, &root).unwrap();
 
-        assert_eq!(report.schema_version, "crop.bench-report.v1");
+        assert_eq!(report.schema_version, "mdcrop.bench-report.v1");
         assert_eq!(report.case_count, 2);
-        assert_eq!(report.aggregate.method, "crop");
+        assert_eq!(report.aggregate.method, "mdcrop");
         assert_eq!(report.aggregate.case_count, 2);
         assert_eq!(report.cases[0].id, "docs-view");
         assert_eq!(report.cases[0].view.as_deref(), Some("docs-only"));
@@ -3776,11 +3784,11 @@ mod tests {
 
     #[test]
     fn bench_manifest_rejects_bad_schema_and_empty_cases() {
-        let root = unique_temp_dir("crop-bench-manifest-bad");
+        let root = unique_temp_dir("mdcrop-bench-manifest-bad");
         fs::create_dir_all(&root).unwrap();
 
         let bad_schema = BenchManifest {
-            schema_version: "crop.bench-manifest.v0".to_string(),
+            schema_version: "mdcrop.bench-manifest.v0".to_string(),
             cases: vec![BenchManifestCase {
                 id: "bad".to_string(),
                 root: ".".to_string(),
@@ -3792,7 +3800,7 @@ mod tests {
         };
         assert!(matches!(
             bench_manifest(bad_schema, &root),
-            Err(CropError::UnsupportedBenchManifestSchema { .. })
+            Err(MdcropError::UnsupportedBenchManifestSchema { .. })
         ));
 
         let empty = BenchManifest {
@@ -3801,7 +3809,7 @@ mod tests {
         };
         assert!(matches!(
             bench_manifest(empty, &root),
-            Err(CropError::EmptyBenchManifest)
+            Err(MdcropError::EmptyBenchManifest)
         ));
 
         fs::remove_dir_all(root).unwrap();
@@ -3809,7 +3817,7 @@ mod tests {
 
     #[test]
     fn run_view_json_emits_named_context_pack() {
-        let root = unique_temp_dir("crop-view");
+        let root = unique_temp_dir("mdcrop-view");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("index.md"),
@@ -3818,22 +3826,22 @@ mod tests {
         .unwrap();
         fs::write(
             root.join("docs").join("target.md"),
-            "Target view evidence explains persisted crops.",
+            "Target view evidence explains persisted mdcrops.",
         )
         .unwrap();
 
         let view = r#"{
-          "schema_version": "crop.view.v1",
+          "schema_version": "mdcrop.view.v1",
           "name": "docs-view",
           "root": "docs",
-          "task": "persisted view crops",
+          "task": "persisted view mdcrops",
           "token_budget": 160,
           "seed": 0
         }"#;
 
         let run = run_view_json(view, &root).unwrap();
 
-        assert_eq!(run.schema_version, "crop.view-run.v1");
+        assert_eq!(run.schema_version, "mdcrop.view-run.v1");
         assert_eq!(run.name, "docs-view");
         assert_eq!(run.root, "docs");
         assert_eq!(run.token_budget, 160);
@@ -3845,7 +3853,7 @@ mod tests {
 
     #[test]
     fn run_view_mdport_json_emits_transfer_pack() {
-        let root = unique_temp_dir("crop-view-mdport");
+        let root = unique_temp_dir("mdcrop-view-mdport");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("index.md"),
@@ -3854,15 +3862,15 @@ mod tests {
         .unwrap();
         fs::write(
             root.join("docs").join("target.md"),
-            "# Target\n\nTarget view evidence explains persisted crops.",
+            "# Target\n\nTarget view evidence explains persisted mdcrops.",
         )
         .unwrap();
 
         let view = r#"{
-          "schema_version": "crop.view.v1",
+          "schema_version": "mdcrop.view.v1",
           "name": "docs-view",
           "root": "docs",
-          "task": "persisted view crops",
+          "task": "persisted view mdcrops",
           "token_budget": 160,
           "seed": 0
         }"#;
@@ -3901,7 +3909,7 @@ mod tests {
 
     #[test]
     fn ingest_path_loads_mdport_sections_as_evidence_units() {
-        let root = unique_temp_dir("crop-ingest-mdport");
+        let root = unique_temp_dir("mdcrop-ingest-mdport");
         fs::create_dir_all(&root).unwrap();
         let document = mdport::MdportDocument::from_markdown(
             "# Generated Guide\n\nMdloom-produced Mdport context.",
@@ -3943,7 +3951,7 @@ mod tests {
 
     #[test]
     fn run_view_prefix_cached_json_splits_stable_prefix_from_task_tail() {
-        let root = unique_temp_dir("crop-view-prefix");
+        let root = unique_temp_dir("mdcrop-view-prefix");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("index.md"),
@@ -3957,7 +3965,7 @@ mod tests {
         .unwrap();
 
         let first = r#"{
-          "schema_version": "crop.view.v1",
+          "schema_version": "mdcrop.view.v1",
           "name": "docs-view",
           "root": "docs",
           "task": "prefix cache views",
@@ -3965,7 +3973,7 @@ mod tests {
           "seed": 0
         }"#;
         let second = r#"{
-          "schema_version": "crop.view.v1",
+          "schema_version": "mdcrop.view.v1",
           "name": "docs-view",
           "root": "docs",
           "task": "different task same view",
@@ -3977,7 +3985,7 @@ mod tests {
         let second =
             run_view_prefix_cached_json(second, &root, PrefixCacheProfile::Generic).unwrap();
 
-        assert_eq!(first.schema_version, "crop.view-prefix-cache.v1");
+        assert_eq!(first.schema_version, "mdcrop.view-prefix-cache.v1");
         assert_eq!(first.name, "docs-view");
         assert_eq!(first.cache.prefix_hash, second.cache.prefix_hash);
         assert_eq!(first.cache.cache_key, second.cache.cache_key);
@@ -3990,7 +3998,7 @@ mod tests {
 
     #[test]
     fn run_view_supports_extension_and_directory_filters() {
-        let root = unique_temp_dir("crop-view-filters");
+        let root = unique_temp_dir("mdcrop-view-filters");
         fs::create_dir_all(root.join("research")).unwrap();
         fs::create_dir_all(root.join("archive")).unwrap();
         fs::write(
@@ -4010,7 +4018,7 @@ mod tests {
         .unwrap();
 
         let view = r#"{
-          "schema_version": "crop.view.v1",
+          "schema_version": "mdcrop.view.v1",
           "name": "tex-view",
           "root": ".",
           "task": "tc parameter views",
@@ -4030,8 +4038,8 @@ mod tests {
     }
 
     #[test]
-    fn inspect_view_reports_resolved_filters_and_samples_without_cropping() {
-        let root = unique_temp_dir("crop-view-inspect");
+    fn inspect_view_reports_resolved_filters_and_samples_without_mdcropping() {
+        let root = unique_temp_dir("mdcrop-view-inspect");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::create_dir_all(root.join("archive")).unwrap();
         fs::write(root.join("docs").join("alpha.md"), "Alpha view evidence.").unwrap();
@@ -4043,7 +4051,7 @@ mod tests {
         .unwrap();
 
         let view = r#"{
-          "schema_version": "crop.view.v1",
+          "schema_version": "mdcrop.view.v1",
           "name": "inspect-docs",
           "root": "docs",
           "task": "inspect view filters",
@@ -4055,7 +4063,7 @@ mod tests {
 
         let inspect = inspect_view_json(view, &root).unwrap();
 
-        assert_eq!(inspect.schema_version, "crop.view-inspect.v1");
+        assert_eq!(inspect.schema_version, "mdcrop.view-inspect.v1");
         assert_eq!(inspect.name, "inspect-docs");
         assert_eq!(inspect.root, "docs");
         assert!(inspect.resolved_root.ends_with("docs"));
@@ -4070,7 +4078,7 @@ mod tests {
 
     #[test]
     fn inspect_view_filters_by_frontmatter_query() {
-        let root = unique_temp_dir("crop-view-frontmatter-query");
+        let root = unique_temp_dir("mdcrop-view-frontmatter-query");
         fs::create_dir_all(root.join("maxim")).unwrap();
         fs::write(
             root.join("maxim").join("systems.md"),
@@ -4089,7 +4097,7 @@ mod tests {
         .unwrap();
 
         let view = r#"{
-          "schema_version": "crop.view.v1",
+          "schema_version": "mdcrop.view.v1",
           "name": "maxim-computing-ready",
           "root": "maxim",
           "task": "computing systems",
@@ -4113,7 +4121,7 @@ mod tests {
 
     #[test]
     fn view_frontmatter_query_rejects_invalid_predicates() {
-        let root = unique_temp_dir("crop-view-frontmatter-query-bad");
+        let root = unique_temp_dir("mdcrop-view-frontmatter-query-bad");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("one.md"),
@@ -4122,7 +4130,7 @@ mod tests {
         .unwrap();
 
         let view = r#"{
-          "schema_version": "crop.view.v1",
+          "schema_version": "mdcrop.view.v1",
           "name": "bad-query",
           "root": "docs",
           "task": "bad",
@@ -4134,7 +4142,7 @@ mod tests {
 
         assert!(matches!(
             inspect_view_json(view, &root),
-            Err(CropError::InvalidFrontmatterQuery { .. })
+            Err(MdcropError::InvalidFrontmatterQuery { .. })
         ));
 
         fs::remove_dir_all(root).unwrap();
@@ -4142,7 +4150,7 @@ mod tests {
 
     #[test]
     fn view_frontmatter_query_preserves_missing_field_ne() {
-        let root = unique_temp_dir("crop-view-frontmatter-query-missing-ne");
+        let root = unique_temp_dir("mdcrop-view-frontmatter-query-missing-ne");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("one.md"),
@@ -4156,7 +4164,7 @@ mod tests {
         .unwrap();
 
         let view = r#"{
-          "schema_version": "crop.view.v1",
+          "schema_version": "mdcrop.view.v1",
           "name": "missing-owner",
           "root": "docs",
           "task": "missing owner",
@@ -4176,12 +4184,12 @@ mod tests {
 
     #[test]
     fn inspect_view_rejects_missing_or_empty_filtered_roots() {
-        let root = unique_temp_dir("crop-view-inspect-empty");
+        let root = unique_temp_dir("mdcrop-view-inspect-empty");
         fs::create_dir_all(&root).unwrap();
         fs::write(root.join("notes.md"), "Only markdown evidence.").unwrap();
 
         let missing = r#"{
-          "schema_version": "crop.view.v1",
+          "schema_version": "mdcrop.view.v1",
           "name": "missing",
           "root": "missing",
           "task": "missing",
@@ -4190,11 +4198,11 @@ mod tests {
         }"#;
         assert!(matches!(
             inspect_view_json(missing, &root),
-            Err(CropError::RootDoesNotExist { .. })
+            Err(MdcropError::RootDoesNotExist { .. })
         ));
 
         let filtered_empty = r#"{
-          "schema_version": "crop.view.v1",
+          "schema_version": "mdcrop.view.v1",
           "name": "empty",
           "root": ".",
           "task": "empty",
@@ -4204,7 +4212,7 @@ mod tests {
         }"#;
         assert!(matches!(
             inspect_view_json(filtered_empty, &root),
-            Err(CropError::NoSupportedFiles { .. })
+            Err(MdcropError::NoSupportedFiles { .. })
         ));
 
         fs::remove_dir_all(root).unwrap();
@@ -4212,7 +4220,7 @@ mod tests {
 
     #[test]
     fn inspect_view_store_reports_ok_and_failed_entries() {
-        let root = unique_temp_dir("crop-view-store-inspect");
+        let root = unique_temp_dir("mdcrop-view-store-inspect");
         let store = root.join("views");
         fs::create_dir_all(store.join("docs")).unwrap();
         fs::write(store.join("docs").join("guide.md"), "Guide view evidence.").unwrap();
@@ -4220,7 +4228,7 @@ mod tests {
         fs::write(
             store.join("a-ok.json"),
             r#"{
-              "schema_version": "crop.view.v1",
+              "schema_version": "mdcrop.view.v1",
               "name": "ok",
               "root": "docs",
               "task": "guide",
@@ -4233,7 +4241,7 @@ mod tests {
         fs::write(
             store.join("b-bad.json"),
             r#"{
-              "schema_version": "crop.view.v1",
+              "schema_version": "mdcrop.view.v1",
               "name": "bad",
               "root": "missing",
               "task": "bad",
@@ -4245,7 +4253,7 @@ mod tests {
 
         let inspect = inspect_view_store(&store).unwrap();
 
-        assert_eq!(inspect.schema_version, "crop.view-store-inspect.v1");
+        assert_eq!(inspect.schema_version, "mdcrop.view-store-inspect.v1");
         assert_eq!(inspect.view_count, 2);
         assert_eq!(inspect.ok_count, 1);
         assert_eq!(inspect.failed_count, 1);
@@ -4275,7 +4283,7 @@ mod tests {
 
     #[test]
     fn markdown_index_renders_titles_links_and_extension_profile() {
-        let root = unique_temp_dir("crop-markdown-index");
+        let root = unique_temp_dir("mdcrop-markdown-index");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("intro.md"),
@@ -4311,7 +4319,7 @@ mod tests {
 
     #[test]
     fn markdown_index_for_view_json_uses_view_filters_and_relative_root() {
-        let root = unique_temp_dir("crop-markdown-index-view");
+        let root = unique_temp_dir("mdcrop-markdown-index-view");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("readme.md"),
@@ -4325,7 +4333,7 @@ mod tests {
         .unwrap();
 
         let view = r#"{
-          "schema_version": "crop.view.v1",
+          "schema_version": "mdcrop.view.v1",
           "name": "mdloom-view",
           "root": "docs",
           "task": "index mdloom docs",
@@ -4345,11 +4353,11 @@ mod tests {
 
     #[test]
     fn markdown_catalog_carries_frontmatter_and_link_side_info() {
-        let root = unique_temp_dir("crop-markdown-catalog");
+        let root = unique_temp_dir("mdcrop-markdown-catalog");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("intro.md"),
-            "---\ntitle: Intro Metadata\ntags: [mdloom, crop]\nstatus: draft\n---\n# Intro\n\n[API](api.md)",
+            "---\ntitle: Intro Metadata\ntags: [mdloom, mdcrop]\nstatus: draft\n---\n# Intro\n\n[API](api.md)",
         )
         .unwrap();
         fs::write(
@@ -4371,7 +4379,7 @@ mod tests {
 
         assert!(markdown.contains("# MDLOOM catalog"));
         assert!(markdown.contains("| Path | Title | In | Out | Orphan | Status | Tags | Title |"));
-        assert!(markdown.contains("| [`docs/intro.md`](docs/intro.md) | Intro Metadata | 0 | 1 | yes | draft | [mdloom, crop] | Intro Metadata |"));
+        assert!(markdown.contains("| [`docs/intro.md`](docs/intro.md) | Intro Metadata | 0 | 1 | yes | draft | [mdloom, mdcrop] | Intro Metadata |"));
         assert!(markdown.contains("| [`docs/api.md`](docs/api.md) | API Metadata | 1 | 0 | no | ready |  | API Metadata |"));
 
         fs::remove_dir_all(root).unwrap();
@@ -4379,7 +4387,7 @@ mod tests {
 
     #[test]
     fn markdown_catalog_for_view_json_uses_view_filters() {
-        let root = unique_temp_dir("crop-markdown-catalog-view");
+        let root = unique_temp_dir("mdcrop-markdown-catalog-view");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("one.md"),
@@ -4393,7 +4401,7 @@ mod tests {
         .unwrap();
 
         let view = r#"{
-          "schema_version": "crop.view.v1",
+          "schema_version": "mdcrop.view.v1",
           "name": "catalog-view",
           "root": "docs",
           "task": "catalog",
@@ -4414,7 +4422,7 @@ mod tests {
 
     #[test]
     fn mdloom_artifacts_reports_missing_and_stale_outputs() {
-        let root = unique_temp_dir("crop-mdloom-artifacts");
+        let root = unique_temp_dir("mdcrop-mdloom-artifacts");
         fs::create_dir_all(root.join(".mdloom")).unwrap();
         fs::create_dir_all(root.join("src")).unwrap();
         fs::create_dir_all(root.join("out")).unwrap();
@@ -4458,7 +4466,7 @@ mod tests {
 
         let report = mdloom_artifacts(&manifest).unwrap();
 
-        assert_eq!(report.schema_version, "crop.mdloom-artifacts.v1");
+        assert_eq!(report.schema_version, "mdcrop.mdloom-artifacts.v1");
         assert_eq!(report.artifact_count, 2);
         assert_eq!(report.missing_output_count, 1);
         assert_eq!(report.stale_count, 1);
@@ -4486,7 +4494,7 @@ mod tests {
         };
 
         let artifacts = mdloom_artifacts_for_root(&root).unwrap();
-        assert_eq!(artifacts.schema_version, "crop.mdloom-artifacts.v1");
+        assert_eq!(artifacts.schema_version, "mdcrop.mdloom-artifacts.v1");
         assert_eq!(artifacts.artifact_count, 2);
         assert_eq!(artifacts.missing_output_count, 1);
         assert_eq!(artifacts.diagnostic_count, 1);
@@ -4494,7 +4502,7 @@ mod tests {
         let headings = markdown_heading_inventory(&src, &options).unwrap();
         assert_eq!(
             headings.schema_version,
-            "crop.markdown-heading-inventory.v1"
+            "mdcrop.markdown-heading-inventory.v1"
         );
         assert_eq!(headings.source_count, 3);
         assert_eq!(headings.heading_count, 5);
@@ -4504,13 +4512,13 @@ mod tests {
             .any(|heading| heading.md_uri == "md://guide.source.md#overview"));
 
         let links = markdown_link_audit(&src, &options).unwrap();
-        assert_eq!(links.schema_version, "crop.markdown-link-audit.v1");
+        assert_eq!(links.schema_version, "mdcrop.markdown-link-audit.v1");
         assert_eq!(links.link_count, 2);
         assert_eq!(links.ok_count, 1);
         assert_eq!(links.broken_count, 1);
 
         let backlinks = markdown_backlinks(&src, &options).unwrap();
-        assert_eq!(backlinks.schema_version, "crop.markdown-backlinks.v1");
+        assert_eq!(backlinks.schema_version, "mdcrop.markdown-backlinks.v1");
         assert_eq!(backlinks.source_count, 3);
         let reference = backlinks
             .pages
@@ -4521,7 +4529,7 @@ mod tests {
         assert!(!reference.orphan);
 
         let frontmatter = markdown_frontmatter_inventory(&src, &options).unwrap();
-        assert_eq!(frontmatter.schema_version, "crop.markdown-frontmatter.v1");
+        assert_eq!(frontmatter.schema_version, "mdcrop.markdown-frontmatter.v1");
         assert_eq!(frontmatter.page_count, 3);
         assert_eq!(frontmatter.key_counts.get("tags"), Some(&3));
 
@@ -4543,11 +4551,11 @@ mod tests {
             .contains(&"draft.source.md".to_string()));
 
         for (file, schema) in [
-            ("artifacts.json", "crop.mdloom-artifacts.v1"),
-            ("headings.json", "crop.markdown-heading-inventory.v1"),
-            ("links.json", "crop.markdown-link-audit.v1"),
-            ("backlinks.json", "crop.markdown-backlinks.v1"),
-            ("frontmatter.json", "crop.markdown-frontmatter.v1"),
+            ("artifacts.json", "mdcrop.mdloom-artifacts.v1"),
+            ("headings.json", "mdcrop.markdown-heading-inventory.v1"),
+            ("links.json", "mdcrop.markdown-link-audit.v1"),
+            ("backlinks.json", "mdcrop.markdown-backlinks.v1"),
+            ("frontmatter.json", "mdcrop.markdown-frontmatter.v1"),
         ] {
             let golden = fs::read_to_string(root.join("golden").join(file)).unwrap();
             assert!(golden.contains(schema), "missing {schema} in {file}");
@@ -4559,7 +4567,7 @@ mod tests {
 
     #[test]
     fn markdown_link_audit_reports_ok_and_broken_local_links() {
-        let root = unique_temp_dir("crop-markdown-links");
+        let root = unique_temp_dir("mdcrop-markdown-links");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("intro.md"),
@@ -4578,7 +4586,7 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(audit.schema_version, "crop.markdown-link-audit.v1");
+        assert_eq!(audit.schema_version, "mdcrop.markdown-link-audit.v1");
         assert_eq!(audit.source_count, 2);
         assert_eq!(audit.link_count, 4);
         assert_eq!(audit.ok_count, 3);
@@ -4602,7 +4610,7 @@ mod tests {
 
     #[test]
     fn markdown_link_audit_resolves_mdpath_targets_and_missing_headings() {
-        let root = unique_temp_dir("crop-markdown-mdpath-links");
+        let root = unique_temp_dir("mdcrop-markdown-mdpath-links");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("intro.md"),
@@ -4639,7 +4647,7 @@ mod tests {
 
     #[test]
     fn markdown_link_audit_for_view_json_uses_view_filters() {
-        let root = unique_temp_dir("crop-markdown-links-view");
+        let root = unique_temp_dir("mdcrop-markdown-links-view");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(root.join("docs").join("one.md"), "# One\n\n[Two](two.md)").unwrap();
         fs::write(root.join("docs").join("two.md"), "# Two\n\nDone.").unwrap();
@@ -4650,7 +4658,7 @@ mod tests {
         .unwrap();
 
         let view = r#"{
-          "schema_version": "crop.view.v1",
+          "schema_version": "mdcrop.view.v1",
           "name": "links-view",
           "root": "docs",
           "task": "audit links",
@@ -4670,7 +4678,7 @@ mod tests {
 
     #[test]
     fn markdown_backlinks_reports_inbound_links_and_orphans() {
-        let root = unique_temp_dir("crop-markdown-backlinks");
+        let root = unique_temp_dir("mdcrop-markdown-backlinks");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("intro.md"),
@@ -4698,7 +4706,7 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(report.schema_version, "crop.markdown-backlinks.v1");
+        assert_eq!(report.schema_version, "mdcrop.markdown-backlinks.v1");
         assert_eq!(report.source_count, 3);
         assert_eq!(report.ok_link_count, 2);
         assert_eq!(report.orphan_count, 2);
@@ -4726,7 +4734,7 @@ mod tests {
 
     #[test]
     fn markdown_backlinks_for_view_json_uses_view_filters() {
-        let root = unique_temp_dir("crop-markdown-backlinks-view");
+        let root = unique_temp_dir("mdcrop-markdown-backlinks-view");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(root.join("docs").join("one.md"), "# One\n\n[Two](two.md)").unwrap();
         fs::write(root.join("docs").join("two.md"), "# Two\n\nDone.").unwrap();
@@ -4737,7 +4745,7 @@ mod tests {
         .unwrap();
 
         let view = r#"{
-          "schema_version": "crop.view.v1",
+          "schema_version": "mdcrop.view.v1",
           "name": "backlinks-view",
           "root": "docs",
           "task": "backlinks",
@@ -4761,11 +4769,11 @@ mod tests {
 
     #[test]
     fn markdown_frontmatter_inventory_reports_keys_and_fields() {
-        let root = unique_temp_dir("crop-markdown-frontmatter");
+        let root = unique_temp_dir("mdcrop-markdown-frontmatter");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("one.md"),
-            "---\ntitle: One\ntags: [mdloom, crop]\nstatus: draft\n---\n# One\n",
+            "---\ntitle: One\ntags: [mdloom, mdcrop]\nstatus: draft\n---\n# One\n",
         )
         .unwrap();
         fs::write(
@@ -4789,7 +4797,7 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(inventory.schema_version, "crop.markdown-frontmatter.v1");
+        assert_eq!(inventory.schema_version, "mdcrop.markdown-frontmatter.v1");
         assert_eq!(inventory.source_count, 3);
         assert_eq!(inventory.page_count, 2);
         assert_eq!(inventory.key_counts.get("title"), Some(&2));
@@ -4799,7 +4807,7 @@ mod tests {
         assert_eq!(inventory.pages[0].fields.get("title").unwrap(), "One");
         assert_eq!(
             inventory.pages[0].fields.get("tags").unwrap(),
-            "[mdloom, crop]"
+            "[mdloom, mdcrop]"
         );
 
         fs::remove_dir_all(root).unwrap();
@@ -4807,7 +4815,7 @@ mod tests {
 
     #[test]
     fn markdown_frontmatter_inventory_for_view_json_uses_view_filters() {
-        let root = unique_temp_dir("crop-markdown-frontmatter-view");
+        let root = unique_temp_dir("mdcrop-markdown-frontmatter-view");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("one.md"),
@@ -4821,7 +4829,7 @@ mod tests {
         .unwrap();
 
         let view = r#"{
-          "schema_version": "crop.view.v1",
+          "schema_version": "mdcrop.view.v1",
           "name": "frontmatter-view",
           "root": "docs",
           "task": "frontmatter",
@@ -4841,7 +4849,7 @@ mod tests {
 
     #[test]
     fn markdown_heading_inventory_reports_mdpath_uris_and_duplicates() {
-        let root = unique_temp_dir("crop-markdown-headings");
+        let root = unique_temp_dir("mdcrop-markdown-headings");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("one.md"),
@@ -4866,7 +4874,7 @@ mod tests {
 
         assert_eq!(
             inventory.schema_version,
-            "crop.markdown-heading-inventory.v1"
+            "mdcrop.markdown-heading-inventory.v1"
         );
         assert_eq!(inventory.source_count, 2);
         assert_eq!(inventory.heading_count, 4);
@@ -4883,13 +4891,13 @@ mod tests {
 
     #[test]
     fn markdown_heading_inventory_for_view_json_uses_view_filters() {
-        let root = unique_temp_dir("crop-markdown-headings-view");
+        let root = unique_temp_dir("mdcrop-markdown-headings-view");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(root.join("docs").join("one.md"), "# Included").unwrap();
         fs::write(root.join("docs").join("ignored.txt"), "# Ignored").unwrap();
 
         let view = r#"{
-          "schema_version": "crop.view.v1",
+          "schema_version": "mdcrop.view.v1",
           "name": "heading-view",
           "root": "docs",
           "task": "headings",
@@ -4909,11 +4917,11 @@ mod tests {
 
     #[test]
     fn side_info_reports_render_markdown_tables() {
-        let root = unique_temp_dir("crop-side-info-markdown");
+        let root = unique_temp_dir("mdcrop-side-info-markdown");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("one.md"),
-            "---\ntitle: One\ntags: [mdloom, crop]\n---\n# One\n\n[Two](two.md)\n[Missing](missing.md)",
+            "---\ntitle: One\ntags: [mdloom, mdcrop]\n---\n# One\n\n[Two](two.md)\n[Missing](missing.md)",
         )
         .unwrap();
         fs::write(
@@ -4950,11 +4958,11 @@ mod tests {
 
     #[test]
     fn run_view_rejects_bad_schema_and_zero_budget() {
-        let root = unique_temp_dir("crop-view-bad");
+        let root = unique_temp_dir("mdcrop-view-bad");
         fs::create_dir_all(&root).unwrap();
 
-        let bad_schema = CropView {
-            schema_version: "crop.view.v0".to_string(),
+        let bad_schema = MdcropView {
+            schema_version: "mdcrop.view.v0".to_string(),
             name: "bad".to_string(),
             root: ".".to_string(),
             task: "bad".to_string(),
@@ -4966,11 +4974,11 @@ mod tests {
         };
         assert!(matches!(
             run_view(bad_schema, &root),
-            Err(CropError::UnsupportedViewSchema { .. })
+            Err(MdcropError::UnsupportedViewSchema { .. })
         ));
 
-        let zero_budget = CropView {
-            schema_version: CROP_VIEW_SCHEMA.to_string(),
+        let zero_budget = MdcropView {
+            schema_version: MDCROP_VIEW_SCHEMA.to_string(),
             name: "zero".to_string(),
             root: ".".to_string(),
             task: "bad".to_string(),
@@ -4982,7 +4990,7 @@ mod tests {
         };
         assert!(matches!(
             run_view(zero_budget, &root),
-            Err(CropError::NonPositiveBudget)
+            Err(MdcropError::NonPositiveBudget)
         ));
 
         fs::remove_dir_all(root).unwrap();
@@ -4990,13 +4998,13 @@ mod tests {
 
     #[test]
     fn list_views_reads_sorted_json_view_store() {
-        let root = unique_temp_dir("crop-view-list");
+        let root = unique_temp_dir("mdcrop-view-list");
         fs::create_dir_all(&root).unwrap();
         fs::write(root.join("ignore.txt"), "not a view").unwrap();
         fs::write(
             root.join("b-view.json"),
             r#"{
-              "schema_version": "crop.view.v1",
+              "schema_version": "mdcrop.view.v1",
               "name": "beta",
               "root": "docs",
               "task": "beta task",
@@ -5008,7 +5016,7 @@ mod tests {
         fs::write(
             root.join("a-view.json"),
             r#"{
-              "schema_version": "crop.view.v1",
+              "schema_version": "mdcrop.view.v1",
               "name": "alpha",
               "root": ".",
               "task": "alpha task",
@@ -5020,7 +5028,7 @@ mod tests {
 
         let list = list_views(&root).unwrap();
 
-        assert_eq!(list.schema_version, "crop.view-list.v1");
+        assert_eq!(list.schema_version, "mdcrop.view-list.v1");
         assert_eq!(list.view_count, 2);
         assert_eq!(list.views[0].file, "a-view.json");
         assert_eq!(list.views[0].name, "alpha");
@@ -5034,17 +5042,17 @@ mod tests {
 
     #[test]
     fn ingest_rejects_missing_or_unsupported_root() {
-        let root = unique_temp_dir("crop-empty");
+        let root = unique_temp_dir("mdcrop-empty");
         assert!(matches!(
             ingest_path(root.join("missing")),
-            Err(CropError::RootDoesNotExist { .. })
+            Err(MdcropError::RootDoesNotExist { .. })
         ));
 
         fs::create_dir_all(&root).unwrap();
         fs::write(root.join("image.bin"), [0, 159, 146, 150]).unwrap();
         assert!(matches!(
             ingest_path(&root),
-            Err(CropError::NoSupportedFiles { .. })
+            Err(MdcropError::NoSupportedFiles { .. })
         ));
         fs::remove_dir_all(root).unwrap();
     }
@@ -5080,11 +5088,11 @@ mod tests {
     fn prefix_cached_pack_for_task(path: &Path, task: &str) -> PrefixCachedPack {
         let mut ingested = ingest_path(path).unwrap();
         score_graph_for_task(&mut ingested.graph, task);
-        let options = CropOptions {
+        let options = MdcropOptions {
             seed: 0,
             token_budget: 160,
         };
-        let pack = crop_context(&ingested.graph, options.clone()).unwrap();
+        let pack = mdcrop_context(&ingested.graph, options.clone()).unwrap();
         prefix_cached_pack(&ingested, pack, task, options, PrefixCacheProfile::Generic).unwrap()
     }
 

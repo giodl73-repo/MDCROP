@@ -2,13 +2,13 @@
 
 ## Goal
 
-Replace CROP's local low-level predicate parsing with SLICE where the behavior
-is already a typed row-selector match, without moving CROP view policy or graph
+Replace MDCROP's local low-level predicate parsing with SLICE where the behavior
+is already a typed row-selector match, without moving MDCROP view policy or graph
 selection into SLICE.
 
 ## Thesis
 
-`frontmatter_query` is CROP's smallest useful SLICE migration because its
+`frontmatter_query` is MDCROP's smallest useful SLICE migration because its
 current grammar is already predicate-shaped: top-level field paths, `eq`, `ne`,
 `has`, and `and`.
 
@@ -22,6 +22,6 @@ current grammar is already predicate-shaped: top-level field paths, `eq`, `ne`,
 
 - Existing frontmatter-query view tests keep passing.
 - Missing fields still satisfy `ne` and fail `eq`/`has`.
-- Unsupported SLICE operators remain invalid for CROP frontmatter queries.
-- CROP still owns view recipes, frontmatter extraction, graph selection, and
+- Unsupported SLICE operators remain invalid for MDCROP frontmatter queries.
+- MDCROP still owns view recipes, frontmatter extraction, graph selection, and
   rendering.

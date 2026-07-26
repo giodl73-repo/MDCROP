@@ -7,7 +7,7 @@ tagged files can become reusable named views.
 
 ## Scope
 
-- Add optional `frontmatter_query` to `crop.view.v1`.
+- Add optional `frontmatter_query` to `mdcrop.view.v1`.
 - Filter supported Markdown files by simple SQL/OData-style predicates.
 - Support arbitrary top-level frontmatter fields, not only tags.
 - Support `eq`, `ne`, and `has` operators joined with `and`.
@@ -17,7 +17,7 @@ tagged files can become reusable named views.
 
 ```json
 {
-  "schema_version": "crop.view.v1",
+  "schema_version": "mdcrop.view.v1",
   "name": "maxim-computing-ready",
   "root": "C:\\src\\maxim",
   "task": "computing systems context",

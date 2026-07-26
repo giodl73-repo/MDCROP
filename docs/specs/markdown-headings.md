@@ -1,10 +1,10 @@
 # Markdown Heading Inventory Schema
 
-Command: `crop headings`
+Command: `mdcrop headings`
 
-Schema version: `crop.markdown-heading-inventory.v1`
+Schema version: `mdcrop.markdown-heading-inventory.v1`
 
-Default output is JSON. `crop headings --format markdown` renders the same
+Default output is JSON. `mdcrop headings --format markdown` renders the same
 report as Markdown heading and duplicate-anchor tables for generated status
 pages; it does not change the JSON schema contract.
 

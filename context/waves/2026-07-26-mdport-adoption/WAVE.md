@@ -9,8 +9,8 @@ source_request: "Rename PEBBLE and pebble.v1 to MDPORT and mdport.v1."
 
 ## Mission
 
-Move CROP's portable Markdown document and corpus-slice boundary from PEBBLE to
-MDPORT without changing CROP's graph selection, indexing, or corpus ownership.
+Move MDCROP's portable Markdown document and corpus-slice boundary from PEBBLE to
+MDPORT without changing MDCROP's graph selection, indexing, or corpus ownership.
 
 ## Changes
 

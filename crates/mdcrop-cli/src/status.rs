@@ -1,12 +1,12 @@
 use anyhow::{bail, Result};
-use crop_core::{
+use mdcrop_core::{
     markdown_backlinks, markdown_backlinks_for_view_json, markdown_catalog,
     markdown_catalog_for_view_json, markdown_frontmatter_inventory,
     markdown_frontmatter_inventory_for_view_json, markdown_heading_inventory,
     markdown_heading_inventory_for_view_json, markdown_link_audit,
     markdown_link_audit_for_view_json, render_markdown_backlinks,
     render_markdown_frontmatter_inventory, render_markdown_heading_inventory,
-    render_markdown_link_audit, CropView, IngestOptions,
+    render_markdown_link_audit, IngestOptions, MdcropView,
 };
 use serde::Serialize;
 use std::fs;
@@ -65,10 +65,10 @@ pub fn run(
 struct StatusDocs {
     label: String,
     catalog: String,
-    links: crop_core::MarkdownLinkAudit,
-    backlinks: crop_core::MarkdownBacklinkReport,
-    frontmatter: crop_core::MarkdownFrontmatterInventory,
-    headings: crop_core::MarkdownHeadingInventory,
+    links: mdcrop_core::MarkdownLinkAudit,
+    backlinks: mdcrop_core::MarkdownBacklinkReport,
+    frontmatter: mdcrop_core::MarkdownFrontmatterInventory,
+    headings: mdcrop_core::MarkdownHeadingInventory,
 }
 
 impl StatusDocs {
@@ -183,7 +183,7 @@ fn status_report(
     let strict_issue_count = docs.strict_issue_count(strict_policy);
 
     CorpusStatusReport {
-        schema_version: "crop.corpus-status.v1",
+        schema_version: "mdcrop.corpus-status.v1",
         title: title.to_string(),
         input: docs.label.clone(),
         issue_count,
@@ -226,7 +226,7 @@ fn status_docs_for_view(
 ) -> Result<StatusDocs> {
     let input = fs::read_to_string(&view)?;
     let base_dir = view.parent().unwrap_or_else(|| std::path::Path::new("."));
-    let mut recipe: CropView = serde_json::from_str(&input)?;
+    let mut recipe: MdcropView = serde_json::from_str(&input)?;
     if !extensions.is_empty() {
         recipe.include_extensions = extensions;
     }
@@ -295,7 +295,7 @@ mod tests {
             .join("..")
             .join("..");
         let fixture = repo.join("examples").join("mdloom-fixture");
-        let output = unique_temp_file("crop-status.md");
+        let output = unique_temp_file("mdcrop-status.md");
 
         run(
             Some(fixture.join("src")),
@@ -327,7 +327,7 @@ mod tests {
             .join("..")
             .join("..");
         let fixture = repo.join("examples").join("mdloom-fixture");
-        let output = unique_temp_file("crop-view-status.md");
+        let output = unique_temp_file("mdcrop-view-status.md");
 
         run(
             None,
@@ -366,7 +366,7 @@ mod tests {
             .join("..")
             .join("..");
         let fixture = repo.join("examples").join("mdloom-fixture");
-        let output = unique_temp_file("crop-status-strict.md");
+        let output = unique_temp_file("mdcrop-status-strict.md");
 
         let result = run(
             Some(fixture.join("src")),
@@ -393,7 +393,7 @@ mod tests {
 
     #[test]
     fn status_strict_allows_clean_corpus() {
-        let root = unique_temp_dir("crop-status-clean");
+        let root = unique_temp_dir("mdcrop-status-clean");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(root.join("docs").join("one.md"), "# One\n\n[Two](two.md)\n").unwrap();
         fs::write(root.join("docs").join("two.md"), "# Two\n\n[One](one.md)\n").unwrap();
@@ -420,7 +420,7 @@ mod tests {
             .join("..")
             .join("..");
         let fixture = repo.join("examples").join("mdloom-fixture");
-        let output = unique_temp_file("crop-status.json");
+        let output = unique_temp_file("mdcrop-status.json");
 
         run(
             Some(fixture.join("src")),
@@ -437,7 +437,7 @@ mod tests {
 
         let json: serde_json::Value =
             serde_json::from_str(&fs::read_to_string(&output).unwrap()).unwrap();
-        assert_eq!(json["schema_version"], "crop.corpus-status.v1");
+        assert_eq!(json["schema_version"], "mdcrop.corpus-status.v1");
         assert_eq!(json["title"], "Fixture Status");
         assert!(json["issue_count"].as_u64().unwrap() > 0);
         assert_eq!(json["strict_issue_count"], json["issue_count"]);
@@ -490,7 +490,7 @@ mod tests {
 
     #[test]
     fn status_strict_can_gate_selected_issue_classes() {
-        let root = unique_temp_dir("crop-status-policy");
+        let root = unique_temp_dir("mdcrop-status-policy");
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(root.join("docs").join("one.md"), "# One\n\n[Two](two.md)\n").unwrap();
         fs::write(root.join("docs").join("two.md"), "# Two\n").unwrap();

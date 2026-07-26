@@ -11,17 +11,17 @@ into a context pack with one command.
 
 ## Deliverables
 
-- Add `CropView` and `CropViewRun` types.
+- Add `MdcropView` and `MdcropViewRun` types.
 - Add `run_view_json` and `run_view` APIs.
-- Add `crop view --file`.
+- Add `mdcrop view --file`.
 - Resolve relative roots from the view file location.
 - Cover success, bad schema, and zero-budget cases with unit tests.
 
 ## Scout commands
 
 ```powershell
-git -C C:\src\CROP --no-pager status --short --branch
-rg "bench_manifest|pack|prefix_cached_pack" C:\src\CROP\crates -n
+git -C C:\src\MDCROP --no-pager status --short --branch
+rg "bench_manifest|pack|prefix_cached_pack" C:\src\MDCROP\crates -n
 ```
 
 ## Validation
@@ -29,12 +29,12 @@ rg "bench_manifest|pack|prefix_cached_pack" C:\src\CROP\crates -n
 ```powershell
 cargo fmt
 cargo test --workspace
-cargo run -p crop-cli -- view --file examples\views\docs-view.json
+cargo run -p mdcrop-cli -- view --file examples\views\docs-view.json
 git diff --check
 ```
 
 ## Outcome
 
-`crop.view.v1` recipes can now be persisted and run through `crop view --file`.
-The output is `crop.view-run.v1` JSON containing the view metadata and produced
-`CropPack`.
+`mdcrop.view.v1` recipes can now be persisted and run through `mdcrop view --file`.
+The output is `mdcrop.view-run.v1` JSON containing the view metadata and produced
+`MdcropPack`.

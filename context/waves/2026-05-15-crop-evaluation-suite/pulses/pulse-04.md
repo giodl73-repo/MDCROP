@@ -6,7 +6,7 @@ Done.
 
 ## Goal
 
-Stabilize the metric vocabulary so CROP comparisons are clear and hard to game.
+Stabilize the metric vocabulary so MDCROP comparisons are clear and hard to game.
 
 ## Deliverables
 
@@ -24,9 +24,9 @@ time comparisons, so timing belongs with real-corpus benchmark pulses.
 ## Scout commands
 
 ```powershell
-git -C C:\src\CROP --no-pager status --short --branch
-rg "gold_recall|noise_rate|token_estimate" C:\src\CROP\crates\crop-core\src\lib.rs -n
-cargo run -p crop-cli -- eval --case missing-bridge --method crop --budget 160
+git -C C:\src\MDCROP --no-pager status --short --branch
+rg "gold_recall|noise_rate|token_estimate" C:\src\MDCROP\crates\mdcrop-core\src\lib.rs -n
+cargo run -p mdcrop-cli -- eval --case missing-bridge --method mdcrop --budget 160
 ```
 
 ## Validation
@@ -34,6 +34,6 @@ cargo run -p crop-cli -- eval --case missing-bridge --method crop --budget 160
 ```powershell
 cargo fmt
 cargo test --workspace
-cargo run -p crop-cli -- eval --all --budget 160
+cargo run -p mdcrop-cli -- eval --all --budget 160
 git diff --check
 ```

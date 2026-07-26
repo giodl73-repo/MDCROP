@@ -2,7 +2,7 @@
 
 ## Goal
 
-Close the MDLOOM support issues by making CROP side-info outputs stable,
+Close the MDLOOM support issues by making MDCROP side-info outputs stable,
 documented, locally testable, and better modularized.
 
 ## Scope
@@ -19,7 +19,7 @@ documented, locally testable, and better modularized.
 ## Related issues
 
 - #1 Expose stable side-info schemas for MDLOOM consumption.
-- #2 Split crop-core and crop-cli into focused modules as surfaces grow.
+- #2 Split mdcrop-core and mdcrop-cli into focused modules as surfaces grow.
 - #3 Add MDLOOM integration smoke fixtures for catalog and artifact health.
 
 ## Checklist
@@ -37,6 +37,6 @@ documented, locally testable, and better modularized.
 
 ## Outcome
 
-MDLOOM can now pin CROP integration against a small local fixture instead of a
+MDLOOM can now pin MDCROP integration against a small local fixture instead of a
 large real repository, and the artifact surface has an explicit module boundary
 for future side-info growth.

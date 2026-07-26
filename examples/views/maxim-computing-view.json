@@ -1,5 +1,5 @@
 {
-  "schema_version": "crop.view.v1",
+  "schema_version": "mdcrop.view.v1",
   "name": "maxim-computing-view",
   "root": "C:\\src\\maxim\\computing",
   "task": "computing systems context",

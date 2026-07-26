@@ -1,10 +1,10 @@
 # Markdown Frontmatter Schema
 
-Command: `crop frontmatter`
+Command: `mdcrop frontmatter`
 
-Schema version: `crop.markdown-frontmatter.v1`
+Schema version: `mdcrop.markdown-frontmatter.v1`
 
-Default output is JSON. `crop frontmatter --format markdown` renders the same
+Default output is JSON. `mdcrop frontmatter --format markdown` renders the same
 report as a Markdown key profile and metadata table for generated status pages;
 it does not change the JSON schema contract.
 
@@ -19,7 +19,7 @@ it does not change the JSON schema contract.
 | `key_counts` | object | Count of pages containing each top-level key. |
 | `pages` | array | Rows with `source`, sorted `keys`, and string-valued `fields`. |
 
-CROP records simple top-level YAML-style key/value fields as strings. Array-like
+MDCROP records simple top-level YAML-style key/value fields as strings. Array-like
 values such as tags remain string values, e.g. `[mdloom, guide]`.
 
 Golden fixture: `examples/mdloom-fixture/golden/frontmatter.json`.

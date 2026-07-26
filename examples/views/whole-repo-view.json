@@ -1,8 +1,8 @@
 {
-  "schema_version": "crop.view.v1",
-  "name": "crop-whole-repo-view",
+  "schema_version": "mdcrop.view.v1",
+  "name": "mdcrop-whole-repo-view",
   "root": "..\\..",
-  "task": "explain CROP architecture and command surfaces",
+  "task": "explain MDCROP architecture and command surfaces",
   "token_budget": 16000,
   "seed": 0,
   "include_extensions": ["md", "rs", "toml", "json"],

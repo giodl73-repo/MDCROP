@@ -1,8 +1,8 @@
 {
-  "schema_version": "crop.view.v1",
-  "name": "crop-benchmark-docs-view",
+  "schema_version": "mdcrop.view.v1",
+  "name": "mdcrop-benchmark-docs-view",
   "root": "..\\..\\docs",
-  "task": "explain CROP benchmark and view workflows",
+  "task": "explain MDCROP benchmark and view workflows",
   "token_budget": 12000,
   "seed": 0,
   "include_extensions": ["md"],

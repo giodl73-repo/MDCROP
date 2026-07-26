@@ -1,6 +1,6 @@
 # Markdown Catalog Contract
 
-Command: `crop catalog`
+Command: `mdcrop catalog`
 
 Output format: Markdown table, not JSON.
 

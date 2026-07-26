@@ -129,34 +129,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "crop-cli"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "crop-core",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "crop-core"
-version = "0.1.0"
-dependencies = [
- "mdpath",
- "mdport",
- "rctx-core",
- "rgraph-core",
- "ropt-core",
- "rstat-core",
- "serde",
- "serde_json",
- "sha2",
- "slice-core",
- "thiserror",
-]
-
-[[package]]
 name = "crypto-common"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -220,6 +192,34 @@ name = "libc"
 version = "0.2.186"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68ab91017fe16c622486840e4c83c9a37afeff978bd239b5293d61ece587de66"
+
+[[package]]
+name = "mdcrop-cli"
+version = "0.2.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "mdcrop-core",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "mdcrop-core"
+version = "0.2.0"
+dependencies = [
+ "mdpath",
+ "mdport",
+ "rctx-core",
+ "rgraph-core",
+ "ropt-core",
+ "rstat-core",
+ "serde",
+ "serde_json",
+ "sha2",
+ "slice-core",
+ "thiserror",
+]
 
 [[package]]
 name = "mdpath"

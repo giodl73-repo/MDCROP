@@ -1,9 +1,12 @@
 [package]
-name = "crop-core"
+name = "mdcrop-core"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Markdown corpus indexing, graph selection, provenance, and context packing."
 
 [dependencies]
 rctx-core.workspace = true

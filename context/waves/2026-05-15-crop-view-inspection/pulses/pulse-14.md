@@ -2,17 +2,17 @@
 
 ## Goal
 
-Let CROP read MDLOOM generated artifact manifests and report generated-output
+Let MDCROP read MDLOOM generated artifact manifests and report generated-output
 health for Markdown, ASCII, HTML, and related targets.
 
 ## Scope
 
-- Add `crop artifacts --root` and `crop artifacts --manifest`.
+- Add `mdcrop artifacts --root` and `mdcrop artifacts --manifest`.
 - Read MDLOOM `.mdloom/artifacts.json` records.
 - Map source paths to output paths and target/status metadata.
 - Report missing outputs, stale outputs, cache status, directive counts, and
   diagnostic counts.
-- Keep MDLOOM responsible for generation while CROP provides corpus intelligence
+- Keep MDLOOM responsible for generation while MDCROP provides corpus intelligence
   over generated artifacts.
 
 ## Checklist
@@ -29,6 +29,6 @@ health for Markdown, ASCII, HTML, and related targets.
 
 ## Outcome
 
-`crop artifacts` emits `crop.mdloom-artifacts.v1` JSON that downstream MDLOOM
+`mdcrop artifacts` emits `mdcrop.mdloom-artifacts.v1` JSON that downstream MDLOOM
 workflows can use to audit whether generated documentation outputs still match
 their sources.

@@ -7,7 +7,7 @@ rendered Markdown artifact.
 
 ## Changes
 
-- Added `crop status --strict`.
+- Added `mdcrop status --strict`.
 - Strict mode renders or writes the Markdown page first, then exits non-zero if
   broken links, orphan pages, or duplicate heading anchors are present.
 - Added CLI coverage for both failing and clean strict-mode corpora.

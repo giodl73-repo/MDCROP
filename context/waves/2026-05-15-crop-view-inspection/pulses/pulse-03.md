@@ -3,8 +3,8 @@
 ## Scout commands
 
 ```powershell
-cargo run -q -p crop-cli -- view --inspect --dir examples\views
-cargo run -q -p crop-cli -- view --inspect --file examples\views\whole-repo-view.json -e md
+cargo run -q -p mdcrop-cli -- view --inspect --dir examples\views
+cargo run -q -p mdcrop-cli -- view --inspect --file examples\views\whole-repo-view.json -e md
 ```
 
 ## Decision
@@ -27,8 +27,8 @@ and adds a non-zero exit only when requested with `--strict`.
 ```powershell
 cargo fmt
 cargo test --workspace
-cargo run -q -p crop-cli -- view --inspect --dir examples\views --strict
-cargo run -q -p crop-cli -- view --inspect --file examples\views\whole-repo-view.json -e md --strict
+cargo run -q -p mdcrop-cli -- view --inspect --dir examples\views --strict
+cargo run -q -p mdcrop-cli -- view --inspect --file examples\views\whole-repo-view.json -e md --strict
 # plus a temporary bad store to confirm strict exits non-zero after JSON output
 git diff --check
 ```

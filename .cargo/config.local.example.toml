@@ -1,4 +1,4 @@
-# Copy this file to .cargo/config.toml when developing CROP beside the MDPATH
+# Copy this file to .cargo/config.toml when developing MDCROP beside the MDPATH
 # and RLINE checkouts at C:\src\MDPATH and C:\src\RLINE. The checked-in
 # Cargo.toml remains wired to GitHub so CI and clean clones use canonical
 # upstream packages.

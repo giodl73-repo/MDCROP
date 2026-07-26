@@ -1,10 +1,10 @@
 # Markdown Backlinks Schema
 
-Command: `crop backlinks`
+Command: `mdcrop backlinks`
 
-Schema version: `crop.markdown-backlinks.v1`
+Schema version: `mdcrop.markdown-backlinks.v1`
 
-Default output is JSON. `crop backlinks --format markdown` renders the same
+Default output is JSON. `mdcrop backlinks --format markdown` renders the same
 report as a Markdown table for generated status pages; it does not change the
 JSON schema contract.
 

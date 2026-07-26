@@ -1,6 +1,6 @@
 # MD vs. Mdport benchmark fixtures
 
-These generated fixtures compare CROP over Markdown source files with CROP over
+These generated fixtures compare MDCROP over Markdown source files with MDCROP over
 equivalent `mdport.v1` transfer files at several corpus sizes.
 
 ```powershell

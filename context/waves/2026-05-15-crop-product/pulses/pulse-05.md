@@ -6,17 +6,17 @@ In progress.
 
 ## Goal
 
-Compare CROP against ordinary top-k retrieval fixtures using the same corpus,
+Compare MDCROP against ordinary top-k retrieval fixtures using the same corpus,
 scores, token budget, and gold labels.
 
 ## Delivered first slice
 
-- [x] Add `EvalCase::MissingBridge` and `EvalMethod::{Crop, ScoreTopK}`.
-- [x] Add `eval_fixture(case, method, budget)` in `crop-core`.
-- [x] Add `crop eval --case missing-bridge --method crop|score-top-k`.
+- [x] Add `EvalCase::MissingBridge` and `EvalMethod::{Mdcrop, ScoreTopK}`.
+- [x] Add `eval_fixture(case, method, budget)` in `mdcrop-core`.
+- [x] Add `mdcrop eval --case missing-bridge --method mdcrop|score-top-k`.
 - [x] Emit JSON metrics for selected units, token use, gold recall, bridge
   recall, noise rate, and quality score.
-- [x] Add coverage proving CROP recovers the bridge while score top-k misses it
+- [x] Add coverage proving MDCROP recovers the bridge while score top-k misses it
   and includes stale noise under the same budget.
 
 ## Remaining fixtures
@@ -31,7 +31,7 @@ scores, token budget, and gold labels.
 ```powershell
 cargo fmt
 cargo test --workspace
-cargo run -p crop-cli -- eval --case missing-bridge --method crop --budget 160
-cargo run -p crop-cli -- eval --case missing-bridge --method score-top-k --budget 160
+cargo run -p mdcrop-cli -- eval --case missing-bridge --method mdcrop --budget 160
+cargo run -p mdcrop-cli -- eval --case missing-bridge --method score-top-k --budget 160
 git diff --check
 ```

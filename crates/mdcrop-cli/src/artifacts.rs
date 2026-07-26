@@ -1,6 +1,6 @@
 use anyhow::{bail, Result};
 use clap::ValueEnum;
-use crop_core::{mdloom_artifacts, mdloom_artifacts_for_root, render_mdloom_artifact_markdown};
+use mdcrop_core::{mdloom_artifacts, mdloom_artifacts_for_root, render_mdloom_artifact_markdown};
 use std::fs;
 use std::path::PathBuf;
 

@@ -8,7 +8,7 @@ requiring a downstream JSON renderer.
 ## Scope
 
 - Add a reusable Markdown renderer for `MdloomArtifactReport`.
-- Add `crop artifacts --format markdown`.
+- Add `mdcrop artifacts --format markdown`.
 - Keep JSON as the default output format.
 - Cover the Markdown table in tests.
 - Update MDLOOM-facing docs.
@@ -26,6 +26,6 @@ requiring a downstream JSON renderer.
 
 ## Outcome
 
-`crop artifacts --format markdown` emits a ready-to-embed artifact health table
+`mdcrop artifacts --format markdown` emits a ready-to-embed artifact health table
 with source/output mappings, target/status, existence, staleness, cache,
 directive, and diagnostic columns.

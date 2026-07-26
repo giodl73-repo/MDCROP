@@ -1,6 +1,6 @@
-# CROP
+# MDCROP
 
-**Graph-cut context cropping for AI agents.**
+**Index, graph, and select Markdown corpora.**
 
 **Series:** [Tools & Infrastructure](https://github.com/giodl73-repo/giodl73-repo/blob/main/series/tools-infrastructure.md).
 
@@ -8,11 +8,11 @@
 [ROLES](https://github.com/giodl73-repo/ROLES), the `.roles` convention for
 repository-local review panels.
 
-CROP trims scattered evidence into focused, provenance-aware context packs from
-repos, notes, issues, chats, and documents. Most RAG systems retrieve chunks;
-CROP draws the boundary around the right context before an agent answers.
+MDCROP trims Markdown evidence into focused, provenance-aware context packs from
+repos, notes, issues, chats, and document corpora. Most RAG systems retrieve chunks;
+MDCROP draws the boundary around the right context before an agent answers.
 
-## Why CROP
+## Why MDCROP
 
 - **Context boundary**: graph-cut style selection keeps relevant neighborhoods
   and excludes noisy periphery.
@@ -28,37 +28,37 @@ CROP draws the boundary around the right context before an agent answers.
 Emit the deterministic bridge/noise fixture:
 
 ```powershell
-cargo run -p crop-cli -- fixture --budget 170
+cargo run -p mdcrop-cli -- fixture --budget 170
 ```
 
-Pack a local file or directory into a task-focused JSON context crop:
+Pack a local file or directory into a task-focused JSON context selection:
 
 ```powershell
-cargo run -p crop-cli -- pack --root C:\src\CROP --task "explain graph context boundary" --budget 12000
+cargo run -p mdcrop-cli -- pack --root C:\src\MDCROP --task "explain graph context boundary" --budget 12000
 ```
 
-Add `--output context.crop.json` to write the pack to disk instead of stdout.
+Add `--output context.mdcrop.json` to write the pack to disk instead of stdout.
 
 Generate a Markdown README/TOC-style source index:
 
 ```powershell
-cargo run -p crop-cli -- index --root C:\src\mdloom -e md -e html --exclude-dir target
-cargo run -p crop-cli -- index --view examples\views\whole-repo-view.json --output INDEX.md
+cargo run -p mdcrop-cli -- index --root C:\src\mdloom -e md -e html --exclude-dir target
+cargo run -p mdcrop-cli -- index --view examples\views\whole-repo-view.json --output INDEX.md
 ```
 
-`crop index` emits Markdown tables with an extension profile and one row per
+`mdcrop index` emits Markdown tables with an extension profile and one row per
 source path, title, directory, extension, and outbound Markdown-link count. It is
-designed as a reusable `crop-core` surface for tools such as MDLOOM, which can own
-its compile/render pipeline while depending on CROP for corpus index primitives.
+designed as a reusable `mdcrop-core` surface for tools such as MDLOOM, which can own
+its compile/render pipeline while depending on MDCROP for corpus index primitives.
 
 Generate a richer Markdown catalog table for README/TOC pages:
 
 ```powershell
-cargo run -p crop-cli -- catalog --root C:\src\mdloom -e md --exclude-dir target --output CATALOG.md
-cargo run -p crop-cli -- catalog --view examples\views\whole-repo-view.json
+cargo run -p mdcrop-cli -- catalog --root C:\src\mdloom -e md --exclude-dir target --output CATALOG.md
+cargo run -p mdcrop-cli -- catalog --view examples\views\whole-repo-view.json
 ```
 
-`crop catalog` emits Markdown that combines source titles, inbound/outbound link
+`mdcrop catalog` emits Markdown that combines source titles, inbound/outbound link
 counts, orphan flags, and selected frontmatter fields such as `status`, `tags`,
 `title`, `wave`, and `version`. It is a ready-to-embed table surface for MDLOOM
 while the structured JSON side-info remains available through `links`,
@@ -67,12 +67,12 @@ while the structured JSON side-info remains available through `links`,
 Report MDLOOM generated artifact health:
 
 ```powershell
-cargo run -p crop-cli -- artifacts --root C:\src\mdloom
-cargo run -p crop-cli -- artifacts --manifest C:\src\mdloom\.mdloom\artifacts.json
-cargo run -p crop-cli -- artifacts --root C:\src\mdloom --format markdown --output ARTIFACTS.md
+cargo run -p mdcrop-cli -- artifacts --root C:\src\mdloom
+cargo run -p mdcrop-cli -- artifacts --manifest C:\src\mdloom\.mdloom\artifacts.json
+cargo run -p mdcrop-cli -- artifacts --root C:\src\mdloom --format markdown --output ARTIFACTS.md
 ```
 
-`crop artifacts` emits `crop.mdloom-artifacts.v1` JSON from MDLOOM's
+`mdcrop artifacts` emits `mdcrop.mdloom-artifacts.v1` JSON from MDLOOM's
 `.mdloom\artifacts.json` contract. It maps source files to generated outputs and
 reports missing outputs, stale outputs, cache status, directive counts, and
 diagnostic counts so MDLOOM can keep generated Markdown, ASCII, and HTML
@@ -82,25 +82,25 @@ artifact health table.
 Generate a combined corpus status page or machine-readable summary:
 
 ```powershell
-cargo run -p crop-cli -- status --root C:\src\maxim --output STATUS.md
-cargo run -p crop-cli -- status --view examples\mdloom-fixture\mdloom-ready-view.json --output STATUS.md
-cargo run -p crop-cli -- status --root C:\src\maxim --strict --output STATUS.md
-cargo run -p crop-cli -- status --root C:\src\maxim --strict --strict-on broken-links --output STATUS.md
-cargo run -p crop-cli -- status --root C:\src\maxim --format json --output STATUS.json
+cargo run -p mdcrop-cli -- status --root C:\src\maxim --output STATUS.md
+cargo run -p mdcrop-cli -- status --view examples\mdloom-fixture\mdloom-ready-view.json --output STATUS.md
+cargo run -p mdcrop-cli -- status --root C:\src\maxim --strict --output STATUS.md
+cargo run -p mdcrop-cli -- status --root C:\src\maxim --strict --strict-on broken-links --output STATUS.md
+cargo run -p mdcrop-cli -- status --root C:\src\maxim --format json --output STATUS.json
 ```
 
-`crop status` composes the catalog, link audit, backlinks, frontmatter, and
+`mdcrop status` composes the catalog, link audit, backlinks, frontmatter, and
 headings into one Markdown page for any Markdown corpus. Use `--format json` for
-the combined `crop.corpus-status.v1` summary contract with per-surface counts,
+the combined `mdcrop.corpus-status.v1` summary contract with per-surface counts,
 issue totals, selected strict policy names, and strict-pass state. Use `--view`
-to generate status from a named `crop.view.v1` recipe, including frontmatter/tag
+to generate status from a named `mdcrop.view.v1` recipe, including frontmatter/tag
 filters. Add `--strict` in CI to exit non-zero after writing the selected output
 format. By default strict mode gates on broken links, orphan pages, and duplicate
 anchors; repeat `--strict-on` to gate only `broken-links`, `orphan-pages`, or
 `duplicate-anchors`.
 
 `frontmatter_query` predicates are evaluated through SLICE's shared selector
-kernel while CROP still owns view recipes, frontmatter extraction, graph
+kernel while MDCROP still owns view recipes, frontmatter extraction, graph
 selection, and output rendering.
 
 Stable schema and consumer-integration notes live in [`docs\specs`](docs/specs),
@@ -110,12 +110,12 @@ with deterministic status contract goldens under
 Audit local Markdown links as structured side-info:
 
 ```powershell
-cargo run -p crop-cli -- links --root C:\src\mdloom -e md --exclude-dir target
-cargo run -p crop-cli -- links --view examples\views\whole-repo-view.json
-cargo run -p crop-cli -- links --root C:\src\mdloom -e md --format markdown --output LINK_AUDIT.md
+cargo run -p mdcrop-cli -- links --root C:\src\mdloom -e md --exclude-dir target
+cargo run -p mdcrop-cli -- links --view examples\views\whole-repo-view.json
+cargo run -p mdcrop-cli -- links --root C:\src\mdloom -e md --format markdown --output LINK_AUDIT.md
 ```
 
-`crop links` emits `crop.markdown-link-audit.v1` JSON with source, target,
+`mdcrop links` emits `mdcrop.markdown-link-audit.v1` JSON with source, target,
 status, resolved source, error details, and aggregate ok/broken counts. It uses
 MDPATH-compatible resolution for `md://` URIs and heading fragments, while
 ignoring external links so MDLOOM can focus this report on local corpus health.
@@ -124,26 +124,26 @@ Use `--format markdown` for a ready-to-embed local link health table.
 Report backlinks and orphan pages:
 
 ```powershell
-cargo run -p crop-cli -- backlinks --root C:\src\mdloom -e md --exclude-dir target
-cargo run -p crop-cli -- backlinks --view examples\views\whole-repo-view.json
-cargo run -p crop-cli -- backlinks --root C:\src\mdloom -e md --format markdown --output BACKLINKS.md
+cargo run -p mdcrop-cli -- backlinks --root C:\src\mdloom -e md --exclude-dir target
+cargo run -p mdcrop-cli -- backlinks --view examples\views\whole-repo-view.json
+cargo run -p mdcrop-cli -- backlinks --root C:\src\mdloom -e md --format markdown --output BACKLINKS.md
 ```
 
-`crop backlinks` emits `crop.markdown-backlinks.v1` JSON with one page row per
+`mdcrop backlinks` emits `mdcrop.markdown-backlinks.v1` JSON with one page row per
 Markdown source, title, inbound link list, outbound link count, and orphan flag.
-It reuses CROP's MDPATH-compatible link resolution so MDLOOM can build indexes
+It reuses MDCROP's MDPATH-compatible link resolution so MDLOOM can build indexes
 and README tables with "referenced by" side-info. Use `--format markdown` for a
 page-level inbound/orphan table.
 
 Inventory Markdown frontmatter:
 
 ```powershell
-cargo run -p crop-cli -- frontmatter --root C:\src\mdloom -e md --exclude-dir target
-cargo run -p crop-cli -- frontmatter --view examples\views\whole-repo-view.json
-cargo run -p crop-cli -- frontmatter --root C:\src\mdloom -e md --format markdown --output FRONTMATTER.md
+cargo run -p mdcrop-cli -- frontmatter --root C:\src\mdloom -e md --exclude-dir target
+cargo run -p mdcrop-cli -- frontmatter --view examples\views\whole-repo-view.json
+cargo run -p mdcrop-cli -- frontmatter --root C:\src\mdloom -e md --format markdown --output FRONTMATTER.md
 ```
 
-`crop frontmatter` emits `crop.markdown-frontmatter.v1` JSON with source paths,
+`mdcrop frontmatter` emits `mdcrop.markdown-frontmatter.v1` JSON with source paths,
 top-level frontmatter key/value fields, and aggregate key counts. This gives
 MDLOOM a small metadata feed for generated README tables, HTML sidebars, and
 status/tag summaries without taking over MDLOOM's renderer. Use
@@ -153,12 +153,12 @@ frontmatter fields.
 Inventory headings and MDPATH anchors:
 
 ```powershell
-cargo run -p crop-cli -- headings --root C:\src\mdloom -e md --exclude-dir target
-cargo run -p crop-cli -- headings --view examples\views\whole-repo-view.json
-cargo run -p crop-cli -- headings --root C:\src\mdloom -e md --format markdown --output HEADINGS.md
+cargo run -p mdcrop-cli -- headings --root C:\src\mdloom -e md --exclude-dir target
+cargo run -p mdcrop-cli -- headings --view examples\views\whole-repo-view.json
+cargo run -p mdcrop-cli -- headings --root C:\src\mdloom -e md --format markdown --output HEADINGS.md
 ```
 
-`crop headings` emits `crop.markdown-heading-inventory.v1` JSON with source,
+`mdcrop headings` emits `mdcrop.markdown-heading-inventory.v1` JSON with source,
 level, text, normalized MDPATH/GitHub anchor, line number, canonical `md://`
 section URI, and duplicate-anchor groups. This is the raw TOC and anchor
 inventory surface for MDLOOM. Use `--format markdown` for an embeddable heading
@@ -167,17 +167,17 @@ and duplicate-anchor table.
 Run a persisted named view recipe:
 
 ```powershell
-cargo run -p crop-cli -- view --file examples\views\docs-view.json
+cargo run -p mdcrop-cli -- view --file examples\views\docs-view.json
 ```
 
-View files use `crop.view.v1` JSON:
+View files use `mdcrop.view.v1` JSON:
 
 ```json
 {
-  "schema_version": "crop.view.v1",
-  "name": "crop-benchmark-docs-view",
+  "schema_version": "mdcrop.view.v1",
+  "name": "mdcrop-benchmark-docs-view",
   "root": "..\\..\\docs",
-  "task": "explain CROP benchmark and view workflows",
+  "task": "explain MDCROP benchmark and view workflows",
   "token_budget": 12000,
   "seed": 0,
   "include_extensions": ["md"],
@@ -187,15 +187,15 @@ View files use `crop.view.v1` JSON:
 ```
 
 Relative roots resolve from the view file location. The default output is
-`crop.view-run.v1` JSON containing the view metadata and produced context pack.
+`mdcrop.view-run.v1` JSON containing the view metadata and produced context pack.
 Use `--format mdport` to emit the same selected context as a compact
 `mdport.v1` transfer pack that MDLOOM and other tools can exchange:
 
 ```powershell
-cargo run -p crop-cli -- view --file examples\views\docs-view.json --format mdport
+cargo run -p mdcrop-cli -- view --file examples\views\docs-view.json --format mdport
 ```
 
-CROP also reads `mdport.v1` JSON files during normal ingest, using each Mdport
+MDCROP also reads `mdport.v1` JSON files during normal ingest, using each Mdport
 section as an evidence unit while preserving the original Mdport `source` path.
 
 `frontmatter_query` is optional and filters Markdown sources using simple
@@ -207,36 +207,36 @@ supports Maxim-style tag views such as `tags has 'computing' and status eq
 List persisted views in a store:
 
 ```powershell
-cargo run -p crop-cli -- view --list --dir examples\views
+cargo run -p mdcrop-cli -- view --list --dir examples\views
 ```
 
-By convention, local user views live in `.crop\views`; `--dir` can point at any
-directory of `crop.view.v1` JSON files. Non-JSON files are ignored and output is
+By convention, local user views live in `.mdcrop\views`; `--dir` can point at any
+directory of `mdcrop.view.v1` JSON files. Non-JSON files are ignored and output is
 sorted by file name.
 
 Checked example views live under `examples\views\`:
 
 | File | Use |
 |------|-----|
-| `docs-view.json` | CROP docs-only context. |
-| `whole-repo-view.json` | Full CROP repository architecture context. |
+| `docs-view.json` | MDCROP docs-only context. |
+| `whole-repo-view.json` | Full MDCROP repository architecture context. |
 | `troubleshooting-view.json` | Local debugging context for view, benchmark, and import failures. |
 | `maxim-computing-view.json` | Local `C:\src\maxim\computing` topic view. |
 | `maxim-tagged-computing-view.json` | Local `C:\src\maxim` frontmatter query view for tagged computing files. |
 | `resonance-theory-view.json` | Local `C:\src\resonance\guides\theory` research view. |
 
-Inspect a recipe before running a full crop:
+Inspect a recipe before running a full mdcrop:
 
 ```powershell
-cargo run -p crop-cli -- view --inspect --file examples\views\whole-repo-view.json -e md
-cargo run -p crop-cli -- view --inspect --dir examples\views
-cargo run -p crop-cli -- view --inspect --dir examples\views --strict
+cargo run -p mdcrop-cli -- view --inspect --file examples\views\whole-repo-view.json -e md
+cargo run -p mdcrop-cli -- view --inspect --dir examples\views
+cargo run -p mdcrop-cli -- view --inspect --dir examples\views --strict
 ```
 
-This returns `crop.view-inspect.v1` JSON with the resolved root, active filters,
+This returns `mdcrop.view-inspect.v1` JSON with the resolved root, active filters,
 supported source count, extension counts, and a small source sample. It validates
 schemas, budgets, roots, and empty filters without scoring or selecting context
-units. Directory inspection returns `crop.view-store-inspect.v1` with one status
+units. Directory inspection returns `mdcrop.view-store-inspect.v1` with one status
 row per JSON view recipe plus aggregate source-count and extension-count totals.
 Add `--strict` to make CI or agent workflows exit non-zero if any store recipe
 reports `failed`; the JSON report is still printed first.
@@ -244,17 +244,17 @@ reports `failed`; the JSON report is still printed first.
 Emit a prefix-cache-aware named view:
 
 ```powershell
-cargo run -p crop-cli -- view --file examples\views\docs-view.json --prefix-cache generic
+cargo run -p mdcrop-cli -- view --file examples\views\docs-view.json --prefix-cache generic
 ```
 
-This returns `crop.view-prefix-cache.v1` JSON with the view name and a
+This returns `mdcrop.view-prefix-cache.v1` JSON with the view name and a
 `PrefixCachedPack`. For repeated runs over the same view root, the prefix hash is
 stable when only the task changes; task, seed, and budget stay in `task_tail`.
 
 Views can also be searched with runtime parameters:
 
 ```powershell
-cargo run -p crop-cli -- view --file examples\views\docs-view.json --query "prefix cache" -e md
+cargo run -p mdcrop-cli -- view --file examples\views\docs-view.json --query "prefix cache" -e md
 ```
 
 `--query` overrides the view task for one run, `-e/--extension` restricts ingest
@@ -265,16 +265,16 @@ See [`docs\VIEWS.md`](docs/VIEWS.md) for large-corpus view candidates for
 Emit a prefix-cache-aware pack:
 
 ```powershell
-cargo run -p crop-cli -- pack --root C:\src\CROP --task "explain graph context boundary" --budget 12000 --prefix-cache generic
+cargo run -p mdcrop-cli -- pack --root C:\src\MDCROP --task "explain graph context boundary" --budget 12000 --prefix-cache generic
 ```
 
-Prefix-cache output separates stable corpus metadata from the selected crop and
+Prefix-cache output separates stable corpus metadata from the selected mdcrop and
 task tail:
 
 - `prefix`: stable schema, source index, content hashes, counts, and graph edge
   count.
 - `cache_key` / `prefix_hash`: deterministic hash of the prefix block.
-- `body`: task-specific selected crop units.
+- `body`: task-specific selected mdcrop units.
 - `task_tail`: volatile task, seed, and budget.
 
 When only `--task` changes against the same root, the prefix hash remains stable
@@ -283,21 +283,21 @@ so provider-side prompt prefix caching can reuse the prefix bytes.
 Run apple-to-apple fixture evaluations:
 
 ```powershell
-cargo run -p crop-cli -- eval --case missing-bridge --method crop --budget 160
-cargo run -p crop-cli -- eval --case missing-bridge --method score-top-k --budget 160
-cargo run -p crop-cli -- eval --case missing-bridge --method lexical-top-k --budget 160
-cargo run -p crop-cli -- eval --case missing-bridge --method hybrid-top-k --budget 160
-cargo run -p crop-cli -- eval --case noisy-periphery --method crop --budget 160
-cargo run -p crop-cli -- eval --case stale-duplicate --method crop --budget 160
-cargo run -p crop-cli -- eval --case budget-packing --method crop --budget 160
-cargo run -p crop-cli -- eval --case cross-link-chain --method crop --budget 160
-cargo run -p crop-cli -- eval --all --budget 160
+cargo run -p mdcrop-cli -- eval --case missing-bridge --method mdcrop --budget 160
+cargo run -p mdcrop-cli -- eval --case missing-bridge --method score-top-k --budget 160
+cargo run -p mdcrop-cli -- eval --case missing-bridge --method lexical-top-k --budget 160
+cargo run -p mdcrop-cli -- eval --case missing-bridge --method hybrid-top-k --budget 160
+cargo run -p mdcrop-cli -- eval --case noisy-periphery --method mdcrop --budget 160
+cargo run -p mdcrop-cli -- eval --case stale-duplicate --method mdcrop --budget 160
+cargo run -p mdcrop-cli -- eval --case budget-packing --method mdcrop --budget 160
+cargo run -p mdcrop-cli -- eval --case cross-link-chain --method mdcrop --budget 160
+cargo run -p mdcrop-cli -- eval --all --budget 160
 ```
 
 The fixture suite uses the same units, relevance scores, token budget, and gold
 labels for each method. Current cases cover missing bridges, noisy periphery,
 stale duplicates, budget packing, and cross-link chains. Current methods are
-`crop`, `score-top-k`, `lexical-top-k`, and `hybrid-top-k`. The `--all` command
+`mdcrop`, `score-top-k`, `lexical-top-k`, and `hybrid-top-k`. The `--all` command
 emits deterministic JSON with ordered cases, methods, per-run rows, and
 per-method aggregate means.
 
@@ -322,20 +322,20 @@ sized MD-vs-Mdport benchmark fixtures when comparing source formats:
 ```
 
 Those generated fixtures cover small, medium, and large corpora under
-`examples\bench-fixtures\out\` so ingest, scoring, and crop timings can be
+`examples\bench-fixtures\out\` so ingest, scoring, and mdcrop timings can be
 compared with the same task and budget.
 
 Score saved external competitor results offline:
 
 ```powershell
-cargo run -p crop-cli -- eval-import --input competitor-results.json
+cargo run -p mdcrop-cli -- eval-import --input competitor-results.json
 ```
 
 The competitor JSON contract is intentionally local-only and dependency-free:
 
 ```json
 {
-  "schema_version": "crop.competitor-results.v1",
+  "schema_version": "mdcrop.competitor-results.v1",
   "case": "missing-bridge",
   "token_budget": 160,
   "method": {
@@ -343,7 +343,7 @@ The competitor JSON contract is intentionally local-only and dependency-free:
     "competitor_class": "vector",
     "implementation": "qdrant",
     "version": null,
-    "notes": "offline export; no network call during CROP eval"
+    "notes": "offline export; no network call during MDCROP eval"
   },
   "selected_units": [
     { "unit_id": "task-seed", "score": 0.99, "token_estimate": 80 },
@@ -356,7 +356,7 @@ Candidate competitor classes are vector databases such as Qdrant and Chroma,
 lexical/search indexes such as Lucene and Tantivy, hybrid retrievers, RAG
 orchestrators such as LlamaIndex and LangChain, and graph systems such as
 GraphRAG or Neo4j-backed retrieval. Their exported unit IDs are scored against
-the same fixture labels, canonical token counts, and metrics as CROP and the
+the same fixture labels, canonical token counts, and metrics as MDCROP and the
 local baselines.
 
 Checked export examples live under `examples\competitors\`:
@@ -372,31 +372,31 @@ Checked export examples live under `examples\competitors\`:
 Run any example with:
 
 ```powershell
-cargo run -p crop-cli -- eval-import --input examples\competitors\qdrant-vector.missing-bridge.json
+cargo run -p mdcrop-cli -- eval-import --input examples\competitors\qdrant-vector.missing-bridge.json
 ```
 
-Benchmark CROP on a local repository or document tree:
+Benchmark MDCROP on a local repository or document tree:
 
 ```powershell
-cargo run -p crop-cli -- bench --root C:\src\CROP --task "explain graph context boundary" --budget 12000
+cargo run -p mdcrop-cli -- bench --root C:\src\MDCROP --task "explain graph context boundary" --budget 12000
 ```
 
-`crop bench` runs the same local ingest, scoring, and crop stages as `crop pack`
+`mdcrop bench` runs the same local ingest, scoring, and mdcrop stages as `mdcrop pack`
 but emits summary JSON instead of the full context body. The report includes
 source/unit/edge counts, selected token counts, boundary and quality metrics,
-and elapsed milliseconds for ingest, scoring, crop, and total runtime. Timing is
+and elapsed milliseconds for ingest, scoring, mdcrop, and total runtime. Timing is
 machine- and root-dependent; use fixture metrics for deterministic quality
 comparisons and benchmark metrics for local performance tracking.
 
 Use a benchmark manifest for repeatable named views over the same corpus:
 
 ```powershell
-cargo run -p crop-cli -- bench --manifest benchmark-manifest.json
+cargo run -p mdcrop-cli -- bench --manifest benchmark-manifest.json
 ```
 
 ```json
 {
-  "schema_version": "crop.bench-manifest.v1",
+  "schema_version": "mdcrop.bench-manifest.v1",
   "cases": [
     {
       "id": "docs-boundary",
@@ -409,7 +409,7 @@ cargo run -p crop-cli -- bench --manifest benchmark-manifest.json
     {
       "id": "repo-architecture",
       "root": ".",
-      "task": "explain CROP architecture",
+      "task": "explain MDCROP architecture",
       "token_budget": 12000,
       "seed": 0,
       "view": "whole-repo"
@@ -419,13 +419,13 @@ cargo run -p crop-cli -- bench --manifest benchmark-manifest.json
 ```
 
 Manifest roots are resolved relative to the manifest file unless they are
-absolute paths. The optional `view` label names the crop recipe being tested
+absolute paths. The optional `view` label names the mdcrop recipe being tested
 without changing the underlying local-only benchmark mechanics.
 
 Manifest output includes both per-case rows and an `aggregate` block. The
-aggregate reports method `crop`, case count, total source/unit/edge counts,
+aggregate reports method `mdcrop`, case count, total source/unit/edge counts,
 total selected tokens, mean selected size, mean quality score, mean ingest/score
-/crop/total milliseconds, and max total milliseconds. Use the aggregate for
+/mdcrop/total milliseconds, and max total milliseconds. Use the aggregate for
 quick run-to-run comparison and the case rows for debugging individual views.
 
 See [`docs\BENCHMARKS.md`](docs/BENCHMARKS.md) for fair comparison rules,
@@ -434,19 +434,19 @@ caveats.
 
 ## Rust API
 
-`crop-core` exposes the first local engine surface:
+`mdcrop-core` exposes the first local engine surface:
 
 - `fixture_graph()` returns the deterministic bridge/noise fixture.
 - `ingest_path(root)` walks Markdown, text, JSON, TOML, YAML, and Rust files,
   chunks text, hashes sources, and builds same-file plus Markdown-link edges.
 - `score_graph_for_task(graph, task)` assigns deterministic lexical relevance.
-- `crop_context(graph, CropOptions)` emits a provenance-aware `CropPack`.
-- `prefix_cached_pack(ingested, pack, task, options, profile)` wraps a crop in a
+- `mdcrop_context(graph, MdcropOptions)` emits a provenance-aware `MdcropPack`.
+- `prefix_cached_pack(ingested, pack, task, options, profile)` wraps a mdcrop in a
   cache-aware prefix/body/task-tail manifest.
-- `bench_pack(root, task, options)` runs local ingest, scoring, and crop stages
+- `bench_pack(root, task, options)` runs local ingest, scoring, and mdcrop stages
   and returns a benchmark summary with stage timings.
 - `bench_manifest_json(json, base_dir)` runs repeatable named benchmark/view
-  cases from `crop.bench-manifest.v1` JSON.
+  cases from `mdcrop.bench-manifest.v1` JSON.
 - `markdown_index(root, title, options)` and
   `markdown_index_for_view_json(json, base_dir)` generate README/TOC-style
   Markdown source indexes for documentation tools such as MDLOOM.
@@ -456,18 +456,18 @@ caveats.
 - `markdown_heading_inventory(root, options)` and
   `markdown_heading_inventory_for_view_json(json, base_dir)` report heading,
   anchor, duplicate-anchor, and `md://` section URI inventories.
-- `run_view_json(json, base_dir)` runs a persisted `crop.view.v1` recipe and
-  returns `crop.view-run.v1` with the produced context pack.
+- `run_view_json(json, base_dir)` runs a persisted `mdcrop.view.v1` recipe and
+  returns `mdcrop.view-run.v1` with the produced context pack.
 - `run_view_mdport_json(json, base_dir)` runs the same recipe and returns a
   `mdport.v1` transfer pack for compact AI/cross-tool interchange.
 - `run_view_prefix_cached_json(json, base_dir, profile)` runs a view and returns
-  `crop.view-prefix-cache.v1` with a prefix-cache-aware pack.
+  `mdcrop.view-prefix-cache.v1` with a prefix-cache-aware pack.
 - `inspect_view_json(json, base_dir)` validates a view and returns
-  `crop.view-inspect.v1` root/filter/source metadata without cropping.
+  `mdcrop.view-inspect.v1` root/filter/source metadata without mdcropping.
 - `inspect_view_store(store)` validates every JSON view recipe in a store and
-  returns `crop.view-store-inspect.v1` per-view status rows.
-- `list_views(store)` lists `crop.view.v1` recipes from a local store directory
-  as `crop.view-list.v1` JSON.
+  returns `mdcrop.view-store-inspect.v1` per-view status rows.
+- `list_views(store)` lists `mdcrop.view.v1` recipes from a local store directory
+  as `mdcrop.view-list.v1` JSON.
 - `eval_fixture(case, method, budget)` runs deterministic apple-to-apple
    retrieval comparisons.
 - `eval_suite(budget)` runs every case against every local method and returns
@@ -484,7 +484,7 @@ cargo fmt
 cargo test --workspace
 ```
 
-By default, CROP depends on BISECT shared packages from GitHub. For local peer
+By default, MDCROP depends on BISECT shared packages from GitHub. For local peer
 development beside `C:\src\apportionment`, copy:
 
 ```powershell
@@ -497,4 +497,3 @@ to the sibling checkout.
 ## License
 
 MIT. See [`LICENSE`](LICENSE).
-

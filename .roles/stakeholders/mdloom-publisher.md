@@ -10,7 +10,7 @@ primary_concern: generated documentation health
 ## Primary concerns
 
 - Artifact inventories connect generated outputs to source material.
-- CROP status pages help MDLOOM publish clean markdown, ASCII, and HTML surfaces.
+- MDCROP status pages help MDLOOM publish clean markdown, ASCII, and HTML surfaces.
 - Broken or stale generated files are visible before release.
 - Reports remain readable in GitHub Markdown.
 

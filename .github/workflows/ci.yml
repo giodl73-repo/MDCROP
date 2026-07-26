@@ -15,10 +15,10 @@ jobs:
       - name: Use canonical line endings
         run: git config --global core.autocrlf false
 
-      - name: Check out CROP
+      - name: Check out MDCROP
         uses: actions/checkout@v7
         with:
-          path: CROP
+          path: MDCROP
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -26,14 +26,14 @@ jobs:
           components: rustfmt
 
       - name: Check formatting
-        working-directory: CROP
+        working-directory: MDCROP
         run: cargo fmt -- --check
 
       - name: Test workspace
-        working-directory: CROP
+        working-directory: MDCROP
         run: cargo test --workspace
 
       - name: Smoke CLI
-        working-directory: CROP
-        run: cargo run -p crop-cli -- fixture --budget 170
+        working-directory: MDCROP
+        run: cargo run -p mdcrop-cli -- fixture --budget 170
 

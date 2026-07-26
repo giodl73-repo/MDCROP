@@ -1,12 +1,12 @@
 ---
-name: crop-scout
-description: Scout CROP product opportunities, competitors, and graph-native differentiation before implementation.
+name: mdcrop-scout
+description: Scout MDCROP product opportunities, competitors, and graph-native differentiation before implementation.
 user-invocable: true
 ---
 
-# crop-scout
+# mdcrop-scout
 
-Use before major CROP design or product changes.
+Use before major MDCROP design or product changes.
 
 ## Checklist
 

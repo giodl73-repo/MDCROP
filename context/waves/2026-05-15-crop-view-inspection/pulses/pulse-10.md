@@ -2,13 +2,13 @@
 
 ## Goal
 
-Expose MDLOOM-ready inbound-reference and orphan-page side-info from CROP roots
+Expose MDLOOM-ready inbound-reference and orphan-page side-info from MDCROP roots
 and named views.
 
 ## Scope
 
-- Add a reusable `crop-core` backlink report API.
-- Add `crop backlinks --root` and `crop backlinks --view`.
+- Add a reusable `mdcrop-core` backlink report API.
+- Add `mdcrop backlinks --root` and `mdcrop backlinks --view`.
 - Reuse MDPATH-compatible local link resolution from the Markdown link audit.
 - Report per-page inbound links, outbound link counts, and orphan flags.
 - Document the command for MDLOOM README/TOC generation workflows.
@@ -27,6 +27,6 @@ and named views.
 
 ## Outcome
 
-`crop backlinks` emits `crop.markdown-backlinks.v1` JSON that downstream tools
+`mdcrop backlinks` emits `mdcrop.markdown-backlinks.v1` JSON that downstream tools
 such as MDLOOM can use to annotate generated indexes with referenced-by context
 and identify Markdown pages that no other local page points at.

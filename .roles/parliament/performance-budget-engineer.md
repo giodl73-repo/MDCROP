@@ -9,12 +9,12 @@ applies_to: [bench, pack, index, large-corpus]
 
 ## Intellectual Disposition
 
-The performance engineer protects CROP's local-engine advantage. Fast ingest and
+The performance engineer protects MDCROP's local-engine advantage. Fast ingest and
 packing are part of the product promise, not an implementation detail.
 
 ## Key Question
 
-*"Does this change keep CROP useful on real repos before an LLM call dominates
+*"Does this change keep MDCROP useful on real repos before an LLM call dominates
 the workflow?"*
 
 ## Lens - What to Verify

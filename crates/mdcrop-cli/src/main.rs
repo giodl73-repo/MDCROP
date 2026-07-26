@@ -1,17 +1,17 @@
 use anyhow::{bail, Result};
 use clap::{Parser, Subcommand, ValueEnum};
-use crop_core::{
-    bench_manifest_json, bench_pack, crop_context, eval_competitor_json, eval_fixture, eval_suite,
-    fixture_graph, ingest_path, inspect_view_json, inspect_view_store, list_views,
-    markdown_backlinks, markdown_backlinks_for_view_json, markdown_catalog,
-    markdown_catalog_for_view_json, markdown_frontmatter_inventory,
-    markdown_frontmatter_inventory_for_view_json, markdown_heading_inventory,
-    markdown_heading_inventory_for_view_json, markdown_index, markdown_index_for_view_json,
-    markdown_link_audit, markdown_link_audit_for_view_json, prefix_cached_pack,
-    render_markdown_backlinks, render_markdown_frontmatter_inventory,
-    render_markdown_heading_inventory, render_markdown_link_audit, run_view_json,
-    run_view_mdport_json, run_view_prefix_cached_json, score_graph_for_task, CropOptions, CropView,
-    EvalCase, EvalMethod, IngestOptions, PrefixCacheProfile,
+use mdcrop_core::{
+    bench_manifest_json, bench_pack, eval_competitor_json, eval_fixture, eval_suite, fixture_graph,
+    ingest_path, inspect_view_json, inspect_view_store, list_views, markdown_backlinks,
+    markdown_backlinks_for_view_json, markdown_catalog, markdown_catalog_for_view_json,
+    markdown_frontmatter_inventory, markdown_frontmatter_inventory_for_view_json,
+    markdown_heading_inventory, markdown_heading_inventory_for_view_json, markdown_index,
+    markdown_index_for_view_json, markdown_link_audit, markdown_link_audit_for_view_json,
+    mdcrop_context, prefix_cached_pack, render_markdown_backlinks,
+    render_markdown_frontmatter_inventory, render_markdown_heading_inventory,
+    render_markdown_link_audit, run_view_json, run_view_mdport_json, run_view_prefix_cached_json,
+    score_graph_for_task, EvalCase, EvalMethod, IngestOptions, MdcropOptions, MdcropView,
+    PrefixCacheProfile,
 };
 use std::fs;
 use std::path::Path;
@@ -21,8 +21,8 @@ mod artifacts;
 mod status;
 
 #[derive(Debug, Parser)]
-#[command(name = "crop")]
-#[command(about = "Graph-cut context cropping for AI agents")]
+#[command(name = "mdcrop")]
+#[command(about = "Graph-cut context mdcropping for AI agents")]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -32,11 +32,11 @@ struct Cli {
 enum Commands {
     /// Emit a deterministic fixture context pack.
     Fixture {
-        /// Token budget for the fixture crop.
+        /// Token budget for the fixture mdcrop.
         #[arg(long, default_value_t = 160)]
         budget: usize,
     },
-    /// Pack a local repo or document tree into a task-focused context crop.
+    /// Pack a local repo or document tree into a task-focused context mdcrop.
     Pack {
         /// Root directory or file to ingest.
         #[arg(long)]
@@ -44,16 +44,16 @@ enum Commands {
         /// Task prompt used to score evidence units.
         #[arg(long)]
         task: String,
-        /// Token budget for the context crop.
+        /// Token budget for the context mdcrop.
         #[arg(long, default_value_t = 12000)]
         budget: usize,
-        /// Seed unit index for crop expansion.
+        /// Seed unit index for mdcrop expansion.
         #[arg(long, default_value_t = 0)]
         seed: usize,
         /// Optional output JSON path. Defaults to stdout.
         #[arg(long)]
         output: Option<PathBuf>,
-        /// Emit prefix-cache-aware JSON instead of a bare crop pack.
+        /// Emit prefix-cache-aware JSON instead of a bare mdcrop pack.
         #[arg(long, value_enum)]
         prefix_cache: Option<PrefixCacheArg>,
     },
@@ -66,7 +66,7 @@ enum Commands {
         #[arg(long, value_enum, default_value_t = EvalCaseArg::MissingBridge)]
         case: EvalCaseArg,
         /// Retrieval method to evaluate.
-        #[arg(long, value_enum, default_value_t = EvalMethodArg::Crop)]
+        #[arg(long, value_enum, default_value_t = EvalMethodArg::Mdcrop)]
         method: EvalMethodArg,
         /// Token budget for the evaluated context.
         #[arg(long, default_value_t = 160)]
@@ -78,7 +78,7 @@ enum Commands {
         #[arg(long)]
         input: PathBuf,
     },
-    /// Benchmark ingest, scoring, and crop stages on a local root.
+    /// Benchmark ingest, scoring, and mdcrop stages on a local root.
     Bench {
         /// JSON manifest with repeatable benchmark cases.
         #[arg(long)]
@@ -89,10 +89,10 @@ enum Commands {
         /// Task prompt used to score evidence units.
         #[arg(long)]
         task: Option<String>,
-        /// Token budget for the context crop.
+        /// Token budget for the context mdcrop.
         #[arg(long, default_value_t = 12000)]
         budget: usize,
-        /// Seed unit index for crop expansion.
+        /// Seed unit index for mdcrop expansion.
         #[arg(long, default_value_t = 0)]
         seed: usize,
     },
@@ -116,7 +116,7 @@ enum Commands {
         /// Documentation/source root to scan.
         #[arg(long)]
         root: Option<PathBuf>,
-        /// crop.view.v1 recipe to scan for documentation side-info.
+        /// mdcrop.view.v1 recipe to scan for documentation side-info.
         #[arg(long)]
         view: Option<PathBuf>,
         /// Status page title.
@@ -146,7 +146,7 @@ enum Commands {
         /// Root directory or file to index.
         #[arg(long)]
         root: Option<PathBuf>,
-        /// crop.view.v1 recipe to index.
+        /// mdcrop.view.v1 recipe to index.
         #[arg(long)]
         view: Option<PathBuf>,
         /// Index title. Defaults to the root or view name.
@@ -167,7 +167,7 @@ enum Commands {
         /// Root directory or file to catalog.
         #[arg(long)]
         root: Option<PathBuf>,
-        /// crop.view.v1 recipe to catalog.
+        /// mdcrop.view.v1 recipe to catalog.
         #[arg(long)]
         view: Option<PathBuf>,
         /// Catalog title. Defaults to the root or view name.
@@ -188,7 +188,7 @@ enum Commands {
         /// Root directory or file to audit.
         #[arg(long)]
         root: Option<PathBuf>,
-        /// crop.view.v1 recipe to audit.
+        /// mdcrop.view.v1 recipe to audit.
         #[arg(long)]
         view: Option<PathBuf>,
         /// Restrict audited files to one or more extensions, e.g. -e md.
@@ -209,7 +209,7 @@ enum Commands {
         /// Root directory or file to analyze.
         #[arg(long)]
         root: Option<PathBuf>,
-        /// crop.view.v1 recipe to analyze.
+        /// mdcrop.view.v1 recipe to analyze.
         #[arg(long)]
         view: Option<PathBuf>,
         /// Restrict analyzed files to one or more extensions, e.g. -e md.
@@ -230,7 +230,7 @@ enum Commands {
         /// Root directory or file to inventory.
         #[arg(long)]
         root: Option<PathBuf>,
-        /// crop.view.v1 recipe to inventory.
+        /// mdcrop.view.v1 recipe to inventory.
         #[arg(long)]
         view: Option<PathBuf>,
         /// Restrict inventoried files to one or more extensions, e.g. -e md.
@@ -251,7 +251,7 @@ enum Commands {
         /// Root directory or file to inventory.
         #[arg(long)]
         root: Option<PathBuf>,
-        /// crop.view.v1 recipe to inventory.
+        /// mdcrop.view.v1 recipe to inventory.
         #[arg(long)]
         view: Option<PathBuf>,
         /// Restrict inventoried files to one or more extensions, e.g. -e md.
@@ -272,23 +272,23 @@ enum Commands {
         /// List view recipes in a store directory.
         #[arg(long)]
         list: bool,
-        /// Validate a view recipe and report resolved root/filter metadata without cropping.
+        /// Validate a view recipe and report resolved root/filter metadata without mdcropping.
         #[arg(long)]
         inspect: bool,
         /// Exit non-zero when store inspection finds any failed view recipe.
         #[arg(long)]
         strict: bool,
-        /// JSON file using the crop.view.v1 recipe schema.
+        /// JSON file using the mdcrop.view.v1 recipe schema.
         #[arg(long)]
         file: Option<PathBuf>,
-        /// View store directory for --list. Defaults to .crop\views.
-        #[arg(long, default_value = ".crop\\views")]
+        /// View store directory for --list. Defaults to .mdcrop\views.
+        #[arg(long, default_value = ".mdcrop\\views")]
         dir: PathBuf,
         /// Emit prefix-cache-aware JSON for the view pack.
         #[arg(long, value_enum)]
         prefix_cache: Option<PrefixCacheArg>,
         /// Output format for a view run.
-        #[arg(long, value_enum, default_value_t = ViewFormatArg::Crop)]
+        #[arg(long, value_enum, default_value_t = ViewFormatArg::Mdcrop)]
         format: ViewFormatArg,
         /// Override the view task for a one-off searchable run.
         #[arg(long)]
@@ -313,7 +313,7 @@ enum EvalCaseArg {
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum EvalMethodArg {
-    Crop,
+    Mdcrop,
     ScoreTopK,
     LexicalTopK,
     HybridTopK,
@@ -326,7 +326,7 @@ enum PrefixCacheArg {
 
 #[derive(Debug, Clone, Copy, ValueEnum, PartialEq, Eq)]
 enum ViewFormatArg {
-    Crop,
+    Mdcrop,
     Mdport,
 }
 
@@ -347,9 +347,9 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
     match cli.command {
         Commands::Fixture { budget } => {
-            let pack = crop_context(
+            let pack = mdcrop_context(
                 &fixture_graph(),
-                CropOptions {
+                MdcropOptions {
                     seed: 0,
                     token_budget: budget,
                 },
@@ -366,11 +366,11 @@ fn main() -> Result<()> {
         } => {
             let mut ingested = ingest_path(root)?;
             score_graph_for_task(&mut ingested.graph, &task);
-            let options = CropOptions {
+            let options = MdcropOptions {
                 seed,
                 token_budget: budget,
             };
-            let pack = crop_context(&ingested.graph, options.clone())?;
+            let pack = mdcrop_context(&ingested.graph, options.clone())?;
             let json = if let Some(prefix_cache) = prefix_cache {
                 serde_json::to_string_pretty(&prefix_cached_pack(
                     &ingested,
@@ -429,7 +429,7 @@ fn main() -> Result<()> {
                 serde_json::to_string_pretty(&bench_pack(
                     root,
                     &task,
-                    CropOptions {
+                    MdcropOptions {
                         seed,
                         token_budget: budget,
                     },
@@ -478,7 +478,7 @@ fn main() -> Result<()> {
             let markdown = if let Some(view) = view {
                 let input = fs::read_to_string(&view)?;
                 let base_dir = view.parent().unwrap_or_else(|| Path::new("."));
-                let mut recipe: CropView = serde_json::from_str(&input)?;
+                let mut recipe: MdcropView = serde_json::from_str(&input)?;
                 if let Some(title) = title {
                     recipe.name = title;
                 }
@@ -523,7 +523,7 @@ fn main() -> Result<()> {
             let markdown = if let Some(view) = view {
                 let input = fs::read_to_string(&view)?;
                 let base_dir = view.parent().unwrap_or_else(|| Path::new("."));
-                let mut recipe: CropView = serde_json::from_str(&input)?;
+                let mut recipe: MdcropView = serde_json::from_str(&input)?;
                 if let Some(title) = title {
                     recipe.name = title;
                 }
@@ -568,7 +568,7 @@ fn main() -> Result<()> {
             let audit = if let Some(view) = view {
                 let input = fs::read_to_string(&view)?;
                 let base_dir = view.parent().unwrap_or_else(|| Path::new("."));
-                let mut recipe: CropView = serde_json::from_str(&input)?;
+                let mut recipe: MdcropView = serde_json::from_str(&input)?;
                 if !extensions.is_empty() {
                     recipe.include_extensions = extensions;
                 }
@@ -612,7 +612,7 @@ fn main() -> Result<()> {
             let report = if let Some(view) = view {
                 let input = fs::read_to_string(&view)?;
                 let base_dir = view.parent().unwrap_or_else(|| Path::new("."));
-                let mut recipe: CropView = serde_json::from_str(&input)?;
+                let mut recipe: MdcropView = serde_json::from_str(&input)?;
                 if !extensions.is_empty() {
                     recipe.include_extensions = extensions;
                 }
@@ -656,7 +656,7 @@ fn main() -> Result<()> {
             let inventory = if let Some(view) = view {
                 let input = fs::read_to_string(&view)?;
                 let base_dir = view.parent().unwrap_or_else(|| Path::new("."));
-                let mut recipe: CropView = serde_json::from_str(&input)?;
+                let mut recipe: MdcropView = serde_json::from_str(&input)?;
                 if !extensions.is_empty() {
                     recipe.include_extensions = extensions;
                 }
@@ -700,7 +700,7 @@ fn main() -> Result<()> {
             let inventory = if let Some(view) = view {
                 let input = fs::read_to_string(&view)?;
                 let base_dir = view.parent().unwrap_or_else(|| Path::new("."));
-                let mut recipe: CropView = serde_json::from_str(&input)?;
+                let mut recipe: MdcropView = serde_json::from_str(&input)?;
                 if !extensions.is_empty() {
                     recipe.include_extensions = extensions;
                 }
@@ -777,7 +777,7 @@ fn main() -> Result<()> {
                 };
                 let input = fs::read_to_string(&file)?;
                 let base_dir = file.parent().unwrap_or_else(|| Path::new("."));
-                let mut view: CropView = serde_json::from_str(&input)?;
+                let mut view: MdcropView = serde_json::from_str(&input)?;
                 if let Some(query) = query {
                     view.task = query;
                 }
@@ -830,7 +830,7 @@ impl From<EvalCaseArg> for EvalCase {
 impl From<EvalMethodArg> for EvalMethod {
     fn from(value: EvalMethodArg) -> Self {
         match value {
-            EvalMethodArg::Crop => EvalMethod::Crop,
+            EvalMethodArg::Mdcrop => EvalMethod::Mdcrop,
             EvalMethodArg::ScoreTopK => EvalMethod::ScoreTopK,
             EvalMethodArg::LexicalTopK => EvalMethod::LexicalTopK,
             EvalMethodArg::HybridTopK => EvalMethod::HybridTopK,

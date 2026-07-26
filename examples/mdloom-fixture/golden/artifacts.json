@@ -1,5 +1,5 @@
 {
-  "schema_version": "crop.mdloom-artifacts.v1",
+  "schema_version": "mdcrop.mdloom-artifacts.v1",
   "manifest": "examples/mdloom-fixture/.mdloom/artifacts.json",
   "generated_by": "mdloom compile",
   "artifact_count": 2,

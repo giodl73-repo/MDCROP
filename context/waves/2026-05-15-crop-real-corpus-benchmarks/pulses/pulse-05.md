@@ -6,7 +6,7 @@ Done.
 
 ## Goal
 
-Document how to run fair apples-to-apples CROP benchmarks, how to interpret
+Document how to run fair apples-to-apples MDCROP benchmarks, how to interpret
 fixture versus real-corpus metrics, and how named views help repeat comparisons.
 
 ## Deliverables
@@ -20,8 +20,8 @@ fixture versus real-corpus metrics, and how named views help repeat comparisons.
 ## Scout commands
 
 ```powershell
-git -C C:\src\CROP --no-pager status --short --branch
-rg "bench --manifest|eval-import|crop.bench" C:\src\CROP -n
+git -C C:\src\MDCROP --no-pager status --short --branch
+rg "bench --manifest|eval-import|mdcrop.bench" C:\src\MDCROP -n
 ```
 
 ## Validation
@@ -29,7 +29,7 @@ rg "bench --manifest|eval-import|crop.bench" C:\src\CROP -n
 ```powershell
 cargo fmt
 cargo test --workspace
-cargo run -p crop-cli -- bench --root . --task "explain crop benchmark" --budget 12000
+cargo run -p mdcrop-cli -- bench --root . --task "explain mdcrop benchmark" --budget 12000
 git diff --check
 ```
 

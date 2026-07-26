@@ -1,13 +1,13 @@
-# CROP - Role Index
+# MDCROP - Role Index
 
-Roles for reviewing CROP as a graph-cut context, corpus-health, and
+Roles for reviewing MDCROP as a graph-cut context, corpus-health, and
 evidence-pack tool. Read this before opening any role file.
 
 ---
 
 ## Parliament roles
 
-Adversarial product and infrastructure voices for CROP design reviews.
+Adversarial product and infrastructure voices for MDCROP design reviews.
 
 | File | Voice | Primary tension |
 |---|---|---|
@@ -22,7 +22,7 @@ Adversarial product and infrastructure voices for CROP design reviews.
 
 ## Editorial roles
 
-Quality gates before a CROP change is considered ready.
+Quality gates before a MDCROP change is considered ready.
 
 | File | Role | Checks |
 |---|---|---|
@@ -34,7 +34,7 @@ Quality gates before a CROP change is considered ready.
 
 ## Stakeholder roles
 
-Consumer lenses for deciding whether CROP serves real downstream uses.
+Consumer lenses for deciding whether MDCROP serves real downstream uses.
 
 | File | Stakeholder | Primary concern |
 |---|---|---|

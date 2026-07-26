@@ -1,17 +1,20 @@
 [package]
-name = "crop-cli"
+name = "mdcrop-cli"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "CLI for indexing, inspecting, and selecting Markdown corpora."
 
 [[bin]]
-name = "crop"
+name = "mdcrop"
 path = "src/main.rs"
 
 [dependencies]
 anyhow.workspace = true
 clap.workspace = true
-crop-core = { path = "../crop-core" }
+mdcrop-core = { version = "0.2.0", path = "../mdcrop-core" }
 serde.workspace = true
 serde_json.workspace = true

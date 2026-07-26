@@ -11,10 +11,10 @@ cargo_config = ".cargo/config.toml"
 [repos.this_repo]
 role = "current repository"
 relative = "."
-clone_url = "https://github.com/giodl73-repo/CROP.git"
+clone_url = "https://github.com/giodl73-repo/MDCROP.git"
 
 [repos.mdpath]
-role = "tracker dependency for crop"
+role = "tracker dependency for mdcrop"
 relative = "..\\..\\standards-protocols\\mdpath"
 clone_url = "https://github.com/giodl73-repo/MDPATH.git"
 cargo_patches = [
@@ -22,7 +22,7 @@ cargo_patches = [
 ]
 
 [repos.mdport]
-role = "tracker dependency for crop"
+role = "tracker dependency for mdcrop"
 relative = "..\\..\\standards-protocols\\mdport"
 clone_url = "https://github.com/giodl73-repo/MDPORT.git"
 cargo_patches = [
@@ -30,7 +30,7 @@ cargo_patches = [
 ]
 
 [repos.rline]
-role = "tracker dependency for crop"
+role = "tracker dependency for mdcrop"
 relative = "..\\rline"
 clone_url = "https://github.com/giodl73-repo/RLINE.git"
 cargo_patches = [
@@ -41,7 +41,7 @@ cargo_patches = [
 ]
 
 [repos.slice]
-role = "tracker dependency for crop"
+role = "tracker dependency for mdcrop"
 relative = "..\\slice"
 clone_url = "https://github.com/giodl73-repo/SLICE.git"
 cargo_patches = [

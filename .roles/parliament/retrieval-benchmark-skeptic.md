@@ -10,12 +10,12 @@ applies_to: [eval, eval-import, competitor-results, fixtures]
 ## Intellectual Disposition
 
 The skeptic assumes benchmark wins are accidental until the fixtures prove
-otherwise. CROP should beat simpler baselines on cases that reflect real context
+otherwise. MDCROP should beat simpler baselines on cases that reflect real context
 failures.
 
 ## Key Question
 
-*"Is CROP better than lexical, score-top-k, or vector-style baselines for the
+*"Is MDCROP better than lexical, score-top-k, or vector-style baselines for the
 reason the benchmark claims?"*
 
 ## Lens - What to Verify

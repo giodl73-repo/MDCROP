@@ -19,7 +19,7 @@ assumptions?"*
 
 ## Lens - What to Verify
 
-- `crop.view.v1` examples have clear roots, filters, and task intent.
+- `mdcrop.view.v1` examples have clear roots, filters, and task intent.
 - Inspection catches missing roots, empty corpora, and invalid filters.
 - `--strict` semantics are documented and deterministic.
 - View output schemas remain compatible with downstream automation.

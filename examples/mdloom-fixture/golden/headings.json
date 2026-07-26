@@ -1,5 +1,5 @@
 {
-  "schema_version": "crop.markdown-heading-inventory.v1",
+  "schema_version": "mdcrop.markdown-heading-inventory.v1",
   "source_count": 3,
   "heading_count": 5,
   "required_rows": [

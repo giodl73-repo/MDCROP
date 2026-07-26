@@ -1,6 +1,6 @@
 {
-  "schema_version": "crop.view.v1",
-  "name": "crop-troubleshooting-view",
+  "schema_version": "mdcrop.view.v1",
+  "name": "mdcrop-troubleshooting-view",
   "root": "..\\..",
   "task": "diagnose failing view, benchmark, or competitor import workflows",
   "token_budget": 12000,

@@ -10,7 +10,7 @@ Make the suite runnable in one command for reproducible comparison reports.
 
 ## Deliverables
 
-- [x] Add `crop eval --all --budget 160`.
+- [x] Add `mdcrop eval --all --budget 160`.
 - [x] Emit deterministic JSON with per-case/per-method rows and aggregate metrics.
 - [x] Keep JSON as the only output mode for this slice to avoid unstable table
   formatting.
@@ -20,9 +20,9 @@ Make the suite runnable in one command for reproducible comparison reports.
 ## Scout commands
 
 ```powershell
-git -C C:\src\CROP --no-pager status --short --branch
-cargo run -p crop-cli -- eval --help
-rg "EvalReport" C:\src\CROP\crates -n
+git -C C:\src\MDCROP --no-pager status --short --branch
+cargo run -p mdcrop-cli -- eval --help
+rg "EvalReport" C:\src\MDCROP\crates -n
 ```
 
 ## Validation
@@ -30,6 +30,6 @@ rg "EvalReport" C:\src\CROP\crates -n
 ```powershell
 cargo fmt
 cargo test --workspace
-cargo run -p crop-cli -- eval --all --budget 160
+cargo run -p mdcrop-cli -- eval --all --budget 160
 git diff --check
 ```

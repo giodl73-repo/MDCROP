@@ -13,7 +13,7 @@ filters.
 ## Deliverables
 
 - Add view-level `include_extensions` and `exclude_dirs`.
-- Add `crop view --query`, `-e/--extension`, and `--exclude-dir` overrides.
+- Add `mdcrop view --query`, `-e/--extension`, and `--exclude-dir` overrides.
 - Support text-heavy research extensions (`tex`, `bib`, `py`, `html`) in default
   ingest.
 - Document candidate Maxim and Resonance view shapes.
@@ -22,7 +22,7 @@ filters.
 ## Scout commands
 
 ```powershell
-git -C C:\src\CROP --no-pager status --short --branch
+git -C C:\src\MDCROP --no-pager status --short --branch
 Get-ChildItem C:\src\maxim,C:\src\resonance -Directory
 ```
 
@@ -31,7 +31,7 @@ Get-ChildItem C:\src\maxim,C:\src\resonance -Directory
 ```powershell
 cargo fmt
 cargo test --workspace
-cargo run -p crop-cli -- view --file examples\views\docs-view.json --query "prefix cache" -e md
+cargo run -p mdcrop-cli -- view --file examples\views\docs-view.json --query "prefix cache" -e md
 git diff --check
 ```
 

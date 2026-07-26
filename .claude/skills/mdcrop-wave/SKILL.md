@@ -1,12 +1,12 @@
 ---
-name: crop-wave
-description: Execute CROP product waves with scout, implementation, docs, validation, and commits.
+name: mdcrop-wave
+description: Execute MDCROP product waves with scout, implementation, docs, validation, and commits.
 user-invocable: true
 ---
 
-# crop-wave
+# mdcrop-wave
 
-Use for CROP development waves.
+Use for MDCROP development waves.
 
 ## Procedure
 

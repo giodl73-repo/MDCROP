@@ -1,4 +1,4 @@
-use crate::CropError;
+use crate::MdcropError;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -59,18 +59,18 @@ pub struct MdloomArtifactReport {
 
 pub fn mdloom_artifacts_for_root(
     root: impl AsRef<Path>,
-) -> Result<MdloomArtifactReport, CropError> {
+) -> Result<MdloomArtifactReport, MdcropError> {
     mdloom_artifacts(root.as_ref().join(".mdloom").join("artifacts.json"))
 }
 
-pub fn mdloom_artifacts(manifest: impl AsRef<Path>) -> Result<MdloomArtifactReport, CropError> {
+pub fn mdloom_artifacts(manifest: impl AsRef<Path>) -> Result<MdloomArtifactReport, MdcropError> {
     let manifest = manifest.as_ref();
     if !manifest.exists() {
-        return Err(CropError::RootDoesNotExist {
+        return Err(MdcropError::RootDoesNotExist {
             path: manifest.display().to_string(),
         });
     }
-    let json = fs::read_to_string(manifest).map_err(|source| CropError::ReadFile {
+    let json = fs::read_to_string(manifest).map_err(|source| MdcropError::ReadFile {
         path: manifest.display().to_string(),
         source,
     })?;
@@ -111,9 +111,9 @@ pub fn render_mdloom_artifact_markdown(report: &MdloomArtifactReport) -> String 
 pub fn mdloom_artifacts_json(
     json: &str,
     manifest_path: impl AsRef<Path>,
-) -> Result<MdloomArtifactReport, CropError> {
+) -> Result<MdloomArtifactReport, MdcropError> {
     let manifest: MdloomArtifactManifest =
-        serde_json::from_str(json).map_err(CropError::ArtifactManifestImport)?;
+        serde_json::from_str(json).map_err(MdcropError::ArtifactManifestImport)?;
     let manifest_path = manifest_path.as_ref();
     let base = manifest_path.parent().unwrap_or_else(|| Path::new("."));
     let root = if manifest.config_root.is_absolute() {
@@ -156,7 +156,7 @@ pub fn mdloom_artifacts_json(
         .len()
         .saturating_sub(missing_output_count + stale_count);
     Ok(MdloomArtifactReport {
-        schema_version: "crop.mdloom-artifacts.v1".to_string(),
+        schema_version: "mdcrop.mdloom-artifacts.v1".to_string(),
         manifest: display_path(manifest_path),
         generated_by: manifest.generated_by,
         artifact_count: artifacts.len(),
@@ -176,14 +176,14 @@ fn resolve_artifact_path(root: &Path, path: &Path) -> PathBuf {
     }
 }
 
-fn file_mtime_ms(path: &Path) -> Result<u64, CropError> {
+fn file_mtime_ms(path: &Path) -> Result<u64, MdcropError> {
     let modified = fs::metadata(path)
-        .map_err(|source| CropError::InspectPath {
+        .map_err(|source| MdcropError::InspectPath {
             path: path.display().to_string(),
             source,
         })?
         .modified()
-        .map_err(|source| CropError::InspectPath {
+        .map_err(|source| MdcropError::InspectPath {
             path: path.display().to_string(),
             source,
         })?;

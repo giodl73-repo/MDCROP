@@ -1,6 +1,6 @@
 # Contributing
 
-Contributions should keep CROP product-neutral, deterministic, and explicit
+Contributions should keep MDCROP product-neutral, deterministic, and explicit
 about provenance and benchmark limits.
 
 ## Before opening a pull request
@@ -8,7 +8,7 @@ about provenance and benchmark limits.
 ```powershell
 cargo fmt --all -- --check
 cargo test --workspace
-cargo run -p crop-cli -- fixture --budget 170
+cargo run -p mdcrop-cli -- fixture --budget 170
 ```
 
 Keep changes focused, update public contracts and examples when behavior
