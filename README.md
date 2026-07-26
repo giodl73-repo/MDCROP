@@ -8,6 +8,22 @@
 [ROLES](https://github.com/giodl73-repo/ROLES), the `.roles` convention for
 repository-local review panels.
 
+## MD family
+
+MDCROP is the corpus-selection layer in the MD family:
+
+```text
+Markdown → MDPATH → MDCROP → MDLOOM → MDPORT
+             address    select     build      transfer
+```
+
+| Repo | Responsibility |
+|------|----------------|
+| [MDPATH](https://github.com/giodl73-repo/MDPATH) | Stable `md://` addresses for Markdown elements. |
+| **MDCROP** | Corpus indexing, graph selection, and bounded context. |
+| [MDLOOM](https://github.com/giodl73-repo/MDLOOM) | Validation, compilation, rendering, and publication. |
+| [MDPORT](https://github.com/giodl73-repo/MDPORT) | Compact portable `mdport.v1` records. |
+
 MDCROP trims Markdown evidence into focused, provenance-aware context packs from
 repos, notes, issues, chats, and document corpora. Most RAG systems retrieve chunks;
 MDCROP draws the boundary around the right context before an agent answers.
