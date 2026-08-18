@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use clap::{Parser, Subcommand, ValueEnum};
 use mdcrop_core::{
     bench_manifest_json, bench_pack, eval_competitor_json, eval_fixture, eval_suite, fixture_graph,
@@ -344,6 +344,15 @@ enum StatusStrictPolicyArg {
 }
 
 fn main() -> Result<()> {
+    std::thread::Builder::new()
+        .name("mdcrop-cli".to_string())
+        .stack_size(8 * 1024 * 1024)
+        .spawn(run_cli)?
+        .join()
+        .map_err(|_| anyhow!("MDCROP CLI worker thread panicked"))?
+}
+
+fn run_cli() -> Result<()> {
     let cli = Cli::parse();
     match cli.command {
         Commands::Fixture { budget } => {
