@@ -159,6 +159,20 @@ launches the real sibling `mdcrop` binary and verifies generated index and
 frontmatter outputs. Compatibility changes therefore require both MDCROP
 goldens and MDLOOM's consumer-owned adapter proof to pass.
 
+### Maturity improvement: prove existing downstream use
+
+Leverage was MDCROP's weakest core rubric dimension at **35.6**, with MDLOOM as
+its only explicit downstream dependent. The bounded improvement records MAXIM's
+existing use instead of adding provider scope: MAXIM tracks 2,725
+`mdcrop.view.v1` recipes, pins MDCROP 0.2.0 in a dependency manifest, and runs
+two representative views through the real provider with exact source-count
+assertions.
+
+With MDLOOM and MAXIM as two explicit dependents, the next offline portfolio
+inventory result is **56.5 leverage**. Proving the compatibility of an existing
+large consumer matters more than another command or schema because it closes
+the adoption gap that produced the weak baseline.
+
 Audit local Markdown links as structured side-info:
 
 ```powershell
