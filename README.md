@@ -143,6 +143,22 @@ Stable schema and consumer-integration notes live in [`docs\specs`](docs/specs),
 with deterministic status contract goldens under
 `examples\mdloom-fixture\golden`.
 
+## Reuse contract
+
+MDCROP 0.2.0 supports a bounded cross-repository contract through the `mdcrop`
+CLI and its named `*.v1` JSON schemas. The contract covers `index`, `catalog`,
+`status`, `links`, `backlinks`, `frontmatter`, `headings`, and `view`; command
+semantics, strict failures, and schema-version fields are compatibility
+surfaces. Internal graph-selection types and unversioned Rust APIs are not part
+of this contract.
+
+MDLOOM is the reference adopter. Its
+[`docs/dependencies/mdcrop.json`](https://github.com/giodl73-repo/MDLOOM/blob/main/docs/dependencies/mdcrop.json)
+pins MDCROP 0.2.0 at an immutable revision, while MDLOOM's integration suite
+launches the real sibling `mdcrop` binary and verifies generated index and
+frontmatter outputs. Compatibility changes therefore require both MDCROP
+goldens and MDLOOM's consumer-owned adapter proof to pass.
+
 Audit local Markdown links as structured side-info:
 
 ```powershell
