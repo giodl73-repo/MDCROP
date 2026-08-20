@@ -1,7 +1,7 @@
 {
   "schema_version": "mdcrop.corpus-status.v1",
   "title": "Ready View Status",
-  "input": "examples\\mdloom-fixture\\mdloom-ready-view.json",
+  "input": "examples\\proof-fixture\\proof-ready-view.json",
   "issue_count": 2,
   "strict_issue_count": 1,
   "strict_pass": false,

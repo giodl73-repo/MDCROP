@@ -1,6 +1,6 @@
 ---
 title: Draft
-tags: [mdloom, draft]
+tags: [proof, draft]
 status: draft
 version: 0.1
 ---

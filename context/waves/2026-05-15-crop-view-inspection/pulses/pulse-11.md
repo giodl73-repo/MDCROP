@@ -2,7 +2,7 @@
 
 ## Goal
 
-Expose MDLOOM-ready Markdown metadata side-info from MDCROP roots and named views.
+Expose PROOF-ready Markdown metadata side-info from MDCROP roots and named views.
 
 ## Scope
 
@@ -10,7 +10,7 @@ Expose MDLOOM-ready Markdown metadata side-info from MDCROP roots and named view
 - Add `mdcrop frontmatter --root` and `mdcrop frontmatter --view`.
 - Extract simple top-level YAML-style frontmatter key/value fields.
 - Report per-page field maps and aggregate key counts.
-- Document the command for MDLOOM README and HTML generation workflows.
+- Document the command for PROOF README and HTML generation workflows.
 
 ## Checklist
 
@@ -21,11 +21,11 @@ Expose MDLOOM-ready Markdown metadata side-info from MDCROP roots and named view
 - [x] README, product plan, and wave tracker updates.
 - [x] `cargo fmt`
 - [x] `cargo test --workspace`
-- [x] MDLOOM/root and view smoke runs.
+- [x] PROOF/root and view smoke runs.
 - [x] `git diff --check`
 
 ## Outcome
 
 `mdcrop frontmatter` emits `mdcrop.markdown-frontmatter.v1` JSON that downstream
-tools such as MDLOOM can use to populate generated README tables, status/tag
+tools such as PROOF can use to populate generated README tables, status/tag
 summaries, and HTML sidebars from source-document metadata.

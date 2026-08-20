@@ -96,12 +96,12 @@ enum Commands {
         #[arg(long, default_value_t = 0)]
         seed: usize,
     },
-    /// Report MDLOOM generated artifact manifest health.
+    /// Report PROOF generated artifact manifest health.
     Artifacts {
-        /// MDLOOM repository root. Defaults to reading .mdloom\artifacts.json under this root.
+        /// PROOF repository root. Defaults to reading .proof\artifacts.json under this root.
         #[arg(long)]
         root: Option<PathBuf>,
-        /// Explicit MDLOOM artifact manifest path.
+        /// Explicit PROOF artifact manifest path.
         #[arg(long)]
         manifest: Option<PathBuf>,
         /// Output format.

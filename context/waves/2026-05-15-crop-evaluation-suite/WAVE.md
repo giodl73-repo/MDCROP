@@ -2,7 +2,7 @@
 
 ## Goal
 
-Turn the first missing-bridge mdloom into a repeatable, multi-fixture evaluation
+Turn the first missing-bridge proof into a repeatable, multi-fixture evaluation
 suite that compares MDCROP against ordinary index/ranking baselines under equal
 inputs, labels, budgets, and output metrics.
 

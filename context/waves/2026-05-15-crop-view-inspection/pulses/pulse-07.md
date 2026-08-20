@@ -3,15 +3,15 @@
 ## Scout commands
 
 ```powershell
-cargo run -q -p mdcrop-cli -- index --root C:\src\mdloom -e md --exclude-dir target
+cargo run -q -p mdcrop-cli -- index --root C:\src\proof -e md --exclude-dir target
 cargo run -q -p mdcrop-cli -- index --view examples\views\whole-repo-view.json -e md
 ```
 
 ## Decision
 
-MDLOOM can own rendering and diagnostics, while MDCROP should expose corpus
+PROOF can own rendering and diagnostics, while MDCROP should expose corpus
 side-info. A local Markdown link audit is the next reusable primitive after index
-generation: it lets MDLOOM and other tools consume ok/broken local links from a
+generation: it lets PROOF and other tools consume ok/broken local links from a
 root or named view.
 
 ## Checklist
@@ -29,7 +29,7 @@ root or named view.
 ```powershell
 cargo fmt
 cargo test --workspace
-cargo run -q -p mdcrop-cli -- links --root C:\src\mdloom -e md --exclude-dir target
+cargo run -q -p mdcrop-cli -- links --root C:\src\proof -e md --exclude-dir target
 cargo run -q -p mdcrop-cli -- links --view examples\views\whole-repo-view.json -e md
 git diff --check
 ```

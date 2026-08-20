@@ -6,12 +6,12 @@
 Get-Content C:\src\mdpath\src\lib.rs
 Get-Content C:\src\mdpath\src\uri.rs
 Get-Content C:\src\mdpath\src\resolver.rs
-cargo run -q -p mdcrop-cli -- links --root C:\src\mdloom -e md --exclude-dir target
+cargo run -q -p mdcrop-cli -- links --root C:\src\proof -e md --exclude-dir target
 ```
 
 ## Decision
 
-MDLOOM already uses MDPATH as its stable Markdown addressing layer. MDCROP should
+PROOF already uses MDPATH as its stable Markdown addressing layer. MDCROP should
 not invent a parallel anchor model. This slice adds a local MDPATH dependency and
 uses it to validate `md://` links and heading fragments during MDCROP link audits.
 
@@ -31,7 +31,7 @@ uses it to validate `md://` links and heading fragments during MDCROP link audit
 ```powershell
 cargo fmt
 cargo test --workspace
-cargo run -q -p mdcrop-cli -- links --root C:\src\mdloom -e md --exclude-dir target
+cargo run -q -p mdcrop-cli -- links --root C:\src\proof -e md --exclude-dir target
 cargo run -q -p mdcrop-cli -- links --view examples\views\whole-repo-view.json -e md
 git diff --check
 ```

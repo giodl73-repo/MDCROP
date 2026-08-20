@@ -21,4 +21,4 @@ JSON schema contract.
 
 Backlinks are derived only from local links that resolve successfully.
 
-Golden fixture: `examples/mdloom-fixture/golden/backlinks.json`.
+Golden fixture: `examples/proof-fixture/golden/backlinks.json`.

@@ -23,4 +23,4 @@ schema contract.
 Path fields use MDCROP source IDs with `/` separators where possible. External
 HTTP links are intentionally ignored.
 
-Golden fixture: `examples/mdloom-fixture/golden/links.json`.
+Golden fixture: `examples/proof-fixture/golden/links.json`.

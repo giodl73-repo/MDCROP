@@ -1,6 +1,6 @@
 use anyhow::{bail, Result};
 use clap::ValueEnum;
-use mdcrop_core::{mdloom_artifacts, mdloom_artifacts_for_root, render_mdloom_artifact_markdown};
+use mdcrop_core::{proof_artifacts, proof_artifacts_for_root, render_proof_artifact_markdown};
 use std::fs;
 use std::path::PathBuf;
 
@@ -20,16 +20,16 @@ pub fn run(
         bail!("--root and --manifest cannot be combined");
     }
     let report = if let Some(manifest) = manifest {
-        mdloom_artifacts(manifest)?
+        proof_artifacts(manifest)?
     } else {
         let Some(root) = root else {
             bail!("--root or --manifest is required");
         };
-        mdloom_artifacts_for_root(root)?
+        proof_artifacts_for_root(root)?
     };
     let rendered = match format {
         ArtifactFormatArg::Json => serde_json::to_string_pretty(&report)?,
-        ArtifactFormatArg::Markdown => render_mdloom_artifact_markdown(&report),
+        ArtifactFormatArg::Markdown => render_proof_artifact_markdown(&report),
     };
     if let Some(output) = output {
         fs::write(output, rendered)?;

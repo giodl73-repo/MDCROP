@@ -1,0 +1,10 @@
+{
+  "schema_version": "mdcrop.view.v1",
+  "name": "proof-fixture-ready",
+  "root": "src",
+  "task": "ready proof source context",
+  "token_budget": 12000,
+  "seed": 0,
+  "include_extensions": ["md"],
+  "frontmatter_query": "tags has 'proof' and status eq 'ready'"
+}

@@ -30,7 +30,7 @@ cargo test -p mdcrop-cli status -- --test-threads=1
 cargo fmt
 cargo test -p mdcrop-cli status -- --test-threads=1
 cargo test --workspace
-cargo run -p mdcrop-cli -- status --root examples\mdloom-fixture\src --format json --strict --strict-on duplicate-anchors --output target\mdcrop-status-policy-smoke.json
+cargo run -p mdcrop-cli -- status --root examples\proof-fixture\src --format json --strict --strict-on duplicate-anchors --output target\mdcrop-status-policy-smoke.json
 git diff --check
 ```
 

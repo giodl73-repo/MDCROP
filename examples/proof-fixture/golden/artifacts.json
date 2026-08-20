@@ -1,7 +1,7 @@
 {
-  "schema_version": "mdcrop.mdloom-artifacts.v1",
-  "manifest": "examples/mdloom-fixture/.mdloom/artifacts.json",
-  "generated_by": "mdloom compile",
+  "schema_version": "mdcrop.proof-artifacts.v1",
+  "manifest": "examples/proof-fixture/.proof/artifacts.json",
+  "generated_by": "proof compile",
   "artifact_count": 2,
   "ok_count": 1,
   "missing_output_count": 1,

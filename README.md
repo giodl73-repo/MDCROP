@@ -13,7 +13,7 @@ repository-local review panels.
 MDCROP is the corpus-selection layer in the MD family:
 
 ```text
-Markdown → MDPATH → MDCROP → MDLOOM → MDPORT
+Markdown → MDPATH → MDCROP → PROOF → MDPORT
              address    select     build      transfer
 ```
 
@@ -21,7 +21,7 @@ Markdown → MDPATH → MDCROP → MDLOOM → MDPORT
 |------|----------------|
 | [MDPATH](https://github.com/giodl73-repo/MDPATH) | Stable `md://` addresses for Markdown elements. |
 | **MDCROP** | Corpus indexing, graph selection, and bounded context. |
-| [MDLOOM](https://github.com/giodl73-repo/MDLOOM) | Validation, compilation, rendering, and publication. |
+| [PROOF](https://github.com/giodl73-repo/PROOF) | Validation, compilation, rendering, and publication. |
 | [MDPORT](https://github.com/giodl73-repo/MDPORT) | Compact portable `mdport.v1` records. |
 
 ## Context & Harness family
@@ -78,40 +78,40 @@ Add `--output context.mdcrop.json` to write the pack to disk instead of stdout.
 Generate a Markdown README/TOC-style source index:
 
 ```powershell
-cargo run -p mdcrop-cli -- index --root C:\src\mdloom -e md -e html --exclude-dir target
+cargo run -p mdcrop-cli -- index --root C:\src\proof -e md -e html --exclude-dir target
 cargo run -p mdcrop-cli -- index --view examples\views\whole-repo-view.json --output INDEX.md
 ```
 
 `mdcrop index` emits Markdown tables with an extension profile and one row per
 source path, title, directory, extension, and outbound Markdown-link count. It is
-designed as a reusable `mdcrop-core` surface for tools such as MDLOOM, which can own
+designed as a reusable `mdcrop-core` surface for tools such as PROOF, which can own
 its compile/render pipeline while depending on MDCROP for corpus index primitives.
 
 Generate a richer Markdown catalog table for README/TOC pages:
 
 ```powershell
-cargo run -p mdcrop-cli -- catalog --root C:\src\mdloom -e md --exclude-dir target --output CATALOG.md
+cargo run -p mdcrop-cli -- catalog --root C:\src\proof -e md --exclude-dir target --output CATALOG.md
 cargo run -p mdcrop-cli -- catalog --view examples\views\whole-repo-view.json
 ```
 
 `mdcrop catalog` emits Markdown that combines source titles, inbound/outbound link
 counts, orphan flags, and selected frontmatter fields such as `status`, `tags`,
-`title`, `wave`, and `version`. It is a ready-to-embed table surface for MDLOOM
+`title`, `wave`, and `version`. It is a ready-to-embed table surface for PROOF
 while the structured JSON side-info remains available through `links`,
 `backlinks`, `frontmatter`, and `headings`.
 
-Report MDLOOM generated artifact health:
+Report PROOF generated artifact health:
 
 ```powershell
-cargo run -p mdcrop-cli -- artifacts --root C:\src\mdloom
-cargo run -p mdcrop-cli -- artifacts --manifest C:\src\mdloom\.mdloom\artifacts.json
-cargo run -p mdcrop-cli -- artifacts --root C:\src\mdloom --format markdown --output ARTIFACTS.md
+cargo run -p mdcrop-cli -- artifacts --root C:\src\proof
+cargo run -p mdcrop-cli -- artifacts --manifest C:\src\proof\.proof\artifacts.json
+cargo run -p mdcrop-cli -- artifacts --root C:\src\proof --format markdown --output ARTIFACTS.md
 ```
 
-`mdcrop artifacts` emits `mdcrop.mdloom-artifacts.v1` JSON from MDLOOM's
-`.mdloom\artifacts.json` contract. It maps source files to generated outputs and
+`mdcrop artifacts` emits `mdcrop.proof-artifacts.v1` JSON from PROOF's
+`.proof\artifacts.json` contract. It maps source files to generated outputs and
 reports missing outputs, stale outputs, cache status, directive counts, and
-diagnostic counts so MDLOOM can keep generated Markdown, ASCII, and HTML
+diagnostic counts so PROOF can keep generated Markdown, ASCII, and HTML
 surfaces aligned with source. Use `--format markdown` for a ready-to-embed
 artifact health table.
 
@@ -119,7 +119,7 @@ Generate a combined corpus status page or machine-readable summary:
 
 ```powershell
 cargo run -p mdcrop-cli -- status --root C:\src\maxim --output STATUS.md
-cargo run -p mdcrop-cli -- status --view examples\mdloom-fixture\mdloom-ready-view.json --output STATUS.md
+cargo run -p mdcrop-cli -- status --view examples\proof-fixture\proof-ready-view.json --output STATUS.md
 cargo run -p mdcrop-cli -- status --root C:\src\maxim --strict --output STATUS.md
 cargo run -p mdcrop-cli -- status --root C:\src\maxim --strict --strict-on broken-links --output STATUS.md
 cargo run -p mdcrop-cli -- status --root C:\src\maxim --format json --output STATUS.json
@@ -141,7 +141,7 @@ selection, and output rendering.
 
 Stable schema and consumer-integration notes live in [`docs\specs`](docs/specs),
 with deterministic status contract goldens under
-`examples\mdloom-fixture\golden`.
+`examples\proof-fixture\golden`.
 
 ## Reuse contract
 
@@ -152,23 +152,23 @@ semantics, strict failures, and schema-version fields are compatibility
 surfaces. Internal graph-selection types and unversioned Rust APIs are not part
 of this contract.
 
-MDLOOM is the reference adopter. Its
-[`docs/dependencies/mdcrop.json`](https://github.com/giodl73-repo/MDLOOM/blob/main/docs/dependencies/mdcrop.json)
-pins MDCROP 0.2.0 at an immutable revision, while MDLOOM's integration suite
+PROOF is the reference adopter. Its
+[`docs/dependencies/mdcrop.json`](https://github.com/giodl73-repo/PROOF/blob/main/docs/dependencies/mdcrop.json)
+pins MDCROP 0.2.0 at an immutable revision, while PROOF's integration suite
 launches the real sibling `mdcrop` binary and verifies generated index and
 frontmatter outputs. Compatibility changes therefore require both MDCROP
-goldens and MDLOOM's consumer-owned adapter proof to pass.
+goldens and PROOF's consumer-owned adapter proof to pass.
 
 ### Maturity improvement: prove existing downstream use
 
-Leverage was MDCROP's weakest core rubric dimension at **35.6**, with MDLOOM as
+Leverage was MDCROP's weakest core rubric dimension at **35.6**, with PROOF as
 its only explicit downstream dependent. The bounded improvement records MAXIM's
 existing use instead of adding provider scope: MAXIM tracks 2,725
 `mdcrop.view.v1` recipes, pins MDCROP 0.2.0 in a dependency manifest, and runs
 two representative views through the real provider with exact source-count
 assertions.
 
-With MDLOOM and MAXIM as two explicit dependents, the next offline portfolio
+With PROOF and MAXIM as two explicit dependents, the next offline portfolio
 inventory result is **56.5 leverage**. Proving the compatibility of an existing
 large consumer matters more than another command or schema because it closes
 the adoption gap that produced the weak baseline.
@@ -176,58 +176,58 @@ the adoption gap that produced the weak baseline.
 Audit local Markdown links as structured side-info:
 
 ```powershell
-cargo run -p mdcrop-cli -- links --root C:\src\mdloom -e md --exclude-dir target
+cargo run -p mdcrop-cli -- links --root C:\src\proof -e md --exclude-dir target
 cargo run -p mdcrop-cli -- links --view examples\views\whole-repo-view.json
-cargo run -p mdcrop-cli -- links --root C:\src\mdloom -e md --format markdown --output LINK_AUDIT.md
+cargo run -p mdcrop-cli -- links --root C:\src\proof -e md --format markdown --output LINK_AUDIT.md
 ```
 
 `mdcrop links` emits `mdcrop.markdown-link-audit.v1` JSON with source, target,
 status, resolved source, error details, and aggregate ok/broken counts. It uses
 MDPATH-compatible resolution for `md://` URIs and heading fragments, while
-ignoring external links so MDLOOM can focus this report on local corpus health.
+ignoring external links so PROOF can focus this report on local corpus health.
 Use `--format markdown` for a ready-to-embed local link health table.
 
 Report backlinks and orphan pages:
 
 ```powershell
-cargo run -p mdcrop-cli -- backlinks --root C:\src\mdloom -e md --exclude-dir target
+cargo run -p mdcrop-cli -- backlinks --root C:\src\proof -e md --exclude-dir target
 cargo run -p mdcrop-cli -- backlinks --view examples\views\whole-repo-view.json
-cargo run -p mdcrop-cli -- backlinks --root C:\src\mdloom -e md --format markdown --output BACKLINKS.md
+cargo run -p mdcrop-cli -- backlinks --root C:\src\proof -e md --format markdown --output BACKLINKS.md
 ```
 
 `mdcrop backlinks` emits `mdcrop.markdown-backlinks.v1` JSON with one page row per
 Markdown source, title, inbound link list, outbound link count, and orphan flag.
-It reuses MDCROP's MDPATH-compatible link resolution so MDLOOM can build indexes
+It reuses MDCROP's MDPATH-compatible link resolution so PROOF can build indexes
 and README tables with "referenced by" side-info. Use `--format markdown` for a
 page-level inbound/orphan table.
 
 Inventory Markdown frontmatter:
 
 ```powershell
-cargo run -p mdcrop-cli -- frontmatter --root C:\src\mdloom -e md --exclude-dir target
+cargo run -p mdcrop-cli -- frontmatter --root C:\src\proof -e md --exclude-dir target
 cargo run -p mdcrop-cli -- frontmatter --view examples\views\whole-repo-view.json
-cargo run -p mdcrop-cli -- frontmatter --root C:\src\mdloom -e md --format markdown --output FRONTMATTER.md
+cargo run -p mdcrop-cli -- frontmatter --root C:\src\proof -e md --format markdown --output FRONTMATTER.md
 ```
 
 `mdcrop frontmatter` emits `mdcrop.markdown-frontmatter.v1` JSON with source paths,
 top-level frontmatter key/value fields, and aggregate key counts. This gives
-MDLOOM a small metadata feed for generated README tables, HTML sidebars, and
-status/tag summaries without taking over MDLOOM's renderer. Use
+PROOF a small metadata feed for generated README tables, HTML sidebars, and
+status/tag summaries without taking over PROOF's renderer. Use
 `--format markdown` for a key profile and metadata table across arbitrary
 frontmatter fields.
 
 Inventory headings and MDPATH anchors:
 
 ```powershell
-cargo run -p mdcrop-cli -- headings --root C:\src\mdloom -e md --exclude-dir target
+cargo run -p mdcrop-cli -- headings --root C:\src\proof -e md --exclude-dir target
 cargo run -p mdcrop-cli -- headings --view examples\views\whole-repo-view.json
-cargo run -p mdcrop-cli -- headings --root C:\src\mdloom -e md --format markdown --output HEADINGS.md
+cargo run -p mdcrop-cli -- headings --root C:\src\proof -e md --format markdown --output HEADINGS.md
 ```
 
 `mdcrop headings` emits `mdcrop.markdown-heading-inventory.v1` JSON with source,
 level, text, normalized MDPATH/GitHub anchor, line number, canonical `md://`
 section URI, and duplicate-anchor groups. This is the raw TOC and anchor
-inventory surface for MDLOOM. Use `--format markdown` for an embeddable heading
+inventory surface for PROOF. Use `--format markdown` for an embeddable heading
 and duplicate-anchor table.
 
 Run a persisted named view recipe:
@@ -255,7 +255,7 @@ View files use `mdcrop.view.v1` JSON:
 Relative roots resolve from the view file location. The default output is
 `mdcrop.view-run.v1` JSON containing the view metadata and produced context pack.
 Use `--format mdport` to emit the same selected context as a compact
-`mdport.v1` transfer pack that MDLOOM and other tools can exchange:
+`mdport.v1` transfer pack that PROOF and other tools can exchange:
 
 ```powershell
 cargo run -p mdcrop-cli -- view --file examples\views\docs-view.json --format mdport
@@ -515,7 +515,7 @@ caveats.
   cases from `mdcrop.bench-manifest.v1` JSON.
 - `markdown_index(root, title, options)` and
   `markdown_index_for_view_json(json, base_dir)` generate README/TOC-style
-  Markdown source indexes for documentation tools such as MDLOOM.
+  Markdown source indexes for documentation tools such as PROOF.
 - `markdown_link_audit(root, options)` and
   `markdown_link_audit_for_view_json(json, base_dir)` report local Markdown link
   and MDPATH heading health as structured side-info.

@@ -1,16 +1,16 @@
 ---
-name: MDLOOM Publisher
-slug: mdloom-publisher
+name: PROOF Publisher
+slug: proof-publisher
 tier: stakeholder
 primary_concern: generated documentation health
 ---
 
-# MDLOOM Publisher
+# PROOF Publisher
 
 ## Primary concerns
 
 - Artifact inventories connect generated outputs to source material.
-- MDCROP status pages help MDLOOM publish clean markdown, ASCII, and HTML surfaces.
+- MDCROP status pages help PROOF publish clean markdown, ASCII, and HTML surfaces.
 - Broken or stale generated files are visible before release.
 - Reports remain readable in GitHub Markdown.
 

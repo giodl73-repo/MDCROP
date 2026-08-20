@@ -13,7 +13,7 @@
       "source": "guide.source.md",
       "fields": {
         "status": "ready",
-        "tags": "[mdloom, guide]",
+        "tags": "[proof, guide]",
         "title": "Guide",
         "version": "1.0"
       }

@@ -4,14 +4,14 @@
 
 ```powershell
 cargo run -q -p mdcrop-cli -- view --inspect --dir examples\views --strict
-Get-ChildItem C:\src\mdloom
+Get-ChildItem C:\src\proof
 ```
 
 ## Decision
 
-MDLOOM should own Markdown/HTML/ASCII rendering, but it can depend on MDCROP for
+PROOF should own Markdown/HTML/ASCII rendering, but it can depend on MDCROP for
 corpus indexing primitives. This slice adds a reusable `mdcrop-core` API and a CLI
-smoke surface for README/TOC-style source tables without writing into MDLOOM
+smoke surface for README/TOC-style source tables without writing into PROOF
 outputs by default.
 
 ## Checklist
@@ -22,7 +22,7 @@ outputs by default.
 - [x] Add CLI `mdcrop index` with optional output path.
 - [x] Add positive tests for root and view indexing.
 - [x] Update README, product plan, and wave docs.
-- [x] Create MDLOOM-side integration spec.
+- [x] Create PROOF-side integration spec.
 - [x] Run validation gates.
 
 ## Validation
@@ -30,7 +30,7 @@ outputs by default.
 ```powershell
 cargo fmt
 cargo test --workspace
-cargo run -q -p mdcrop-cli -- index --root C:\src\mdloom -e md -e html --exclude-dir target
+cargo run -q -p mdcrop-cli -- index --root C:\src\proof -e md -e html --exclude-dir target
 cargo run -q -p mdcrop-cli -- index --view examples\views\whole-repo-view.json -e md
 git diff --check
 ```

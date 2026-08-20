@@ -4,27 +4,27 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct MdloomArtifactManifest {
+pub struct ProofArtifactManifest {
     pub schema_version: String,
     pub generated_by: String,
     pub config_root: PathBuf,
     pub generated_at_ms: u64,
-    pub artifacts: Vec<MdloomArtifactRecord>,
+    pub artifacts: Vec<ProofArtifactRecord>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct MdloomArtifactRecord {
+pub struct ProofArtifactRecord {
     pub source_path: PathBuf,
     pub output_path: PathBuf,
     pub target: String,
     pub status: String,
     pub directives_resolved: usize,
     pub from_cache: bool,
-    pub diagnostics: Vec<MdloomArtifactDiagnostic>,
+    pub diagnostics: Vec<ProofArtifactDiagnostic>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct MdloomArtifactDiagnostic {
+pub struct ProofArtifactDiagnostic {
     pub code: String,
     pub severity: String,
     pub line: usize,
@@ -32,7 +32,7 @@ pub struct MdloomArtifactDiagnostic {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct MdloomArtifactReportEntry {
+pub struct ProofArtifactReportEntry {
     pub source: String,
     pub output: String,
     pub target: String,
@@ -45,7 +45,7 @@ pub struct MdloomArtifactReportEntry {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct MdloomArtifactReport {
+pub struct ProofArtifactReport {
     pub schema_version: String,
     pub manifest: String,
     pub generated_by: String,
@@ -54,16 +54,16 @@ pub struct MdloomArtifactReport {
     pub missing_output_count: usize,
     pub stale_count: usize,
     pub diagnostic_count: usize,
-    pub artifacts: Vec<MdloomArtifactReportEntry>,
+    pub artifacts: Vec<ProofArtifactReportEntry>,
 }
 
-pub fn mdloom_artifacts_for_root(
+pub fn proof_artifacts_for_root(
     root: impl AsRef<Path>,
-) -> Result<MdloomArtifactReport, MdcropError> {
-    mdloom_artifacts(root.as_ref().join(".mdloom").join("artifacts.json"))
+) -> Result<ProofArtifactReport, MdcropError> {
+    proof_artifacts(root.as_ref().join(".proof").join("artifacts.json"))
 }
 
-pub fn mdloom_artifacts(manifest: impl AsRef<Path>) -> Result<MdloomArtifactReport, MdcropError> {
+pub fn proof_artifacts(manifest: impl AsRef<Path>) -> Result<ProofArtifactReport, MdcropError> {
     let manifest = manifest.as_ref();
     if !manifest.exists() {
         return Err(MdcropError::RootDoesNotExist {
@@ -74,12 +74,12 @@ pub fn mdloom_artifacts(manifest: impl AsRef<Path>) -> Result<MdloomArtifactRepo
         path: manifest.display().to_string(),
         source,
     })?;
-    mdloom_artifacts_json(&json, manifest)
+    proof_artifacts_json(&json, manifest)
 }
 
-pub fn render_mdloom_artifact_markdown(report: &MdloomArtifactReport) -> String {
+pub fn render_proof_artifact_markdown(report: &ProofArtifactReport) -> String {
     let mut markdown = String::new();
-    markdown.push_str("# MDLOOM Artifact Health\n\n");
+    markdown.push_str("# PROOF Artifact Health\n\n");
     markdown.push_str(&format!("Manifest: `{}`\n\n", report.manifest));
     markdown.push_str(&format!(
         "Artifacts: **{}** | OK: **{}** | Missing: **{}** | Stale: **{}** | Diagnostics: **{}**\n\n",
@@ -108,11 +108,11 @@ pub fn render_mdloom_artifact_markdown(report: &MdloomArtifactReport) -> String 
     markdown
 }
 
-pub fn mdloom_artifacts_json(
+pub fn proof_artifacts_json(
     json: &str,
     manifest_path: impl AsRef<Path>,
-) -> Result<MdloomArtifactReport, MdcropError> {
-    let manifest: MdloomArtifactManifest =
+) -> Result<ProofArtifactReport, MdcropError> {
+    let manifest: ProofArtifactManifest =
         serde_json::from_str(json).map_err(MdcropError::ArtifactManifestImport)?;
     let manifest_path = manifest_path.as_ref();
     let base = manifest_path.parent().unwrap_or_else(|| Path::new("."));
@@ -130,7 +130,7 @@ pub fn mdloom_artifacts_json(
         let stale = output_exists
             && source_path.exists()
             && file_mtime_ms(&source_path)? > file_mtime_ms(&output_path)?;
-        artifacts.push(MdloomArtifactReportEntry {
+        artifacts.push(ProofArtifactReportEntry {
             source: display_path(&artifact.source_path),
             output: display_path(&artifact.output_path),
             target: artifact.target,
@@ -155,8 +155,8 @@ pub fn mdloom_artifacts_json(
     let ok_count = artifacts
         .len()
         .saturating_sub(missing_output_count + stale_count);
-    Ok(MdloomArtifactReport {
-        schema_version: "mdcrop.mdloom-artifacts.v1".to_string(),
+    Ok(ProofArtifactReport {
+        schema_version: "mdcrop.proof-artifacts.v1".to_string(),
         manifest: display_path(manifest_path),
         generated_by: manifest.generated_by,
         artifact_count: artifacts.len(),

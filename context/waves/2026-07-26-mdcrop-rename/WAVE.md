@@ -10,7 +10,7 @@ source_request: "Rename CROP to MDCROP as part of the Markdown product family."
 ## Mission
 
 Establish MDCROP as the Markdown corpus discovery and selection layer between
-MDPATH addressing and MDLOOM compilation.
+MDPATH addressing and PROOF compilation.
 
 ## Changes
 

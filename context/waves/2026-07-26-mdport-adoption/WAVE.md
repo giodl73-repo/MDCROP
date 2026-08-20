@@ -17,7 +17,7 @@ MDPORT without changing MDCROP's graph selection, indexing, or corpus ownership.
 - Depend on `mdport` 0.2.0 from the renamed MDPORT repository.
 - Emit and ingest `mdport.v1`.
 - Rename Rust APIs, CLI format names, fixtures, specs, and generated examples.
-- Align old PROOF fixture terminology to MDLOOM.
+- Align old PROOF fixture terminology to PROOF.
 
 ## Validation
 

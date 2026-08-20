@@ -15,7 +15,7 @@ Output format: Markdown table, not JSON.
 | `Orphan` | `yes` when inbound link count is zero. |
 | `Status`, `Tags`, `Wave`, `Version` | Included when those frontmatter keys appear in the catalog. |
 
-MDLOOM can embed this output directly in README/TOC pages. Consumers that need
+PROOF can embed this output directly in README/TOC pages. Consumers that need
 structured data should combine `frontmatter`, `backlinks`, and `links`.
 
-Golden fixture: `examples/mdloom-fixture/golden/catalog.md`.
+Golden fixture: `examples/proof-fixture/golden/catalog.md`.

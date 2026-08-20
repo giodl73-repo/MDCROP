@@ -16,11 +16,11 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 use thiserror::Error;
 
-mod mdloom_artifacts;
-pub use mdloom_artifacts::{
-    mdloom_artifacts, mdloom_artifacts_for_root, mdloom_artifacts_json,
-    render_mdloom_artifact_markdown, MdloomArtifactDiagnostic, MdloomArtifactManifest,
-    MdloomArtifactRecord, MdloomArtifactReport, MdloomArtifactReportEntry,
+mod proof_artifacts;
+pub use proof_artifacts::{
+    proof_artifacts, proof_artifacts_for_root, proof_artifacts_json,
+    render_proof_artifact_markdown, ProofArtifactDiagnostic, ProofArtifactManifest,
+    ProofArtifactRecord, ProofArtifactReport, ProofArtifactReportEntry,
 };
 
 pub const COMPETITOR_RESULTS_SCHEMA: &str = "mdcrop.competitor-results.v1";
@@ -3912,7 +3912,7 @@ mod tests {
         let root = unique_temp_dir("mdcrop-ingest-mdport");
         fs::create_dir_all(&root).unwrap();
         let document = mdport::MdportDocument::from_markdown(
-            "# Generated Guide\n\nMdloom-produced Mdport context.",
+            "# Generated Guide\n\nProof-produced Mdport context.",
             "Generated Guide",
             "src/guides/generated.source.md",
             ["data/records.json".to_string()],
@@ -3937,7 +3937,7 @@ mod tests {
         );
         assert!(ingested.graph.units[0]
             .text
-            .contains("Mdloom-produced Mdport context."));
+            .contains("Proof-produced Mdport context."));
         assert_eq!(
             ingested.graph.units[0]
                 .metadata
@@ -4299,7 +4299,7 @@ mod tests {
 
         let markdown = markdown_index(
             &root,
-            "MDLOOM generated docs",
+            "PROOF generated docs",
             &IngestOptions {
                 include_extensions: vec!["md".to_string(), "html".to_string()],
                 exclude_dirs: Vec::new(),
@@ -4308,7 +4308,7 @@ mod tests {
         )
         .unwrap();
 
-        assert!(markdown.contains("# MDLOOM generated docs"));
+        assert!(markdown.contains("# PROOF generated docs"));
         assert!(markdown.contains("| `html` | 1 |"));
         assert!(markdown.contains("| `md` | 2 |"));
         assert!(markdown.contains("[`docs/intro.md`](docs/intro.md)"));
@@ -4334,9 +4334,9 @@ mod tests {
 
         let view = r#"{
           "schema_version": "mdcrop.view.v1",
-          "name": "mdloom-view",
+          "name": "proof-view",
           "root": "docs",
-          "task": "index mdloom docs",
+          "task": "index proof docs",
           "token_budget": 160,
           "seed": 0,
           "include_extensions": ["md"]
@@ -4344,7 +4344,7 @@ mod tests {
 
         let markdown = markdown_index_for_view_json(view, &root).unwrap();
 
-        assert!(markdown.contains("# mdloom-view"));
+        assert!(markdown.contains("# proof-view"));
         assert!(markdown.contains("[`readme.md`](readme.md)"));
         assert!(!markdown.contains("skip.txt"));
 
@@ -4357,7 +4357,7 @@ mod tests {
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("intro.md"),
-            "---\ntitle: Intro Metadata\ntags: [mdloom, mdcrop]\nstatus: draft\n---\n# Intro\n\n[API](api.md)",
+            "---\ntitle: Intro Metadata\ntags: [proof, mdcrop]\nstatus: draft\n---\n# Intro\n\n[API](api.md)",
         )
         .unwrap();
         fs::write(
@@ -4368,7 +4368,7 @@ mod tests {
 
         let markdown = markdown_catalog(
             &root,
-            "MDLOOM catalog",
+            "PROOF catalog",
             &IngestOptions {
                 include_extensions: vec!["md".to_string()],
                 exclude_dirs: Vec::new(),
@@ -4377,9 +4377,9 @@ mod tests {
         )
         .unwrap();
 
-        assert!(markdown.contains("# MDLOOM catalog"));
+        assert!(markdown.contains("# PROOF catalog"));
         assert!(markdown.contains("| Path | Title | In | Out | Orphan | Status | Tags | Title |"));
-        assert!(markdown.contains("| [`docs/intro.md`](docs/intro.md) | Intro Metadata | 0 | 1 | yes | draft | [mdloom, mdcrop] | Intro Metadata |"));
+        assert!(markdown.contains("| [`docs/intro.md`](docs/intro.md) | Intro Metadata | 0 | 1 | yes | draft | [proof, mdcrop] | Intro Metadata |"));
         assert!(markdown.contains("| [`docs/api.md`](docs/api.md) | API Metadata | 1 | 0 | no | ready |  | API Metadata |"));
 
         fs::remove_dir_all(root).unwrap();
@@ -4421,21 +4421,21 @@ mod tests {
     }
 
     #[test]
-    fn mdloom_artifacts_reports_missing_and_stale_outputs() {
-        let root = unique_temp_dir("mdcrop-mdloom-artifacts");
-        fs::create_dir_all(root.join(".mdloom")).unwrap();
+    fn proof_artifacts_reports_missing_and_stale_outputs() {
+        let root = unique_temp_dir("mdcrop-proof-artifacts");
+        fs::create_dir_all(root.join(".proof")).unwrap();
         fs::create_dir_all(root.join("src")).unwrap();
         fs::create_dir_all(root.join("out")).unwrap();
         fs::write(root.join("out").join("guide.md"), "old output").unwrap();
         std::thread::sleep(std::time::Duration::from_millis(20));
         fs::write(root.join("src").join("guide.source.md"), "new source").unwrap();
         fs::write(root.join("src").join("missing.source.md"), "missing source").unwrap();
-        let manifest = root.join(".mdloom").join("artifacts.json");
+        let manifest = root.join(".proof").join("artifacts.json");
         fs::write(
             &manifest,
             r#"{
               "schema_version": "1",
-              "generated_by": "mdloom compile",
+              "generated_by": "proof compile",
               "config_root": "..",
               "generated_at_ms": 1,
               "artifacts": [
@@ -4464,9 +4464,9 @@ mod tests {
         )
         .unwrap();
 
-        let report = mdloom_artifacts(&manifest).unwrap();
+        let report = proof_artifacts(&manifest).unwrap();
 
-        assert_eq!(report.schema_version, "mdcrop.mdloom-artifacts.v1");
+        assert_eq!(report.schema_version, "mdcrop.proof-artifacts.v1");
         assert_eq!(report.artifact_count, 2);
         assert_eq!(report.missing_output_count, 1);
         assert_eq!(report.stale_count, 1);
@@ -4475,8 +4475,8 @@ mod tests {
         assert!(report.artifacts[0].output_exists);
         assert!(!report.artifacts[1].output_exists);
         assert_eq!(report.artifacts[1].diagnostic_count, 1);
-        let markdown = render_mdloom_artifact_markdown(&report);
-        assert!(markdown.contains("# MDLOOM Artifact Health"));
+        let markdown = render_proof_artifact_markdown(&report);
+        assert!(markdown.contains("# PROOF Artifact Health"));
         assert!(markdown.contains("| Source | Output | Target | Status | Exists | Stale | Cache | Directives | Diagnostics |"));
         assert!(markdown.contains("| `src/guide.source.md` | `out/guide.md` | `markdown` | `written` | yes | yes | no | 2 | 0 |"));
 
@@ -4484,8 +4484,8 @@ mod tests {
     }
 
     #[test]
-    fn mdloom_fixture_exercises_side_info_contracts() {
-        let root = mdloom_fixture_root();
+    fn proof_fixture_exercises_side_info_contracts() {
+        let root = proof_fixture_root();
         let src = root.join("src");
         let options = IngestOptions {
             include_extensions: vec!["md".to_string()],
@@ -4493,8 +4493,8 @@ mod tests {
             frontmatter_query: None,
         };
 
-        let artifacts = mdloom_artifacts_for_root(&root).unwrap();
-        assert_eq!(artifacts.schema_version, "mdcrop.mdloom-artifacts.v1");
+        let artifacts = proof_artifacts_for_root(&root).unwrap();
+        assert_eq!(artifacts.schema_version, "mdcrop.proof-artifacts.v1");
         assert_eq!(artifacts.artifact_count, 2);
         assert_eq!(artifacts.missing_output_count, 1);
         assert_eq!(artifacts.diagnostic_count, 1);
@@ -4537,21 +4537,21 @@ mod tests {
         assert!(catalog
             .contains("| Path | Title | In | Out | Orphan | Status | Tags | Title | Version |"));
         assert!(catalog.contains("Guide"));
-        assert!(catalog.contains("[mdloom, guide]"));
+        assert!(catalog.contains("[proof, guide]"));
 
-        let view_json = fs::read_to_string(root.join("mdloom-ready-view.json")).unwrap();
+        let view_json = fs::read_to_string(root.join("proof-ready-view.json")).unwrap();
         let inspect = inspect_view_json(&view_json, &root).unwrap();
         assert_eq!(inspect.supported_source_count, 2);
         assert_eq!(
             inspect.frontmatter_query.as_deref(),
-            Some("tags has 'mdloom' and status eq 'ready'")
+            Some("tags has 'proof' and status eq 'ready'")
         );
         assert!(!inspect
             .sample_sources
             .contains(&"draft.source.md".to_string()));
 
         for (file, schema) in [
-            ("artifacts.json", "mdcrop.mdloom-artifacts.v1"),
+            ("artifacts.json", "mdcrop.proof-artifacts.v1"),
             ("headings.json", "mdcrop.markdown-heading-inventory.v1"),
             ("links.json", "mdcrop.markdown-link-audit.v1"),
             ("backlinks.json", "mdcrop.markdown-backlinks.v1"),
@@ -4773,7 +4773,7 @@ mod tests {
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("one.md"),
-            "---\ntitle: One\ntags: [mdloom, mdcrop]\nstatus: draft\n---\n# One\n",
+            "---\ntitle: One\ntags: [proof, mdcrop]\nstatus: draft\n---\n# One\n",
         )
         .unwrap();
         fs::write(
@@ -4807,7 +4807,7 @@ mod tests {
         assert_eq!(inventory.pages[0].fields.get("title").unwrap(), "One");
         assert_eq!(
             inventory.pages[0].fields.get("tags").unwrap(),
-            "[mdloom, mdcrop]"
+            "[proof, mdcrop]"
         );
 
         fs::remove_dir_all(root).unwrap();
@@ -4921,7 +4921,7 @@ mod tests {
         fs::create_dir_all(root.join("docs")).unwrap();
         fs::write(
             root.join("docs").join("one.md"),
-            "---\ntitle: One\ntags: [mdloom, mdcrop]\n---\n# One\n\n[Two](two.md)\n[Missing](missing.md)",
+            "---\ntitle: One\ntags: [proof, mdcrop]\n---\n# One\n\n[Two](two.md)\n[Missing](missing.md)",
         )
         .unwrap();
         fs::write(
@@ -5077,12 +5077,12 @@ mod tests {
         ))
     }
 
-    fn mdloom_fixture_root() -> PathBuf {
+    fn proof_fixture_root() -> PathBuf {
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("..")
             .join("..")
             .join("examples")
-            .join("mdloom-fixture")
+            .join("proof-fixture")
     }
 
     fn prefix_cached_pack_for_task(path: &Path, task: &str) -> PrefixCachedPack {

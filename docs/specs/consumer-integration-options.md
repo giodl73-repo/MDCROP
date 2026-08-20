@@ -1,6 +1,6 @@
 # Consumer Integration Options
 
-Audience: downstream documentation systems such as MDLOOM, knowledge bases,
+Audience: downstream documentation systems such as PROOF, knowledge bases,
 research notebooks, and large Markdown corpora.
 
 MDCROP exposes reusable corpus-intelligence surfaces. Consumers should call these
@@ -99,8 +99,8 @@ Strict mode writes the status page before failing, so CI can upload the page as
 an artifact. By default it gates on broken links, orphan pages, and duplicate
 anchors. Add repeatable `--strict-on` selectors to gate only `broken-links`,
 `orphan-pages`, or `duplicate-anchors`. Root and view JSON examples live in
-`examples\mdloom-fixture\golden\status-root.json` and
-`examples\mdloom-fixture\golden\status-view.json`.
+`examples\proof-fixture\golden\status-root.json` and
+`examples\proof-fixture\golden\status-view.json`.
 
 ### Feed a registry or tracker
 
@@ -128,12 +128,12 @@ needed instead of JSON.
 ## Optional artifact-health adapter
 
 If a consumer emits a generated-artifact manifest compatible with
-`mdcrop.mdloom-artifacts.v1`, MDCROP can report missing, stale, cached, or diagnostic
+`mdcrop.proof-artifacts.v1`, MDCROP can report missing, stale, cached, or diagnostic
 artifact rows:
 
 ```powershell
-mdcrop artifacts --manifest .mdloom\artifacts.json
-mdcrop artifacts --manifest .mdloom\artifacts.json --format markdown --output ARTIFACTS.md
+mdcrop artifacts --manifest .proof\artifacts.json
+mdcrop artifacts --manifest .proof\artifacts.json --format markdown --output ARTIFACTS.md
 ```
 
 This is an adapter over an external manifest. It should not be required for

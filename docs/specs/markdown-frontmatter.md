@@ -20,6 +20,6 @@ it does not change the JSON schema contract.
 | `pages` | array | Rows with `source`, sorted `keys`, and string-valued `fields`. |
 
 MDCROP records simple top-level YAML-style key/value fields as strings. Array-like
-values such as tags remain string values, e.g. `[mdloom, guide]`.
+values such as tags remain string values, e.g. `[proof, guide]`.
 
-Golden fixture: `examples/mdloom-fixture/golden/frontmatter.json`.
+Golden fixture: `examples/proof-fixture/golden/frontmatter.json`.

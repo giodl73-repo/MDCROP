@@ -40,6 +40,6 @@ Consumer lenses for deciding whether MDCROP serves real downstream uses.
 |---|---|---|
 | `stakeholders/rag-builder.md` | RAG Builder | Focused context packs improve retrieval before LLM calls |
 | `stakeholders/repo-maintainer.md` | Repo Maintainer | Status, links, headings, and frontmatter checks are actionable |
-| `stakeholders/mdloom-publisher.md` | MDLOOM Publisher | Generated docs and artifact inventories stay publishable |
+| `stakeholders/proof-publisher.md` | PROOF Publisher | Generated docs and artifact inventories stay publishable |
 | `stakeholders/future-agent.md` | Future Agent | Named views and reports make handoff/resume work easy |
 

@@ -2,16 +2,16 @@
 
 ## Goal
 
-Make MDLOOM artifact health embeddable in generated README/status pages without
+Make PROOF artifact health embeddable in generated README/status pages without
 requiring a downstream JSON renderer.
 
 ## Scope
 
-- Add a reusable Markdown renderer for `MdloomArtifactReport`.
+- Add a reusable Markdown renderer for `ProofArtifactReport`.
 - Add `mdcrop artifacts --format markdown`.
 - Keep JSON as the default output format.
 - Cover the Markdown table in tests.
-- Update MDLOOM-facing docs.
+- Update PROOF-facing docs.
 
 ## Checklist
 
