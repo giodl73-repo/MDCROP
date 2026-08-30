@@ -14,17 +14,31 @@ use std::path::PathBuf;
 
 use crate::{SideInfoFormatArg, StatusStrictPolicyArg};
 
-pub fn run(
-    root: Option<PathBuf>,
-    view: Option<PathBuf>,
-    title: String,
-    extensions: Vec<String>,
-    exclude_dirs: Vec<String>,
-    strict: bool,
-    strict_policies: Vec<StatusStrictPolicyArg>,
-    format: SideInfoFormatArg,
-    output: Option<PathBuf>,
-) -> Result<()> {
+pub struct RunOptions {
+    pub root: Option<PathBuf>,
+    pub view: Option<PathBuf>,
+    pub title: String,
+    pub extensions: Vec<String>,
+    pub exclude_dirs: Vec<String>,
+    pub strict: bool,
+    pub strict_policies: Vec<StatusStrictPolicyArg>,
+    pub format: SideInfoFormatArg,
+    pub output: Option<PathBuf>,
+}
+
+pub fn run(options: RunOptions) -> Result<()> {
+    let RunOptions {
+        root,
+        view,
+        title,
+        extensions,
+        exclude_dirs,
+        strict,
+        strict_policies,
+        format,
+        output,
+    } = options;
+
     if root.is_some() && view.is_some() {
         bail!("--root and --view cannot be combined");
     }
@@ -297,17 +311,17 @@ mod tests {
         let fixture = repo.join("examples").join("proof-fixture");
         let output = unique_temp_file("mdcrop-status.md");
 
-        run(
-            Some(fixture.join("src")),
-            None,
-            "Fixture Status".to_string(),
-            vec!["md".to_string()],
-            Vec::new(),
-            false,
-            Vec::new(),
-            SideInfoFormatArg::Markdown,
-            Some(output.clone()),
-        )
+        run(RunOptions {
+            root: Some(fixture.join("src")),
+            view: None,
+            title: "Fixture Status".to_string(),
+            extensions: vec!["md".to_string()],
+            exclude_dirs: Vec::new(),
+            strict: false,
+            strict_policies: Vec::new(),
+            format: SideInfoFormatArg::Markdown,
+            output: Some(output.clone()),
+        })
         .unwrap();
 
         let markdown = fs::read_to_string(&output).unwrap();
@@ -329,17 +343,17 @@ mod tests {
         let fixture = repo.join("examples").join("proof-fixture");
         let output = unique_temp_file("mdcrop-view-status.md");
 
-        run(
-            None,
-            Some(fixture.join("proof-ready-view.json")),
-            "View Status".to_string(),
-            Vec::new(),
-            Vec::new(),
-            false,
-            Vec::new(),
-            SideInfoFormatArg::Markdown,
-            Some(output.clone()),
-        )
+        run(RunOptions {
+            root: None,
+            view: Some(fixture.join("proof-ready-view.json")),
+            title: "View Status".to_string(),
+            extensions: Vec::new(),
+            exclude_dirs: Vec::new(),
+            strict: false,
+            strict_policies: Vec::new(),
+            format: SideInfoFormatArg::Markdown,
+            output: Some(output.clone()),
+        })
         .unwrap();
 
         let markdown = fs::read_to_string(&output).unwrap();
@@ -368,17 +382,17 @@ mod tests {
         let fixture = repo.join("examples").join("proof-fixture");
         let output = unique_temp_file("mdcrop-status-strict.md");
 
-        let result = run(
-            Some(fixture.join("src")),
-            None,
-            "Strict Status".to_string(),
-            vec!["md".to_string()],
-            Vec::new(),
-            true,
-            Vec::new(),
-            SideInfoFormatArg::Markdown,
-            Some(output.clone()),
-        );
+        let result = run(RunOptions {
+            root: Some(fixture.join("src")),
+            view: None,
+            title: "Strict Status".to_string(),
+            extensions: vec!["md".to_string()],
+            exclude_dirs: Vec::new(),
+            strict: true,
+            strict_policies: Vec::new(),
+            format: SideInfoFormatArg::Markdown,
+            output: Some(output.clone()),
+        });
 
         assert!(result
             .unwrap_err()
@@ -398,17 +412,17 @@ mod tests {
         fs::write(root.join("docs").join("one.md"), "# One\n\n[Two](two.md)\n").unwrap();
         fs::write(root.join("docs").join("two.md"), "# Two\n\n[One](one.md)\n").unwrap();
 
-        run(
-            Some(root.join("docs")),
-            None,
-            "Clean Status".to_string(),
-            vec!["md".to_string()],
-            Vec::new(),
-            true,
-            Vec::new(),
-            SideInfoFormatArg::Markdown,
-            None,
-        )
+        run(RunOptions {
+            root: Some(root.join("docs")),
+            view: None,
+            title: "Clean Status".to_string(),
+            extensions: vec!["md".to_string()],
+            exclude_dirs: Vec::new(),
+            strict: true,
+            strict_policies: Vec::new(),
+            format: SideInfoFormatArg::Markdown,
+            output: None,
+        })
         .unwrap();
 
         fs::remove_dir_all(root).unwrap();
@@ -422,17 +436,17 @@ mod tests {
         let fixture = repo.join("examples").join("proof-fixture");
         let output = unique_temp_file("mdcrop-status.json");
 
-        run(
-            Some(fixture.join("src")),
-            None,
-            "Fixture Status".to_string(),
-            vec!["md".to_string()],
-            Vec::new(),
-            false,
-            Vec::new(),
-            SideInfoFormatArg::Json,
-            Some(output.clone()),
-        )
+        run(RunOptions {
+            root: Some(fixture.join("src")),
+            view: None,
+            title: "Fixture Status".to_string(),
+            extensions: vec!["md".to_string()],
+            exclude_dirs: Vec::new(),
+            strict: false,
+            strict_policies: Vec::new(),
+            format: SideInfoFormatArg::Json,
+            output: Some(output.clone()),
+        })
         .unwrap();
 
         let json: serde_json::Value =
@@ -496,30 +510,30 @@ mod tests {
         fs::write(root.join("docs").join("two.md"), "# Two\n").unwrap();
         fs::write(root.join("docs").join("orphan.md"), "# Orphan\n").unwrap();
 
-        run(
-            Some(root.join("docs")),
-            None,
-            "Selected Policy".to_string(),
-            vec!["md".to_string()],
-            Vec::new(),
-            true,
-            vec![StatusStrictPolicyArg::BrokenLinks],
-            SideInfoFormatArg::Markdown,
-            None,
-        )
+        run(RunOptions {
+            root: Some(root.join("docs")),
+            view: None,
+            title: "Selected Policy".to_string(),
+            extensions: vec!["md".to_string()],
+            exclude_dirs: Vec::new(),
+            strict: true,
+            strict_policies: vec![StatusStrictPolicyArg::BrokenLinks],
+            format: SideInfoFormatArg::Markdown,
+            output: None,
+        })
         .unwrap();
 
-        let result = run(
-            Some(root.join("docs")),
-            None,
-            "Selected Policy".to_string(),
-            vec!["md".to_string()],
-            Vec::new(),
-            true,
-            vec![StatusStrictPolicyArg::OrphanPages],
-            SideInfoFormatArg::Markdown,
-            None,
-        );
+        let result = run(RunOptions {
+            root: Some(root.join("docs")),
+            view: None,
+            title: "Selected Policy".to_string(),
+            extensions: vec!["md".to_string()],
+            exclude_dirs: Vec::new(),
+            strict: true,
+            strict_policies: vec![StatusStrictPolicyArg::OrphanPages],
+            format: SideInfoFormatArg::Markdown,
+            output: None,
+        });
 
         assert!(result
             .unwrap_err()
@@ -531,17 +545,17 @@ mod tests {
 
     #[test]
     fn status_strict_policy_requires_strict_mode() {
-        let result = run(
-            Some(PathBuf::from("unused")),
-            None,
-            "Invalid Policy".to_string(),
-            vec!["md".to_string()],
-            Vec::new(),
-            false,
-            vec![StatusStrictPolicyArg::BrokenLinks],
-            SideInfoFormatArg::Markdown,
-            None,
-        );
+        let result = run(RunOptions {
+            root: Some(PathBuf::from("unused")),
+            view: None,
+            title: "Invalid Policy".to_string(),
+            extensions: vec!["md".to_string()],
+            exclude_dirs: Vec::new(),
+            strict: false,
+            strict_policies: vec![StatusStrictPolicyArg::BrokenLinks],
+            format: SideInfoFormatArg::Markdown,
+            output: None,
+        });
 
         assert!(result
             .unwrap_err()

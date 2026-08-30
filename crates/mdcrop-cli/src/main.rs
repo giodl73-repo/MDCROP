@@ -462,7 +462,7 @@ fn run_cli() -> Result<()> {
             strict_policies,
             format,
             output,
-        } => status::run(
+        } => status::run(status::RunOptions {
             root,
             view,
             title,
@@ -472,7 +472,7 @@ fn run_cli() -> Result<()> {
             strict_policies,
             format,
             output,
-        )?,
+        })?,
         Commands::Index {
             root,
             view,

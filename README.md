@@ -287,9 +287,10 @@ Checked example views live under `examples\views\`:
 | `docs-view.json` | MDCROP docs-only context. |
 | `whole-repo-view.json` | Full MDCROP repository architecture context. |
 | `troubleshooting-view.json` | Local debugging context for view, benchmark, and import failures. |
-| `maxim-computing-view.json` | Local `C:\src\maxim\computing` topic view. |
-| `maxim-tagged-computing-view.json` | Local `C:\src\maxim` frontmatter query view for tagged computing files. |
-| `resonance-theory-view.json` | Local `C:\src\resonance\guides\theory` research view. |
+
+Machine-local large-corpus recipes live under `examples\local-views\`. They are
+templates for workspaces that have those corpora at the documented paths, not
+members of the strict checked example store.
 
 Inspect a recipe before running a full mdcrop:
 

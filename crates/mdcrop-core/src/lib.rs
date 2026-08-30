@@ -644,6 +644,24 @@ pub fn shared_kernel_probe(seed: usize) -> (&'static str, SeedPart) {
     (RCTX_VERSION, SeedPart::Usize(seed))
 }
 
+fn unit_with_source(
+    id: &str,
+    source_id: &str,
+    text: &str,
+    relevance: f64,
+    token_estimate: usize,
+) -> EvidenceUnit {
+    EvidenceUnit {
+        id: id.to_string(),
+        source_id: source_id.to_string(),
+        content_hash: sha256_hex(text.as_bytes()),
+        text: text.to_string(),
+        metadata: BTreeMap::new(),
+        relevance,
+        token_estimate,
+    }
+}
+
 pub fn fixture_graph() -> EvidenceGraph {
     EvidenceGraph {
         units: vec![
@@ -5112,23 +5130,5 @@ mod tests {
             score: Some(score),
             token_estimate: Some(token_estimate),
         }
-    }
-}
-
-fn unit_with_source(
-    id: &str,
-    source_id: &str,
-    text: &str,
-    relevance: f64,
-    token_estimate: usize,
-) -> EvidenceUnit {
-    EvidenceUnit {
-        id: id.to_string(),
-        source_id: source_id.to_string(),
-        content_hash: sha256_hex(text.as_bytes()),
-        text: text.to_string(),
-        metadata: BTreeMap::new(),
-        relevance,
-        token_estimate,
     }
 }

@@ -37,21 +37,17 @@ Reusable examples live under `examples\views\`:
 | `docs-view.json` | `..\..\docs` | MDCROP documentation search and benchmark/view workflow context. |
 | `whole-repo-view.json` | `..\..` | Full repository context filtered to source, docs, manifests, and JSON examples. |
 | `troubleshooting-view.json` | `..\..` | Debugging failures across views, benchmarks, and competitor imports. |
-| `maxim-computing-view.json` | `C:\src\maxim\computing` | Local Maxim computing topic slice. |
-| `resonance-theory-view.json` | `C:\src\resonance\guides\theory` | Local Resonance theory slice. |
 
 Run any recipe directly:
 
 ```powershell
 cargo run -p mdcrop-cli -- view --file examples\views\whole-repo-view.json --query "prefix cache"
-cargo run -p mdcrop-cli -- view --file examples\views\maxim-computing-view.json -e md
 ```
 
 Inspect first when a view points at a large or optional corpus:
 
 ```powershell
 cargo run -p mdcrop-cli -- view --inspect --file examples\views\whole-repo-view.json -e md
-cargo run -p mdcrop-cli -- view --inspect --file examples\views\resonance-theory-view.json -e md -e tex
 cargo run -p mdcrop-cli -- view --inspect --dir examples\views
 cargo run -p mdcrop-cli -- view --inspect --dir examples\views --strict
 ```
@@ -69,6 +65,20 @@ non-zero when any recipe failed.
 Use the whole-repo and troubleshooting views as templates for `.mdcrop\views` in
 other repositories. Use the Maxim and Resonance examples as local large-corpus
 recipes; they require those sibling checkouts to exist at `C:\src`.
+
+## Local large-corpus recipes
+
+Machine-local recipes live under `examples\local-views\`:
+
+| File | Root | Purpose |
+|------|------|---------|
+| `maxim-computing-view.json` | `C:\src\maxim\computing` | Local Maxim computing topic slice. |
+| `maxim-tagged-computing-view.json` | `C:\src\maxim` | Local Maxim frontmatter query view for tagged computing files. |
+| `resonance-theory-view.json` | `C:\src\resonance\guides\theory` | Local Resonance theory slice. |
+
+Use these as templates or inspect them directly when the matching local corpus
+exists. They are intentionally outside `examples\views\` so the checked store can
+remain portable and pass `--strict` in CI.
 
 ## Maxim view candidates
 
