@@ -2,7 +2,7 @@
 
 ## MDCROP-PF-01: Context Pack Becomes Answer Authority
 
-**Status:** OPEN
+**Status:** MITIGATED
 
 **Pattern:** A selected MDCROP pack is treated as semantic closure or the final
 answer, even though it is a bounded evidence proposal.
@@ -32,18 +32,20 @@ consumer owner.
 **Detection difficulty:** Focused packs are useful and compact, so users may
 stop checking whether excluded evidence changes the answer.
 
-**Structural solution:** Keep context-boundary roles and benchmark metrics
-focused on evidence selection, not answer correctness.
+**Structural solution:** Keep context-boundary roles, README wording, and
+machine-readable pitfall boundaries focused on evidence selection, not answer
+correctness or permission to stop checking excluded evidence.
 
-**Evidence:** `.roles/parliament/context-boundary-cartographer.md`,
-`.roles/stakeholders/rag-builder.md`, `PRODUCT_PLAN.md`, and
+**Evidence:** `docs/specs/pitfall-boundaries.v1.json`, `.roles/ROLE.md`,
+`.roles/parliament/context-boundary-cartographer.md`,
+`.roles/stakeholders/rag-builder.md`, `README.md`, `PRODUCT_PLAN.md`, and
 `docs/BENCHMARKS.md`.
 
 **Test:** `cargo test -p mdcrop-core --test pitfall_policy`.
 
 ## MDCROP-PF-02: Fixture Win Becomes General Retrieval Superiority
 
-**Status:** OPEN
+**Status:** MITIGATED
 
 **Pattern:** MDCROP fixture and benchmark wins are generalized into broad
 retrieval superiority claims without real-corpus and competitor-method evidence.
@@ -73,16 +75,18 @@ research author.
 deterministic, so it can sound broader than its controlled setup.
 
 **Structural solution:** Require Retrieval Benchmark Skeptic review plus
-explicit fixture/real-corpus separation in claims.
+explicit fixture/real-corpus separation in claims and a machine-readable list
+of blocked benchmark overclaims.
 
-**Evidence:** `.roles/parliament/retrieval-benchmark-skeptic.md`,
+**Evidence:** `docs/specs/pitfall-boundaries.v1.json`,
+`.roles/parliament/retrieval-benchmark-skeptic.md`, `.roles/ROLE.md`,
 `docs/BENCHMARKS.md`, `examples/competitors/`, and `cargo test --workspace`.
 
 **Test:** `cargo test -p mdcrop-core --test pitfall_policy`.
 
 ## MDCROP-PF-03: Consumer Adoption Pin Becomes Compatibility Guarantee
 
-**Status:** OPEN
+**Status:** MITIGATED
 
 **Pattern:** PROOF, MAXIM, or another consumer's current MDCROP invocation is
 treated as a compatibility guarantee for future schema, CLI, or output changes.
@@ -113,10 +117,12 @@ affected consumer owner.
 their implied contract is broader than the tests actually rehearse.
 
 **Structural solution:** Require consumer-specific rehearsal before changing
-stable schema names, strict semantics, view behavior, or side-info reports.
+stable schema names, CLI command shape, strict semantics, view behavior, or
+side-info reports, and document that consumer pins are current evidence only.
 
-**Evidence:** `docs/specs/consumer-integration-options.md`,
-`docs/specs/proof-artifacts.md`, `.roles/stakeholders/proof-publisher.md`, and
+**Evidence:** `docs/specs/pitfall-boundaries.v1.json`,
+`docs/specs/consumer-integration-options.md`, `docs/specs/proof-artifacts.md`,
+`.roles/ROLE.md`, `.roles/stakeholders/proof-publisher.md`, and
 `.roles/parliament/view-contract-keeper.md`.
 
 **Test:** `cargo test -p mdcrop-core --test pitfall_policy`.

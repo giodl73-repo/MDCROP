@@ -43,3 +43,20 @@ Consumer lenses for deciding whether MDCROP serves real downstream uses.
 | `stakeholders/proof-publisher.md` | PROOF Publisher | Generated docs and artifact inventories stay publishable |
 | `stakeholders/future-agent.md` | Future Agent | Named views and reports make handoff/resume work easy |
 
+---
+
+## PITFALL gate routing
+
+Invoke the Context Boundary Cartographer before any generated pack, README
+example, benchmark report, PROOF artifact, or downstream prompt treats MDCROP
+output as semantic closure, final answer authority, whole-corpus coverage,
+counterexample absence, a downstream decision, or permission for an agent to
+stop checking excluded evidence.
+
+Invoke the Retrieval Benchmark Skeptic before any fixture result is used for a
+broad retrieval, RAG, competitor-superiority, customer-ready, real-corpus, or
+hosted-service performance claim.
+
+Invoke the View Contract Keeper before stable schema names, CLI command shape,
+side-info output contracts, strict semantics, or view behavior relied on by
+PROOF, MAXIM, or another consumer are changed.

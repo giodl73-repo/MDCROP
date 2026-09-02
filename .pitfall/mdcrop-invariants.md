@@ -69,3 +69,21 @@ denied.
 debt that ordinary tests can miss.
 
 **Test:** `cargo clippy --workspace --all-targets -- -D warnings`.
+
+## MDCROP-I-06: Context, Benchmark, And Consumer Boundaries Are Machine-Readable
+
+**Claim:** MDCROP keeps context-pack authority, benchmark claim boundaries, and
+consumer compatibility limits in a machine-readable spec that is also routed
+through roles, public docs, and pitfall tests.
+
+**Status:** VERIFIED
+
+**Why it matters:** Context-selection tools fail when useful packs, fixture
+wins, or consumer pins are treated as answer truth, retrieval science, or
+future compatibility guarantees.
+
+**Evidence:** `docs/specs/pitfall-boundaries.v1.json`, `.roles/ROLE.md`,
+`README.md`, `docs/BENCHMARKS.md`, `docs/specs/consumer-integration-options.md`,
+and `crates/mdcrop-core/tests/pitfall_policy.rs`.
+
+**Test:** `cargo test -p mdcrop-core --test pitfall_policy`.

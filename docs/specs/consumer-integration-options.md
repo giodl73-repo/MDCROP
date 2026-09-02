@@ -19,6 +19,10 @@ insufficient.
   behavior should be expressed as view files, manifests, or documented adapters.
 - JSON outputs are the stable machine-readable contracts. Markdown outputs are
   generated status/README conveniences over the same reports.
+- A working PROOF, MAXIM, or other consumer invocation is evidence for that
+  pinned version and command shape only. It is not a future compatibility
+  guarantee for schema, CLI, side-info, strict-semantics, or view-behavior
+  changes without consumer-specific rehearsal.
 
 ## Generic surfaces
 

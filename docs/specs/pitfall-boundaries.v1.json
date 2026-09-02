@@ -1,0 +1,95 @@
+{
+  "$schema": "mdcrop.pitfall-boundaries.v1",
+  "owner": "MDCROP maintainer",
+  "purpose": "Machine-readable boundaries for context-pack authority, benchmark claims, and consumer compatibility.",
+  "authority": {
+    "context_pack": "bounded evidence proposal with provenance and excluded-boundary risk",
+    "answer_authority": "downstream agent, reader, or owner after inspecting excluded evidence and task-specific sources",
+    "fixture_benchmark": "deterministic local comparison over labeled fixture cases",
+    "retrieval_superiority": "requires real-corpus and competitor-method evidence beyond fixtures",
+    "consumer_invocation": "current adopter proof for a named version and command shape",
+    "compatibility_guarantee": "requires consumer-specific rehearsal before stable schema, CLI, side-info, strict semantics, or view changes"
+  },
+  "pitfall_boundaries": [
+    {
+      "entryId": "MDCROP-PF-01",
+      "requiredOwner": "Context Boundary Cartographer",
+      "sourceLayer": "CLI view output, generated packs, README examples, benchmark reports, PROOF artifacts, and downstream prompt/context handoffs",
+      "maySupport": [
+        "bounded evidence proposal",
+        "source-provenance handoff",
+        "bridge-evidence discovery",
+        "excluded-context review trigger"
+      ],
+      "blockedClaims": [
+        "semantic closure",
+        "final answer authority",
+        "whole-corpus coverage",
+        "counterexample absence",
+        "downstream decision",
+        "agent may stop checking"
+      ],
+      "requiredEvidence": [
+        "source IDs",
+        "scores",
+        "boundary reasons",
+        "excluded evidence review",
+        "bridge recall or source coverage when claiming better task context"
+      ]
+    },
+    {
+      "entryId": "MDCROP-PF-02",
+      "requiredOwner": "Retrieval Benchmark Skeptic",
+      "sourceLayer": "fixture evaluations, competitor imports, generated benchmark output, paper evidence, README claims, and customer positioning",
+      "maySupport": [
+        "fixture-quality comparison",
+        "controlled bridge/noise behavior",
+        "local deterministic scorer regression",
+        "benchmark-hypothesis generation"
+      ],
+      "blockedClaims": [
+        "broad retrieval superiority",
+        "RAG superiority",
+        "competitor superiority",
+        "customer-ready retrieval science",
+        "real-corpus generalization",
+        "hosted-service performance claim"
+      ],
+      "requiredEvidence": [
+        "same corpus",
+        "same task",
+        "same budget",
+        "same labels",
+        "real-corpus benchmark for real-corpus claims",
+        "competitor-method export for competitor claims"
+      ]
+    },
+    {
+      "entryId": "MDCROP-PF-03",
+      "requiredOwner": "View Contract Keeper",
+      "sourceLayer": "PROOF, MAXIM, or other current consumer invocation",
+      "maySupport": [
+        "named adopter evidence for pinned version",
+        "current command-shape compatibility",
+        "consumer-specific rehearsal target",
+        "release-risk trigger"
+      ],
+      "blockedClaims": [
+        "future compatibility guarantee",
+        "all-consumer compatibility",
+        "schema-change safety",
+        "CLI-change safety",
+        "strict-semantics-change safety",
+        "view-behavior-change safety"
+      ],
+      "requiredEvidence": [
+        "consumer-specific rehearsal",
+        "stable schema name",
+        "CLI command shape",
+        "side-info output contract",
+        "strict semantics",
+        "view behavior"
+      ]
+    }
+  ]
+}

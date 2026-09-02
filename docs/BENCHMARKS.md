@@ -10,6 +10,9 @@ The benchmark suite has two layers:
 
 Use fixture results to make quality claims. Use real-corpus benchmark results to
 track local performance and context-shaping behavior on actual data.
+Fixture wins do not prove broad retrieval, RAG, competitor, customer-ready,
+real-corpus, or hosted-service superiority without matching real-corpus and
+competitor-method evidence.
 
 ## Fair comparison rules
 

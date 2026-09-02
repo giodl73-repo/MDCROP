@@ -26,6 +26,32 @@ fn open_pitfalls_remain_user_and_consumer_facing() {
         "Consumer Adoption Pin Becomes Compatibility Guarantee",
     );
 
+    let boundary_manifest = repo_text("docs/specs/pitfall-boundaries.v1.json");
+    for required in [
+        "MDCROP-PF-01",
+        "MDCROP-PF-02",
+        "MDCROP-PF-03",
+        "final answer authority",
+        "agent may stop checking",
+        "broad retrieval superiority",
+        "real-corpus benchmark for real-corpus claims",
+        "future compatibility guarantee",
+        "consumer-specific rehearsal",
+    ] {
+        assert_contains(&boundary_manifest, required);
+    }
+
+    let roles = repo_text(".roles/ROLE.md");
+    for required in [
+        "Context Boundary Cartographer",
+        "Retrieval Benchmark Skeptic",
+        "View Contract Keeper",
+        "permission for an agent to",
+        "stop checking excluded evidence",
+    ] {
+        assert_contains(&roles, required);
+    }
+
     let product_plan = repo_text("PRODUCT_PLAN.md");
     assert_contains(&product_plan, "evidence graph");
     assert_contains(&product_plan, "context pack for a task");
@@ -34,10 +60,12 @@ fn open_pitfalls_remain_user_and_consumer_facing() {
     let benchmarks = repo_text("docs/BENCHMARKS.md");
     assert_contains(&benchmarks, "fixture");
     assert_contains(&benchmarks, "competitor");
+    assert_contains(&benchmarks, "Fixture wins do not prove broad retrieval");
 
     let consumer_options = repo_text("docs/specs/consumer-integration-options.md");
     assert_contains(&consumer_options, "consumer");
     assert_contains(&consumer_options, "MDCROP");
+    assert_contains(&consumer_options, "not a future compatibility");
 
     let proof_artifacts = repo_text("docs/specs/proof-artifacts.md");
     assert_contains(&proof_artifacts, "PROOF");

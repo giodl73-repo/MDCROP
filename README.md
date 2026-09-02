@@ -43,6 +43,9 @@ Sources → FLETCH → MDCROP → LATTICE → WITNESS
 
 MDCROP proposes the bounded candidate context. It does not fetch sources,
 guarantee semantic closure, or control an agent harness.
+Context packs are bounded evidence proposals, not final answer authority; an
+agent or reader must still inspect excluded evidence, bridge paths, provenance,
+and task-specific counterexamples before answering.
 
 MDCROP trims Markdown evidence into focused, provenance-aware context packs from
 repos, notes, issues, chats, and document corpora. Most RAG systems retrieve chunks;
@@ -157,7 +160,9 @@ PROOF is the reference adopter. Its
 pins MDCROP 0.2.0 at an immutable revision, while PROOF's integration suite
 launches the real sibling `mdcrop` binary and verifies generated index and
 frontmatter outputs. Compatibility changes therefore require both MDCROP
-goldens and PROOF's consumer-owned adapter proof to pass.
+goldens and PROOF's consumer-owned adapter proof to pass. Consumer pins prove a
+named version and command shape, not future compatibility for schema, CLI,
+side-info, strict-semantic, or view-behavior changes.
 
 ### Maturity improvement: prove existing downstream use
 
