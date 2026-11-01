@@ -5,3 +5,9 @@ target/
 *.log
 examples/bench-fixtures/out/
 
+/dist/
+/.cache/
+/node_modules/
+/test-results/
+/playwright-report/
+

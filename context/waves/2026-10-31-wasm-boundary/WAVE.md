@@ -5,8 +5,8 @@ This wave starts with a portability/scope decision, not a public demo.
 
 | Pulse | Scope | Status |
 |---|---|---|
-| 01 | Inspect kernel/dependencies, compile probe and accept public fixture boundary | locally complete; hosted validation pending |
-| 02 | Implement bounded worker/reader task and qualify Pages release | proposed, not executed |
+| 01 | Inspect kernel/dependencies, compile probe and accept public fixture boundary | complete; PR #19 and main Windows/Linux CI passed |
+| 02 | Implement bounded worker/reader task and qualify Pages release | locally qualified; hosted/live checks follow publication; see pulses/pulse-02.md |
 
 Pulse 01 scout: inspect `fixture_graph`, `mdcrop_context`, locked dependency tree,
 native ingestion/benchmark entry points, roles and existing synthetic evaluation

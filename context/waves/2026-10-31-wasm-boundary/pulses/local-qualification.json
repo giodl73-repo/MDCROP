@@ -1,0 +1,180 @@
+{
+  "stage": "dirty precommit local preview, not deployed release pins",
+  "native_tests": 65,
+  "retained_probe_tests": 4,
+  "native_wasm_matrix_pairs": 1024,
+  "representative_invalid_requests": 28,
+  "browser_stats": {
+    "startTime": "2026-11-01T14:43:52.811Z",
+    "duration": 22092.576,
+    "expected": 22,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "retries": 0,
+  "preview_inventory": {
+    "commit": "c4557f7485615d0701241f3c91fd49cfd4b0783b",
+    "dirty": true,
+    "bytes": 1687813,
+    "files": {
+      ".nojekyll": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "app.js": {
+        "bytes": 8479,
+        "sha256": "2fe4ace5edbb4975a486afa7f8ab455dcb25552b15ee9f9f970afb18cfbc4095"
+      },
+      "BUILD.md": {
+        "bytes": 3592,
+        "sha256": "d0d5a7c31faa332dd526828dcaa2798efbeacf321fd7754a864d61782ab96086"
+      },
+      "fixture.json": {
+        "bytes": 1001,
+        "sha256": "4777329089359d66584bb037038c6b5b46e61d118789110173d2a7d587dc4b2a"
+      },
+      "index.html": {
+        "bytes": 7426,
+        "sha256": "96aee357e75c00b555a251c303ac189f53313a9b1103d53119cb979ee9a3a4da"
+      },
+      "LICENSE": {
+        "bytes": 1094,
+        "sha256": "a33382ab2e3ff573aff888bbb45756043e077d4c75d38cf6a7ecf4cd05906109"
+      },
+      "pkg/mdcrop_web.d.ts": {
+        "bytes": 1509,
+        "sha256": "1465cbe1f31177d8595e794db881b488f03b7767e803e0fdd953f92abd5a9698"
+      },
+      "pkg/mdcrop_web.js": {
+        "bytes": 6841,
+        "sha256": "85bee40c2d95550d373775899e374caebeca7671f4d08dda8051e192f1dc0cc3"
+      },
+      "pkg/mdcrop_web_bg.wasm": {
+        "bytes": 222988,
+        "sha256": "eafb6670b7ae7ce3c7c6897e490e99e49a51b0a8166c770c4ba9a1719247bb69"
+      },
+      "pkg/mdcrop_web_bg.wasm.d.ts": {
+        "bytes": 475,
+        "sha256": "b92681e58701216f91b4b565f8ea1e3732d3e3ddd3bda3216fce471cd11b9040"
+      },
+      "provenance.json": {
+        "bytes": 9430,
+        "sha256": "e9713028f8f931636713633e869fe975eeeb9ea8ba1bb6877580bdab2b096c83"
+      },
+      "rust/COPYRIGHT-library.html": {
+        "bytes": 425661,
+        "sha256": "90567e2718bf7fd65a71a3a43c5596488e80e5f51ed02bfea6fec54458b5f3d1"
+      },
+      "rust/licenses/Apache-2.0.txt": {
+        "bytes": 10280,
+        "sha256": "074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff"
+      },
+      "rust/licenses/BSD-2-Clause.txt": {
+        "bytes": 1267,
+        "sha256": "f32fb3b417a194167cfad068223fc975ba96c5960513a10f66a3c28720aec1df"
+      },
+      "rust/licenses/CC-BY-SA-4.0.txt": {
+        "bytes": 20137,
+        "sha256": "23ee78c8bae49cf08ea2f0c84945c66b987ebe4520881fb51b3dad4fb43d07c2"
+      },
+      "rust/licenses/GCC-exception-3.1.txt": {
+        "bytes": 3320,
+        "sha256": "a3966c9410ef94a1efbfa9ec04e9c1994026a70623fbf0885ce36737bfba3b54"
+      },
+      "rust/licenses/GPL-2.0-only.txt": {
+        "bytes": 17642,
+        "sha256": "54b212ba1f97f6948fa5486239ab505dd820b02e50cbfd296b4062c8609a70af"
+      },
+      "rust/licenses/GPL-3.0-or-later.txt": {
+        "bytes": 34795,
+        "sha256": "05315fce6c35f79b8a35454828995fa26336f235895ac64557abc028f4ffcea2"
+      },
+      "rust/licenses/ISC.txt": {
+        "bytes": 730,
+        "sha256": "0ff61769b238634e042ab759dddfd104a8e69d091e3600ae3410e401a6164381"
+      },
+      "rust/licenses/LLVM-exception.txt": {
+        "bytes": 919,
+        "sha256": "e34c58338bd89d43e709e226610d8f32b3e3c47f4ad9a99a8dc1d4ac7842488e"
+      },
+      "rust/licenses/MIT.txt": {
+        "bytes": 1078,
+        "sha256": "b85dcd3e453d05982552c52b5fc9e0bdd6d23c6f8e844b984a88af32570b0cc0"
+      },
+      "rust/licenses/NCSA.txt": {
+        "bytes": 1676,
+        "sha256": "39cb0234065c92b9e6cee3830cbb52b1aa289aa8fe9ba2e66730fec5cf05c630"
+      },
+      "rust/licenses/OFL-1.1.txt": {
+        "bytes": 4016,
+        "sha256": "8eea8287e5876b539670cadb82e99f9a7afddec6f6730811be1daf25d2e9bcfd"
+      },
+      "rust/licenses/Unicode-3.0.txt": {
+        "bytes": 1995,
+        "sha256": "f5062c9a188d81dfe66b56db4182dcf9e4b17c0d9b0d311a8e20b3a1b075c443"
+      },
+      "rust/README.md": {
+        "bytes": 756,
+        "sha256": "d2b8c7d079a416718baa41928b2698283b568ee930d6491498ce42e3c8e38abc"
+      },
+      "source/Cargo.lock": {
+        "bytes": 16477,
+        "sha256": "411c35fcf433a881f7a11495bab99c4d6428e58275afde5076b814ba1d66482c"
+      },
+      "source/crates/mdcrop-core/src/lib.rs": {
+        "bytes": 177801,
+        "sha256": "045231340040e74b075be0def7e87d5a33576dc4427b034633ee8ac467909efd"
+      },
+      "source/crates/mdcrop-web/src/lib.rs": {
+        "bytes": 6910,
+        "sha256": "1b350c62e18ed20e091206473528c3b7b82bef1d38220afe815526f9d956eaec"
+      },
+      "source.zip": {
+        "bytes": 239947,
+        "sha256": "121f83a764e1e4d18014f37c200daeab4a94d5a1b18dc0d6dff00b679cdfb824"
+      },
+      "style.css": {
+        "bytes": 4984,
+        "sha256": "c52c7e9e6d0d6fc15b09bfb02339923204d9d1bb5ecf9fee74a4e15238e81094"
+      },
+      "THIRD-PARTY-NOTICES.txt": {
+        "bytes": 454068,
+        "sha256": "57c0cb8bede1aba9d9e88de5805b72facfffd2b6f562f1ef3a898cc734871d8d"
+      },
+      "worker.js": {
+        "bytes": 519,
+        "sha256": "443b83dfc48da1aff1ac1a10c9eb11127574ab3c82176e5d03fbb1bb259f1338"
+      }
+    }
+  },
+  "git_sources_preserved": [
+    "git+https://github.com/giodl73-repo/MDPATH.git?branch=master#4f79f8764c2b8b73d3771a87f36a990be30dc536",
+    "git+https://github.com/giodl73-repo/MDPORT?rev=86da46bfe78bd43fa5dd075dd1bb63344a624072#86da46bfe78bd43fa5dd075dd1bb63344a624072",
+    "git+https://github.com/giodl73-repo/RLINE.git?branch=master#7a612a3be30e398590787f64cfae097e865ff4b8",
+    "git+https://github.com/giodl73-repo/SLICE?rev=ffa956cf8704cae5086af676c9044ae10a9a9b15#ffa956cf8704cae5086af676c9044ae10a9a9b15"
+  ],
+  "observations": {
+    "desktop": {
+      "browser": "149.0.7827.55",
+      "viewport": {
+        "width": 1365,
+        "height": 900
+      },
+      "readiness_ms": 138,
+      "fixture_units": 4,
+      "scope": "One startup including network/worker/UI; not Rust CPU, retrieval or large-corpus benchmark"
+    },
+    "mobile": {
+      "browser": "149.0.7827.55",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "readiness_ms": 112,
+      "fixture_units": 4,
+      "scope": "One startup including network/worker/UI; not Rust CPU, retrieval or large-corpus benchmark"
+    }
+  },
+  "boundary": "Fixed synthetic fixture; no closure, source trust, CPU, large-corpus, retrieval or downstream acceptance claim"
+}
