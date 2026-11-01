@@ -39,3 +39,10 @@ is fixed; no arbitrary disconnected graph input or corpus is admitted.
 `local-qualification.json` records preview measurements explicitly as dirty/local,
 not final release byte pins. Core/CLI source and the four upstream Git revisions
 are unchanged. Producer role review lives in `docs/reviews/wasm-explorer.md`.
+
+The first published release passed all 22 live cases, 1,024 matrix pairs and
+32 exact file checks. Live visual review then found cramped download labels at
+390 px despite the overflow assertion passing. A CSS-only follow-up gives result
+download actions full-width rows on narrow screens. The same 22 local cases pass
+and the corrected screenshot was inspected; final hosted/live custody follows
+this correction. Selection/admission/worker code and dependency pins are unchanged.
