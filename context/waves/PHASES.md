@@ -2,7 +2,9 @@
 
 ## Active wave
 
-None. Start the next wave when a new product slice is selected.
+`2026-10-31-wasm-boundary` — qualify a bounded public fixture and portable
+selection boundary before implementing a browser experience. Pulse 01 is the
+scope/compile decision; Pulse 02 remains proposed.
 
 ## Completed waves
 

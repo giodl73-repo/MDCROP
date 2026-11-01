@@ -7,6 +7,20 @@ on:
     branches: [main]
 
 jobs:
+  wasm-boundary:
+    name: WASM boundary probe
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@1.95.0
+        with:
+          components: rustfmt
+          targets: wasm32-unknown-unknown
+      - name: Validate standalone scout
+        run: |
+          cargo fmt --manifest-path tools/wasm-probe/Cargo.toml --check
+          cargo test --locked --manifest-path tools/wasm-probe/Cargo.toml
+          cargo build --locked --manifest-path tools/wasm-probe/Cargo.toml --lib --release --target wasm32-unknown-unknown
   rust:
     name: Rust
     runs-on: windows-latest
