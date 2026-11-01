@@ -1,0 +1,772 @@
+{
+  "cases": [
+    {
+      "budget": 80,
+      "response": {
+        "ok": true,
+        "over_budget": false,
+        "pack": {
+          "boundary_conductance": 1.0,
+          "boundary_cut_edges": 2,
+          "quality_score": 0.8,
+          "relevance_mean": 1.0,
+          "representative_unit_id": "task-seed",
+          "token_estimate": 80,
+          "units": [
+            {
+              "content_hash": "sha256:8bd7c7c7ca49e39068e157dd040589f22513447235c2227fa6184493db59181e",
+              "id": "task-seed",
+              "metadata": {},
+              "reason": "Seed",
+              "relevance": 1.0,
+              "source_id": "fixture:task",
+              "text": "Explain the target note.",
+              "token_estimate": 80
+            }
+          ]
+        }
+      },
+      "seed": 0
+    },
+    {
+      "budget": 120,
+      "response": {
+        "ok": true,
+        "over_budget": false,
+        "pack": {
+          "boundary_conductance": 0.3333333333333333,
+          "boundary_cut_edges": 1,
+          "quality_score": 0.8933333333333333,
+          "relevance_mean": 0.95,
+          "representative_unit_id": "task-seed",
+          "token_estimate": 120,
+          "units": [
+            {
+              "content_hash": "sha256:8bd7c7c7ca49e39068e157dd040589f22513447235c2227fa6184493db59181e",
+              "id": "task-seed",
+              "metadata": {},
+              "reason": "Seed",
+              "relevance": 1.0,
+              "source_id": "fixture:task",
+              "text": "Explain the target note.",
+              "token_estimate": 80
+            },
+            {
+              "content_hash": "sha256:b95f077b333791feebb1c5e490769194b77a5c1afb40898a8049a44f21ebb7f2",
+              "id": "stale-noise",
+              "metadata": {},
+              "reason": "RelevantNeighbor",
+              "relevance": 0.9,
+              "source_id": "fixture:old",
+              "text": "Old noisy note that should stay outside the mdcrop.",
+              "token_estimate": 40
+            }
+          ]
+        }
+      },
+      "seed": 0
+    },
+    {
+      "budget": 160,
+      "response": {
+        "ok": true,
+        "over_budget": false,
+        "pack": {
+          "boundary_conductance": 1.0,
+          "boundary_cut_edges": 1,
+          "quality_score": 0.5733333333333334,
+          "relevance_mean": 0.7166666666666667,
+          "representative_unit_id": "bridge-note",
+          "token_estimate": 160,
+          "units": [
+            {
+              "content_hash": "sha256:8bd7c7c7ca49e39068e157dd040589f22513447235c2227fa6184493db59181e",
+              "id": "task-seed",
+              "metadata": {},
+              "reason": "Seed",
+              "relevance": 1.0,
+              "source_id": "fixture:task",
+              "text": "Explain the target note.",
+              "token_estimate": 80
+            },
+            {
+              "content_hash": "sha256:8d3d602a50df0730fa363f983d3279170f3a99f96469aa92ca9c3cea26c860f5",
+              "id": "bridge-note",
+              "metadata": {},
+              "reason": "BridgeConnector",
+              "relevance": 0.2,
+              "source_id": "fixture:note",
+              "text": "Bridge note connecting the task to the target evidence.",
+              "token_estimate": 40
+            },
+            {
+              "content_hash": "sha256:cfc460ad4b14ac7fd81fd99510b1149b16659bffb6874ab4ea5e56f7a5222552",
+              "id": "target-note",
+              "metadata": {},
+              "reason": "ConnectorTarget",
+              "relevance": 0.95,
+              "source_id": "fixture:target",
+              "text": "Target note with the answer evidence.",
+              "token_estimate": 40
+            }
+          ]
+        }
+      },
+      "seed": 0
+    },
+    {
+      "budget": 200,
+      "response": {
+        "ok": true,
+        "over_budget": false,
+        "pack": {
+          "boundary_conductance": 0.0,
+          "boundary_cut_edges": 0,
+          "quality_score": 0.81,
+          "relevance_mean": 0.7625,
+          "representative_unit_id": "task-seed",
+          "token_estimate": 200,
+          "units": [
+            {
+              "content_hash": "sha256:8bd7c7c7ca49e39068e157dd040589f22513447235c2227fa6184493db59181e",
+              "id": "task-seed",
+              "metadata": {},
+              "reason": "Seed",
+              "relevance": 1.0,
+              "source_id": "fixture:task",
+              "text": "Explain the target note.",
+              "token_estimate": 80
+            },
+            {
+              "content_hash": "sha256:8d3d602a50df0730fa363f983d3279170f3a99f96469aa92ca9c3cea26c860f5",
+              "id": "bridge-note",
+              "metadata": {},
+              "reason": "BridgeConnector",
+              "relevance": 0.2,
+              "source_id": "fixture:note",
+              "text": "Bridge note connecting the task to the target evidence.",
+              "token_estimate": 40
+            },
+            {
+              "content_hash": "sha256:cfc460ad4b14ac7fd81fd99510b1149b16659bffb6874ab4ea5e56f7a5222552",
+              "id": "target-note",
+              "metadata": {},
+              "reason": "ConnectorTarget",
+              "relevance": 0.95,
+              "source_id": "fixture:target",
+              "text": "Target note with the answer evidence.",
+              "token_estimate": 40
+            },
+            {
+              "content_hash": "sha256:b95f077b333791feebb1c5e490769194b77a5c1afb40898a8049a44f21ebb7f2",
+              "id": "stale-noise",
+              "metadata": {},
+              "reason": "RelevantNeighbor",
+              "relevance": 0.9,
+              "source_id": "fixture:old",
+              "text": "Old noisy note that should stay outside the mdcrop.",
+              "token_estimate": 40
+            }
+          ]
+        }
+      },
+      "seed": 0
+    },
+    {
+      "budget": 80,
+      "response": {
+        "ok": true,
+        "over_budget": false,
+        "pack": {
+          "boundary_conductance": 0.3333333333333333,
+          "boundary_cut_edges": 1,
+          "quality_score": 0.5933333333333333,
+          "relevance_mean": 0.575,
+          "representative_unit_id": "bridge-note",
+          "token_estimate": 80,
+          "units": [
+            {
+              "content_hash": "sha256:8d3d602a50df0730fa363f983d3279170f3a99f96469aa92ca9c3cea26c860f5",
+              "id": "bridge-note",
+              "metadata": {},
+              "reason": "Seed",
+              "relevance": 0.2,
+              "source_id": "fixture:note",
+              "text": "Bridge note connecting the task to the target evidence.",
+              "token_estimate": 40
+            },
+            {
+              "content_hash": "sha256:cfc460ad4b14ac7fd81fd99510b1149b16659bffb6874ab4ea5e56f7a5222552",
+              "id": "target-note",
+              "metadata": {},
+              "reason": "RelevantNeighbor",
+              "relevance": 0.95,
+              "source_id": "fixture:target",
+              "text": "Target note with the answer evidence.",
+              "token_estimate": 40
+            }
+          ]
+        }
+      },
+      "seed": 1
+    },
+    {
+      "budget": 120,
+      "response": {
+        "ok": true,
+        "over_budget": false,
+        "pack": {
+          "boundary_conductance": 1.0,
+          "boundary_cut_edges": 2,
+          "quality_score": 0.48,
+          "relevance_mean": 0.6,
+          "representative_unit_id": "task-seed",
+          "token_estimate": 120,
+          "units": [
+            {
+              "content_hash": "sha256:8bd7c7c7ca49e39068e157dd040589f22513447235c2227fa6184493db59181e",
+              "id": "task-seed",
+              "metadata": {},
+              "reason": "ConnectorTarget",
+              "relevance": 1.0,
+              "source_id": "fixture:task",
+              "text": "Explain the target note.",
+              "token_estimate": 80
+            },
+            {
+              "content_hash": "sha256:8d3d602a50df0730fa363f983d3279170f3a99f96469aa92ca9c3cea26c860f5",
+              "id": "bridge-note",
+              "metadata": {},
+              "reason": "Seed",
+              "relevance": 0.2,
+              "source_id": "fixture:note",
+              "text": "Bridge note connecting the task to the target evidence.",
+              "token_estimate": 40
+            }
+          ]
+        }
+      },
+      "seed": 1
+    },
+    {
+      "budget": 160,
+      "response": {
+        "ok": true,
+        "over_budget": false,
+        "pack": {
+          "boundary_conductance": 1.0,
+          "boundary_cut_edges": 1,
+          "quality_score": 0.5733333333333334,
+          "relevance_mean": 0.7166666666666667,
+          "representative_unit_id": "bridge-note",
+          "token_estimate": 160,
+          "units": [
+            {
+              "content_hash": "sha256:8bd7c7c7ca49e39068e157dd040589f22513447235c2227fa6184493db59181e",
+              "id": "task-seed",
+              "metadata": {},
+              "reason": "ConnectorTarget",
+              "relevance": 1.0,
+              "source_id": "fixture:task",
+              "text": "Explain the target note.",
+              "token_estimate": 80
+            },
+            {
+              "content_hash": "sha256:8d3d602a50df0730fa363f983d3279170f3a99f96469aa92ca9c3cea26c860f5",
+              "id": "bridge-note",
+              "metadata": {},
+              "reason": "Seed",
+              "relevance": 0.2,
+              "source_id": "fixture:note",
+              "text": "Bridge note connecting the task to the target evidence.",
+              "token_estimate": 40
+            },
+            {
+              "content_hash": "sha256:cfc460ad4b14ac7fd81fd99510b1149b16659bffb6874ab4ea5e56f7a5222552",
+              "id": "target-note",
+              "metadata": {},
+              "reason": "RelevantNeighbor",
+              "relevance": 0.95,
+              "source_id": "fixture:target",
+              "text": "Target note with the answer evidence.",
+              "token_estimate": 40
+            }
+          ]
+        }
+      },
+      "seed": 1
+    },
+    {
+      "budget": 200,
+      "response": {
+        "ok": true,
+        "over_budget": false,
+        "pack": {
+          "boundary_conductance": 1.0,
+          "boundary_cut_edges": 1,
+          "quality_score": 0.5733333333333334,
+          "relevance_mean": 0.7166666666666667,
+          "representative_unit_id": "bridge-note",
+          "token_estimate": 160,
+          "units": [
+            {
+              "content_hash": "sha256:8bd7c7c7ca49e39068e157dd040589f22513447235c2227fa6184493db59181e",
+              "id": "task-seed",
+              "metadata": {},
+              "reason": "ConnectorTarget",
+              "relevance": 1.0,
+              "source_id": "fixture:task",
+              "text": "Explain the target note.",
+              "token_estimate": 80
+            },
+            {
+              "content_hash": "sha256:8d3d602a50df0730fa363f983d3279170f3a99f96469aa92ca9c3cea26c860f5",
+              "id": "bridge-note",
+              "metadata": {},
+              "reason": "Seed",
+              "relevance": 0.2,
+              "source_id": "fixture:note",
+              "text": "Bridge note connecting the task to the target evidence.",
+              "token_estimate": 40
+            },
+            {
+              "content_hash": "sha256:cfc460ad4b14ac7fd81fd99510b1149b16659bffb6874ab4ea5e56f7a5222552",
+              "id": "target-note",
+              "metadata": {},
+              "reason": "RelevantNeighbor",
+              "relevance": 0.95,
+              "source_id": "fixture:target",
+              "text": "Target note with the answer evidence.",
+              "token_estimate": 40
+            }
+          ]
+        }
+      },
+      "seed": 1
+    },
+    {
+      "budget": 80,
+      "response": {
+        "ok": true,
+        "over_budget": false,
+        "pack": {
+          "boundary_conductance": 0.3333333333333333,
+          "boundary_cut_edges": 1,
+          "quality_score": 0.5933333333333333,
+          "relevance_mean": 0.575,
+          "representative_unit_id": "bridge-note",
+          "token_estimate": 80,
+          "units": [
+            {
+              "content_hash": "sha256:8d3d602a50df0730fa363f983d3279170f3a99f96469aa92ca9c3cea26c860f5",
+              "id": "bridge-note",
+              "metadata": {},
+              "reason": "RelevantNeighbor",
+              "relevance": 0.2,
+              "source_id": "fixture:note",
+              "text": "Bridge note connecting the task to the target evidence.",
+              "token_estimate": 40
+            },
+            {
+              "content_hash": "sha256:cfc460ad4b14ac7fd81fd99510b1149b16659bffb6874ab4ea5e56f7a5222552",
+              "id": "target-note",
+              "metadata": {},
+              "reason": "Seed",
+              "relevance": 0.95,
+              "source_id": "fixture:target",
+              "text": "Target note with the answer evidence.",
+              "token_estimate": 40
+            }
+          ]
+        }
+      },
+      "seed": 2
+    },
+    {
+      "budget": 120,
+      "response": {
+        "ok": true,
+        "over_budget": false,
+        "pack": {
+          "boundary_conductance": 0.3333333333333333,
+          "boundary_cut_edges": 1,
+          "quality_score": 0.5933333333333333,
+          "relevance_mean": 0.575,
+          "representative_unit_id": "bridge-note",
+          "token_estimate": 80,
+          "units": [
+            {
+              "content_hash": "sha256:8d3d602a50df0730fa363f983d3279170f3a99f96469aa92ca9c3cea26c860f5",
+              "id": "bridge-note",
+              "metadata": {},
+              "reason": "RelevantNeighbor",
+              "relevance": 0.2,
+              "source_id": "fixture:note",
+              "text": "Bridge note connecting the task to the target evidence.",
+              "token_estimate": 40
+            },
+            {
+              "content_hash": "sha256:cfc460ad4b14ac7fd81fd99510b1149b16659bffb6874ab4ea5e56f7a5222552",
+              "id": "target-note",
+              "metadata": {},
+              "reason": "Seed",
+              "relevance": 0.95,
+              "source_id": "fixture:target",
+              "text": "Target note with the answer evidence.",
+              "token_estimate": 40
+            }
+          ]
+        }
+      },
+      "seed": 2
+    },
+    {
+      "budget": 160,
+      "response": {
+        "ok": true,
+        "over_budget": false,
+        "pack": {
+          "boundary_conductance": 1.0,
+          "boundary_cut_edges": 1,
+          "quality_score": 0.5733333333333334,
+          "relevance_mean": 0.7166666666666667,
+          "representative_unit_id": "bridge-note",
+          "token_estimate": 160,
+          "units": [
+            {
+              "content_hash": "sha256:8bd7c7c7ca49e39068e157dd040589f22513447235c2227fa6184493db59181e",
+              "id": "task-seed",
+              "metadata": {},
+              "reason": "ConnectorTarget",
+              "relevance": 1.0,
+              "source_id": "fixture:task",
+              "text": "Explain the target note.",
+              "token_estimate": 80
+            },
+            {
+              "content_hash": "sha256:8d3d602a50df0730fa363f983d3279170f3a99f96469aa92ca9c3cea26c860f5",
+              "id": "bridge-note",
+              "metadata": {},
+              "reason": "BridgeConnector",
+              "relevance": 0.2,
+              "source_id": "fixture:note",
+              "text": "Bridge note connecting the task to the target evidence.",
+              "token_estimate": 40
+            },
+            {
+              "content_hash": "sha256:cfc460ad4b14ac7fd81fd99510b1149b16659bffb6874ab4ea5e56f7a5222552",
+              "id": "target-note",
+              "metadata": {},
+              "reason": "Seed",
+              "relevance": 0.95,
+              "source_id": "fixture:target",
+              "text": "Target note with the answer evidence.",
+              "token_estimate": 40
+            }
+          ]
+        }
+      },
+      "seed": 2
+    },
+    {
+      "budget": 200,
+      "response": {
+        "ok": true,
+        "over_budget": false,
+        "pack": {
+          "boundary_conductance": 1.0,
+          "boundary_cut_edges": 1,
+          "quality_score": 0.5733333333333334,
+          "relevance_mean": 0.7166666666666667,
+          "representative_unit_id": "bridge-note",
+          "token_estimate": 160,
+          "units": [
+            {
+              "content_hash": "sha256:8bd7c7c7ca49e39068e157dd040589f22513447235c2227fa6184493db59181e",
+              "id": "task-seed",
+              "metadata": {},
+              "reason": "ConnectorTarget",
+              "relevance": 1.0,
+              "source_id": "fixture:task",
+              "text": "Explain the target note.",
+              "token_estimate": 80
+            },
+            {
+              "content_hash": "sha256:8d3d602a50df0730fa363f983d3279170f3a99f96469aa92ca9c3cea26c860f5",
+              "id": "bridge-note",
+              "metadata": {},
+              "reason": "BridgeConnector",
+              "relevance": 0.2,
+              "source_id": "fixture:note",
+              "text": "Bridge note connecting the task to the target evidence.",
+              "token_estimate": 40
+            },
+            {
+              "content_hash": "sha256:cfc460ad4b14ac7fd81fd99510b1149b16659bffb6874ab4ea5e56f7a5222552",
+              "id": "target-note",
+              "metadata": {},
+              "reason": "Seed",
+              "relevance": 0.95,
+              "source_id": "fixture:target",
+              "text": "Target note with the answer evidence.",
+              "token_estimate": 40
+            }
+          ]
+        }
+      },
+      "seed": 2
+    },
+    {
+      "budget": 80,
+      "response": {
+        "ok": true,
+        "over_budget": false,
+        "pack": {
+          "boundary_conductance": 1.0,
+          "boundary_cut_edges": 1,
+          "quality_score": 0.7200000000000001,
+          "relevance_mean": 0.9,
+          "representative_unit_id": "stale-noise",
+          "token_estimate": 40,
+          "units": [
+            {
+              "content_hash": "sha256:b95f077b333791feebb1c5e490769194b77a5c1afb40898a8049a44f21ebb7f2",
+              "id": "stale-noise",
+              "metadata": {},
+              "reason": "Seed",
+              "relevance": 0.9,
+              "source_id": "fixture:old",
+              "text": "Old noisy note that should stay outside the mdcrop.",
+              "token_estimate": 40
+            }
+          ]
+        }
+      },
+      "seed": 3
+    },
+    {
+      "budget": 120,
+      "response": {
+        "ok": true,
+        "over_budget": false,
+        "pack": {
+          "boundary_conductance": 0.3333333333333333,
+          "boundary_cut_edges": 1,
+          "quality_score": 0.8933333333333333,
+          "relevance_mean": 0.95,
+          "representative_unit_id": "task-seed",
+          "token_estimate": 120,
+          "units": [
+            {
+              "content_hash": "sha256:8bd7c7c7ca49e39068e157dd040589f22513447235c2227fa6184493db59181e",
+              "id": "task-seed",
+              "metadata": {},
+              "reason": "ConnectorTarget",
+              "relevance": 1.0,
+              "source_id": "fixture:task",
+              "text": "Explain the target note.",
+              "token_estimate": 80
+            },
+            {
+              "content_hash": "sha256:b95f077b333791feebb1c5e490769194b77a5c1afb40898a8049a44f21ebb7f2",
+              "id": "stale-noise",
+              "metadata": {},
+              "reason": "Seed",
+              "relevance": 0.9,
+              "source_id": "fixture:old",
+              "text": "Old noisy note that should stay outside the mdcrop.",
+              "token_estimate": 40
+            }
+          ]
+        }
+      },
+      "seed": 3
+    },
+    {
+      "budget": 160,
+      "response": {
+        "ok": true,
+        "over_budget": false,
+        "pack": {
+          "boundary_conductance": 0.3333333333333333,
+          "boundary_cut_edges": 1,
+          "quality_score": 0.8933333333333333,
+          "relevance_mean": 0.95,
+          "representative_unit_id": "task-seed",
+          "token_estimate": 120,
+          "units": [
+            {
+              "content_hash": "sha256:8bd7c7c7ca49e39068e157dd040589f22513447235c2227fa6184493db59181e",
+              "id": "task-seed",
+              "metadata": {},
+              "reason": "ConnectorTarget",
+              "relevance": 1.0,
+              "source_id": "fixture:task",
+              "text": "Explain the target note.",
+              "token_estimate": 80
+            },
+            {
+              "content_hash": "sha256:b95f077b333791feebb1c5e490769194b77a5c1afb40898a8049a44f21ebb7f2",
+              "id": "stale-noise",
+              "metadata": {},
+              "reason": "Seed",
+              "relevance": 0.9,
+              "source_id": "fixture:old",
+              "text": "Old noisy note that should stay outside the mdcrop.",
+              "token_estimate": 40
+            }
+          ]
+        }
+      },
+      "seed": 3
+    },
+    {
+      "budget": 200,
+      "response": {
+        "ok": true,
+        "over_budget": false,
+        "pack": {
+          "boundary_conductance": 0.3333333333333333,
+          "boundary_cut_edges": 1,
+          "quality_score": 0.8933333333333333,
+          "relevance_mean": 0.95,
+          "representative_unit_id": "task-seed",
+          "token_estimate": 120,
+          "units": [
+            {
+              "content_hash": "sha256:8bd7c7c7ca49e39068e157dd040589f22513447235c2227fa6184493db59181e",
+              "id": "task-seed",
+              "metadata": {},
+              "reason": "ConnectorTarget",
+              "relevance": 1.0,
+              "source_id": "fixture:task",
+              "text": "Explain the target note.",
+              "token_estimate": 80
+            },
+            {
+              "content_hash": "sha256:b95f077b333791feebb1c5e490769194b77a5c1afb40898a8049a44f21ebb7f2",
+              "id": "stale-noise",
+              "metadata": {},
+              "reason": "Seed",
+              "relevance": 0.9,
+              "source_id": "fixture:old",
+              "text": "Old noisy note that should stay outside the mdcrop.",
+              "token_estimate": 40
+            }
+          ]
+        }
+      },
+      "seed": 3
+    },
+    {
+      "budget": 0,
+      "response": {
+        "error": "[INPUT] budget must be positive",
+        "ok": false
+      },
+      "seed": 0
+    },
+    {
+      "budget": 160,
+      "response": {
+        "error": "[INPUT] seed unit 4 is out of bounds for graph with 4 units",
+        "ok": false
+      },
+      "seed": 4
+    },
+    {
+      "budget": 257,
+      "response": {
+        "error": "probe budget limit is 256",
+        "ok": false
+      },
+      "seed": 0
+    },
+    {
+      "budget": 79,
+      "response": {
+        "ok": true,
+        "over_budget": true,
+        "pack": {
+          "boundary_conductance": 1.0,
+          "boundary_cut_edges": 2,
+          "quality_score": 0.8,
+          "relevance_mean": 1.0,
+          "representative_unit_id": "task-seed",
+          "token_estimate": 80,
+          "units": [
+            {
+              "content_hash": "sha256:8bd7c7c7ca49e39068e157dd040589f22513447235c2227fa6184493db59181e",
+              "id": "task-seed",
+              "metadata": {},
+              "reason": "Seed",
+              "relevance": 1.0,
+              "source_id": "fixture:task",
+              "text": "Explain the target note.",
+              "token_estimate": 80
+            }
+          ]
+        }
+      },
+      "seed": 0
+    }
+  ],
+  "graph": {
+    "adjacency": [
+      [
+        1,
+        3
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        1
+      ],
+      [
+        0
+      ]
+    ],
+    "units": [
+      {
+        "content_hash": "sha256:8bd7c7c7ca49e39068e157dd040589f22513447235c2227fa6184493db59181e",
+        "id": "task-seed",
+        "metadata": {},
+        "relevance": 1.0,
+        "source_id": "fixture:task",
+        "text": "Explain the target note.",
+        "token_estimate": 80
+      },
+      {
+        "content_hash": "sha256:8d3d602a50df0730fa363f983d3279170f3a99f96469aa92ca9c3cea26c860f5",
+        "id": "bridge-note",
+        "metadata": {},
+        "relevance": 0.2,
+        "source_id": "fixture:note",
+        "text": "Bridge note connecting the task to the target evidence.",
+        "token_estimate": 40
+      },
+      {
+        "content_hash": "sha256:cfc460ad4b14ac7fd81fd99510b1149b16659bffb6874ab4ea5e56f7a5222552",
+        "id": "target-note",
+        "metadata": {},
+        "relevance": 0.95,
+        "source_id": "fixture:target",
+        "text": "Target note with the answer evidence.",
+        "token_estimate": 40
+      },
+      {
+        "content_hash": "sha256:b95f077b333791feebb1c5e490769194b77a5c1afb40898a8049a44f21ebb7f2",
+        "id": "stale-noise",
+        "metadata": {},
+        "relevance": 0.9,
+        "source_id": "fixture:old",
+        "text": "Old noisy note that should stay outside the mdcrop.",
+        "token_estimate": 40
+      }
+    ]
+  },
+  "schema": "mdcrop.wasm-boundary-native-fixture.v1",
+  "scope": "synthetic fixture only; native observations, not browser runtime or consumer authority"
+}

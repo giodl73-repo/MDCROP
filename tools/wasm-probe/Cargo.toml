@@ -1,0 +1,22 @@
+[package]
+name = "mdcrop-wasm-boundary-probe"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+publish = false
+
+# Standalone scout harness, deliberately outside the production workspace.
+[workspace]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+mdcrop-core = { path = "../../crates/mdcrop-core" }
+serde_json = "1"
+wasm-bindgen = "=0.2.127"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+# rstat-core's rand closure requires an explicit browser backend, even though
+# the selected scoring/summary path does not call its RNG APIs.
+getrandom = { version = "=0.2.17", features = ["js"] }

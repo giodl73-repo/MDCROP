@@ -1,0 +1,56 @@
+{
+  "schema": "mdcrop.wasm-boundary-qualification.v1",
+  "entry": "01bf332a2a39d8c95d6af7389f3fcab23b447f62",
+  "stage": "local native and release compile/link only; not browser or Pages qualified",
+  "rust": "rustc 1.95.0 (59807616e 2026-04-14)",
+  "host": "Windows x86_64",
+  "target": "wasm32-unknown-unknown",
+  "production_kernel_manifest_lock_unchanged": true,
+  "production_git_sources": [
+    "git+https://github.com/giodl73-repo/MDPATH.git?branch=master#4f79f8764c2b8b73d3771a87f36a990be30dc536",
+    "git+https://github.com/giodl73-repo/MDPORT?rev=86da46bfe78bd43fa5dd075dd1bb63344a624072#86da46bfe78bd43fa5dd075dd1bb63344a624072",
+    "git+https://github.com/giodl73-repo/RLINE.git?branch=master#7a612a3be30e398590787f64cfae097e865ff4b8",
+    "git+https://github.com/giodl73-repo/SLICE?rev=ffa956cf8704cae5086af676c9044ae10a9a9b15#ffa956cf8704cae5086af676c9044ae10a9a9b15"
+  ],
+  "standalone_probe_keeps_production_git_sources": true,
+  "baseline_wasm_check": "expected failure: getrandom requires explicit browser backend",
+  "remedy": "getrandom 0.2.17/js only in standalone probe wasm32 dependency closure",
+  "production_native_tests": 60,
+  "probe_native_tests": 4,
+  "admitted_seed_budget_pairs_exercised": 1024,
+  "native_representative_cases": 20,
+  "fixture_text_hashes_recomputed": 4,
+  "raw_local_wasm": {
+    "bytes": 630715,
+    "sha256": "3a3fdf0a70ef407c5fe1599b52f4416c5de46567c740741505bfc7073fe1d35a"
+  },
+  "fixture_snapshot": {
+    "bytes": 25178,
+    "sha256": "2981df983b95745e22c07bdddd114e5c5e5d1f5086e7cae7741b9308da6ced7c"
+  },
+  "evidence_logs": {
+    "native-tests.log": {
+      "bytes": 6530,
+      "sha256": "5b2b9dee8b1c0a557309cd060868c93ee1887024c606a7060e888ae7ae1dbc81"
+    },
+    "probe-native-tests.log": {
+      "bytes": 1127,
+      "sha256": "e76146d251f8b2a33350ef7ba446e91575773a97f7d81d4ede7d483468eb683a"
+    },
+    "wasm-check-initial.log": {
+      "bytes": 1091,
+      "sha256": "63b4c47fe26b37a4940d6d11642312ddc4893b1c64636f4500bcafc2e88b5e32"
+    },
+    "wasm-probe-build.log": {
+      "bytes": 167,
+      "sha256": "31a2cd809e8dead0cd20c846df26337107dbe1a6759df77e22a3f77c6680a7b4"
+    }
+  },
+  "pending": [
+    "real native/WASM browser parity",
+    "bounded reader UI and worker recovery",
+    "source/license/build routes and size gate",
+    "tested Pages deployment and exact live release custody"
+  ],
+  "review": "producer-applied repository roles; not independent/human/consumer approval"
+}

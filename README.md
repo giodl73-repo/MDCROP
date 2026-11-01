@@ -61,6 +61,12 @@ MDCROP draws the boundary around the right context before an agent answers.
 
 ## Commands
 
+The [browser fixture boundary](docs/wasm-boundary.md) accepts a bounded seed/budget
+explorer over the existing synthetic graph. Its standalone native/compile probe
+is reproducible under [`tools/wasm-probe`](tools/wasm-probe/README.md).
+Browser execution, a reader-facing UI and Pages release remain future work;
+the native commands below retain their current contracts.
+
 Emit the deterministic bridge/noise fixture:
 
 ```powershell
