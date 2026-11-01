@@ -4,7 +4,7 @@
 
 `2026-10-31-wasm-boundary` — qualify a bounded public fixture and portable
 selection boundary before implementing a browser experience. Pulse 01 is the
-scope/compile decision; Pulse 02 remains proposed.
+scope/compile decision is complete; Pulse 02 implements the accepted browser task.
 
 ## Completed waves
 

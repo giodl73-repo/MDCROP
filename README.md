@@ -8,6 +8,23 @@
 [ROLES](https://github.com/giodl73-repo/ROLES), the `.roles` convention for
 repository-local review panels.
 
+## Explore a context boundary in your browser
+
+[Open the Rust/WASM context explorer](https://giodl73-repo.github.io/MDCROP/).
+Choose any starting note and an estimated budget in the public four-node fixture.
+Inspect selected and excluded notes, bridge reasons, source IDs, text, hashes,
+edges and native metrics; download the current pack, complete report and request.
+The example runs immediately, and the complete fixture/source downloads remain
+available independently of the engine. No account, upload, model call or source
+fetch is required.
+
+The same native Rust selection runs in a worker. A seed can exceed the requested
+estimated budget; the page shows that overrun. Fixture costs are not tokenizer
+or billing counts, and selected context is not semantic closure or answer
+authority. Corpus ingestion, directory/view/status operations, benchmarks and
+real-corpus claims remain native. Retry preserves controls; Restore example is
+separate. See [build and validation](BUILD.md) and [scope](docs/wasm-boundary.md).
+
 ## MD family
 
 MDCROP is the corpus-selection layer in the MD family:
@@ -61,11 +78,10 @@ MDCROP draws the boundary around the right context before an agent answers.
 
 ## Commands
 
-The [browser fixture boundary](docs/wasm-boundary.md) accepts a bounded seed/budget
-explorer over the existing synthetic graph. Its standalone native/compile probe
-is reproducible under [`tools/wasm-probe`](tools/wasm-probe/README.md).
-Browser execution, a reader-facing UI and Pages release remain future work;
-the native commands below retain their current contracts.
+The [browser fixture boundary](docs/wasm-boundary.md) is implemented by the
+unpublished `mdcrop-web` adapter. The preceding standalone compile probe remains
+reproducible under [`tools/wasm-probe`](tools/wasm-probe/README.md). The native
+commands below retain their current contracts.
 
 Emit the deterministic bridge/noise fixture:
 
@@ -569,3 +585,8 @@ to the sibling checkout.
 ## License
 
 MIT. See [`LICENSE`](LICENSE).
+
+The first-party grant covers repository-authored software, documentation and
+synthetic fixture content. Retained Rust notices in `tools/licenses/rust/` and
+generated dependency notices preserve their upstream grants; those materials
+are not relicensed by the first-party MIT license.

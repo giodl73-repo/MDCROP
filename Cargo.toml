@@ -2,6 +2,7 @@
 members = [
     "crates/mdcrop-core",
     "crates/mdcrop-cli",
+    "crates/mdcrop-web",
 ]
 resolver = "2"
 

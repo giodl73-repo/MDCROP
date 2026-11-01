@@ -1,8 +1,10 @@
 # Bounded browser fixture decision
 
-Status: accepted by producer review for a fixture prototype. Compile/link and
-native fixture qualification are complete; browser execution, UI, Pages delivery
-and live-release verification are not complete. This is not a native-only exception.
+Status: accepted scope implemented in `mdcrop-web` and the worker-backed reader
+task. Local real-WASM parity covers all 1,024 admitted control pairs and the UI
+suite; hosted deployment and fresh live release custody follow source publication.
+See `pulses/pulse-02.md` in the boundary wave and `BUILD.md` for final gates and
+reproduction. The dated Pulse 01 qualification remains compile/native evidence.
 
 ## Reader task and public fixture
 
